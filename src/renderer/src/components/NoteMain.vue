@@ -1,5 +1,6 @@
 <template>
   <div ref="noteEditor" id="idNoteEditor"></div>
+  <input type="file" @change="selectFileAndPlay" style="display: none" ref="fileInput"/>
 </template>
 
 <script lang="js">
@@ -31,8 +32,17 @@ export default {
       });
     }, "保存笔记");
 
+    const fileInput = ref(null);
+
+    const selectFileAndPlay = (event) => {
+      const file = event.target.files[0];
+      console.log(file)
+      service.send("window-new", {route: "/video/" + encodeURIComponent(file.path)})
+    }
+
     keyManager.registerHotkeyProcessor("ctrl+o", (event, handler)=>{
-      service.send("window-new", {route: "/video"})
+      event.preventDefault();
+      fileInput.value.click();
     }, "打开视频")
 
     watch(noteModel.currNote, ()=>{
@@ -59,16 +69,41 @@ export default {
           },
           link : {
             click: (dom)=>{
-              console.log(dom);
+              if (dom.href.startsWith("timestamp://")) {
+                service.invoke("/note/locateVideo", dom.href.replace("timestamp://", ""))
+              }
             }
           }
         })
       }
     });
 
+    window.electron.ipcRenderer.on('/client/insertAll', function(event, arg) {
+      editor.focus();
+      let data = JSON.parse(arg);
+      if (data) {
+        editor.insertValue("\n\n" + formatTime(data.time) + "\n" + insertMdImg(data.screenshotId) + "\n")
+      }
+    });
+
+    // format 1.2222 to 0:0:1
+    function formatTime(second) {
+      let h = Math.floor(second / 3600);
+      let m = Math.floor((second % 3600) / 60);
+      let s = Math.floor(second % 60);
+      return `[${h + ":" + m + ":" + s}](timestamp://${second})` ;
+    }
+
+    // format 1 to file://./screenshot/1.png to md file
+    function insertMdImg(fileId) {
+      return `![](kingfisher://./screenshot/${fileId}.png)`
+    }
+
     return {
       noteEditor,
-      editor
+      editor,
+      fileInput,
+      selectFileAndPlay
     }
   }
 }

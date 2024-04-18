@@ -58,6 +58,20 @@ export class Window {
     return BrowserWindow.fromId(id);
   }
 
+  findWindowByRoute(route) {
+    for (let i in this.group) {
+      if (
+        this.getWindow(Number(i)) &&
+        this.group[i].route.startsWith(route) &&
+        !this.group[i].isMultiWindow
+      ) {
+        return this.getWindow(Number(i));
+      }
+    }
+
+    return null;
+  }
+
   // 创建窗口
   createWindows(options) {
     let args = Object.assign({}, windowsCfg, options);

@@ -18,9 +18,13 @@
     "build:linux": "npm run build && electron-builder --linux"
   },
   "dependencies": {
+    "@cloudgeek/playcore-hls": "^0.1.7",
+    "@cloudgeek/vue3-video-player": "^0.3.10",
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
     "element-plus": "^2.7.0",
+    "flv-h265.js": "^1.7.7",
+    "hls.js": "^1.5.8",
     "hotkeys-js": "^3.13.7",
     "vditor": "^3.10.4",
     "vue": "^3.4.15",

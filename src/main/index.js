@@ -1,11 +1,13 @@
 import  { Window } from './window'
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, protocol, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 const isDevelopment = process.env.NODE_ENV !== "production";
+const path = require('path')
 
 import storeService from './service/store'
+import noteService from './service/note'
 
 function createMainWindow() {
   // Create the browser window.
@@ -49,6 +51,12 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
+  protocol.registerFileProtocol('kingfisher', (request, callback) => {
+    const url = request.url.substr("kingfisher".length + 3)
+    console.log("转换视频链接", decodeURI(path.normalize(url)))
+    callback(decodeURI(path.normalize(url)))
+  })
+
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
@@ -65,6 +73,7 @@ app.whenReady().then(() => {
   })
 
   storeService.install()
+  noteService.install(windowManager)
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

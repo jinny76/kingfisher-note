@@ -3,7 +3,7 @@ import fs from "fs";
 
 const rootPath = process.cwd();
 
-const install = (electron) => {
+const install = () => {
   ipcMain.handle('/store/saveNote', (event, params) => {
     console.log("开始保存文件");
     // save file to "note" folder

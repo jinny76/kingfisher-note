@@ -76,6 +76,9 @@ export default {
         case "2-2":
           dialogOpenVisible.value = true;
           break;
+        case "4":
+          service.send("window-all-closed")
+          break;
       }
     }
 
