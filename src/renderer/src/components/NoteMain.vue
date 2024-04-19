@@ -1,11 +1,19 @@
 <template>
-  <div ref="noteEditor" id="idNoteEditor"></div>
+  <el-container style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
+    <el-aside :width="videoWidth">
+      <video-window v-if="videoUrl != ''" :url-str="videoUrl"></video-window>
+    </el-aside>
+    <el-main>
+      <div ref="noteEditor" id="idNoteEditor"></div>
+    </el-main>
+  </el-container>
   <input type="file" @change="selectFileAndPlay" style="display: none" ref="fileInput"/>
 </template>
 
 <script lang="js">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import Vditor from 'vditor'
+import VideoWindow from './Video.vue'
 import keyManager from '../utils/keys'
 import service from '../utils/service'
 import noteModel from '../model/note'
@@ -13,9 +21,15 @@ import {ElMessage} from "element-plus";
 
 export default {
   name: 'NoteMain',
-  components: {},
+  components: {VideoWindow},
   setup () {
     const noteEditor = ref()
+
+    const displayMode = noteModel.displayMode;
+
+    const showVideo = computed(()=>{
+      return "same" === displayMode.value;
+    });
 
     let editor;
 
@@ -36,8 +50,11 @@ export default {
 
     const selectFileAndPlay = (event) => {
       const file = event.target.files[0];
-      console.log(file)
-      service.send("window-new", {route: "/video/" + encodeURIComponent(file.path)})
+      if ("same" === displayMode.value) {
+        noteModel.videoUrl.value = file.path;
+      } else {
+        service.send("window-new", { route: "/video/" + encodeURIComponent(file.path) });
+      }
     }
 
     keyManager.registerHotkeyProcessor("ctrl+o", (event, handler)=>{
@@ -60,6 +77,9 @@ export default {
           height: "100%",
           mode: "sv",
           icon: "material",
+          keydown: ()=>{
+            console.log("keydown")
+          },
           preview: {
             delay: 200,
             theme : {
@@ -99,11 +119,19 @@ export default {
       return `![](kingfisher://./screenshot/${fileId}.png)`
     }
 
+    const videoWidth = computed(() => {
+      return showVideo.value ? "50%" : "0%";
+    });
+
     return {
       noteEditor,
       editor,
       fileInput,
-      selectFileAndPlay
+      selectFileAndPlay,
+      displayMode,
+      showVideo,
+      videoWidth,
+      videoUrl: noteModel.videoUrl
     }
   }
 }

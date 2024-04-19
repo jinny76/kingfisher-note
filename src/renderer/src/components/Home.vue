@@ -29,11 +29,10 @@
     <el-main style="padding: 0px;">
       <component :is="mainComp"></component>
     </el-main>
-    <el-footer>Footer</el-footer>
   </el-container>
   <el-dialog v-model="dialogOpenVisible" title="打开笔记" width="500">
     <el-row v-for="note in noteList" :key="note" style="width: 100%; padding: 5px;">
-      <el-col :span="24" style="cursor: pointer; color: black" @click="openNote(note)">{{note}}</el-col>
+      <el-col :span="24" style="cursor: pointer; color: black" @click="openNote(note)">{{ note }}</el-col>
     </el-row>
     <template #footer>
       <div class="dialog-footer">
@@ -44,45 +43,51 @@
 </template>
 
 <script lang="js">
-import { ref } from 'vue'
-import NoteMain from './NoteMain.vue'
-import noteModel from '../model/note'
-import service from "../utils/service"
-import {ElMessageBox} from "element-plus";
+import { computed, ref } from "vue";
+import NoteMain from "./NoteMain.vue";
+import noteModel from "../model/note";
+import service from "../utils/service";
+import { ElMessageBox } from "element-plus";
 
 export default {
-  name: 'Home',
-  components: {NoteMain},
+  name: "Home",
+  components: { NoteMain },
   setup () {
-    const activeIndex = ref('1')
+    const activeIndex = ref("1");
+
+    const displayMode = noteModel.displayMode;
+
+    const showVideo = computed(() => {
+      return "same" === displayMode.value;
+    });
 
     const handleSelect = (index) => {
       switch (index) {
         case "2-1":
-          ElMessageBox.prompt('请输入笔记名称', '新建笔记', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
+          ElMessageBox.prompt("请输入笔记名称", "新建笔记", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
             inputPattern: /\S/,
-            inputErrorMessage: '笔记名称不能为空'
+            inputErrorMessage: "笔记名称不能为空"
           }).then(({ value }) => {
             noteModel.currNote.value = {
-              name : value + ".kfnote",
-              data : ""
-            }
+              name: value + ".kfnote",
+              data: ""
+            };
           }).catch(() => {
-            console.log('取消新建笔记')
-          })
+            console.log("取消新建笔记");
+          });
           break;
         case "2-2":
           dialogOpenVisible.value = true;
           break;
         case "4":
-          service.send("window-all-closed")
+          service.send("window-all-closed");
           break;
       }
-    }
+    };
 
-    const mainComp = ref('NoteMain');
+    const mainComp = ref("NoteMain");
 
     const dialogOpenVisible = ref(false);
 
@@ -91,21 +96,21 @@ export default {
 
       service.invoke("/store/getNote", JSON.stringify({
         path: note
-      }), (result)=>{
-        noteModel.currNote.value = result
+      }), (result) => {
+        noteModel.currNote.value = result;
       });
-    }
+    };
 
     return {
       activeIndex,
       handleSelect,
       mainComp,
-      currNote : noteModel.currNote,
+      currNote: noteModel.currNote,
       noteList: noteModel.noteList,
       dialogOpenVisible,
       openNote
-    }
+    };
   }
-}
+};
 
 </script>

@@ -9,6 +9,10 @@ service.invoke('/store/getNoteList', null, (result) => {
   noteList.value = result
 });
 
+const displayMode = ref("window")
+
+const videoUrl = ref("")
+
 export default {
-  currNote, noteList
+  currNote, noteList, displayMode, videoUrl
 }

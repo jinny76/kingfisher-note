@@ -5,19 +5,28 @@
 </template>
 
 <script lang="js">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import service from "../utils/service";
+import noteModel from "../model/note";
 
 export default {
   name: "Home",
+  props: {
+    urlStr : {
+      type: String
+    }
+  },
+  emits: [],
   components: {},
-  setup () {
+  setup (props, {emit}) {
     let route = useRoute();
-    let urlStr = route.params.path;
-    if (urlStr.indexOf("://") === -1) {
+    let urlStr = props.urlStr || route.params.path;
+    if (urlStr && urlStr.indexOf("://") === -1) {
       urlStr = "kingfisher://" + urlStr.replaceAll("\\", "/");
     }
+
+    const displayMode = noteModel.displayMode;
 
     console.log("urlStr", urlStr);
     const url = ref(urlStr);
