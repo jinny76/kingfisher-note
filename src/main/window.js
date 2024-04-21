@@ -36,10 +36,12 @@ export class Window {
   }
 
   // 窗口配置
-  winOpts(wh) {
+  winOpts(options) {
+    console.log("窗口配置", options);
     return {
-      width: wh[0],
-      height: wh[1],
+      width: options.width || 800,
+      height: options.height || 600,
+      alwaysOnTop: options.alwaysOnTop,
       fullscreenable:true,
       simpleFullscreen:true,
       autoHideMenuBar: true,
@@ -90,7 +92,7 @@ export class Window {
       }
     }
     // 创建 electron 窗口的配置参数
-    let opt = this.winOpts([args.width || 390, args.height || 590]);
+    let opt = this.winOpts(args);
     // 判断是否有父窗口
     if (args.parentId) {
       console.log("parentId：" + args.parentId);
@@ -108,6 +110,9 @@ export class Window {
 
 
     let win = new BrowserWindow(opt);
+    if (args.alwaysOnTop) {
+      win.setAlwaysOnTop(true, "screen-saver");
+    }
     console.log("窗口 id：" + win.id);
     this.group[win.id] = {
       route: args.route,

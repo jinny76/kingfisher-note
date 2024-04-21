@@ -3,8 +3,11 @@ import { app, shell, protocol, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import StreamServer from "./video/server"
+
 const isDevelopment = process.env.NODE_ENV !== "production";
 const path = require('path')
+
 
 import storeService from './service/store'
 import noteService from './service/note'
@@ -80,6 +83,7 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  console.log("关闭窗口", process.platform);
   if (process.platform !== 'darwin') {
     app.quit()
   }
@@ -87,6 +91,10 @@ app.on('window-all-closed', () => {
 
 let windowManager = new Window()
 windowManager.listen()
+
+
+const streamServer = new StreamServer()
+streamServer.start()
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.

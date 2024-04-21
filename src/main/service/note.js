@@ -42,7 +42,7 @@ const install = (_windowManager) => {
       console.log("找到视频窗口")
       videoWindow.webContents.send('/client/locateVideo', params)
     } else {
-      console.log("未找到视频窗口")
+      windowManager.main.webContents.send('/client/locateVideo', params)
     }
   });
 

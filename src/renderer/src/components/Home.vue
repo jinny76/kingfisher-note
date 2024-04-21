@@ -22,7 +22,7 @@
           </el-sub-menu>
           <el-menu-item index="2-4">保存笔记</el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="4">退出</el-menu-item>
+        <el-menu-item index="4">设置</el-menu-item>
         <el-menu-item index="5">{{ currNote.name }}</el-menu-item>
       </el-menu>
     </el-header>
@@ -45,20 +45,19 @@
 <script lang="js">
 import { computed, ref } from "vue";
 import NoteMain from "./NoteMain.vue";
+import NoteSetting from "./NoteSetting.vue";
 import noteModel from "../model/note";
 import service from "../utils/service";
 import { ElMessageBox } from "element-plus";
 
 export default {
   name: "Home",
-  components: { NoteMain },
+  components: { NoteMain, NoteSetting },
   setup () {
     const activeIndex = ref("1");
 
-    const displayMode = noteModel.displayMode;
-
     const showVideo = computed(() => {
-      return "same" === displayMode.value;
+      return "same" === noteModel.setting.value.displayMode;
     });
 
     const handleSelect = (index) => {
@@ -82,12 +81,12 @@ export default {
           dialogOpenVisible.value = true;
           break;
         case "4":
-          service.send("window-all-closed");
+          mainComp.value = "NoteSetting";
           break;
       }
     };
 
-    const mainComp = ref("NoteMain");
+    const mainComp = noteModel.mainComp;
 
     const dialogOpenVisible = ref(false);
 

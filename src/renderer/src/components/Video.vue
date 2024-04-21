@@ -1,11 +1,11 @@
 <template>
-  <vue3-video-player v-bind="options" controls :src="url" v-show="initFlag"
+  <vue3-video-player v-bind="options" controls v-show="initFlag"
                      style="width: 100%; height: 100%;display: flex"
                      ref="playerDom" @play="whenPlay"></vue3-video-player>
 </template>
 
 <script lang="js">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import service from "../utils/service";
 import noteModel from "../model/note";
@@ -21,15 +21,26 @@ export default {
   components: {},
   setup (props, {emit}) {
     let route = useRoute();
-    let urlStr = props.urlStr || route.params.path;
-    if (urlStr && urlStr.indexOf("://") === -1) {
-      urlStr = "kingfisher://" + urlStr.replaceAll("\\", "/");
+    function handleSource() {
+      let urlStr = props.urlStr || route.params.path;
+      if (urlStr.endsWith("/")) {
+        urlStr = urlStr.substring(0, urlStr.length - 1);
+      }
+      if (urlStr && urlStr.indexOf("://") === -1) {
+        if (urlStr.endsWith(".mp4")) {
+          urlStr = "kingfisher://" + urlStr.replaceAll("\\", "/");
+        } else {
+          urlStr = "http://localhost:9555?v=" + encodeURIComponent(urlStr);
+          console.log(urlStr)
+        }
+      }
+      return urlStr;
     }
 
-    const displayMode = noteModel.displayMode;
+    watch(()=> props.urlStr, () => {
+      options.value.src = handleSource();
+    });
 
-    console.log("urlStr", urlStr);
-    const url = ref(urlStr);
     const initFlag = ref(true);
     const options = ref({
       muted: false,
@@ -41,14 +52,13 @@ export default {
       lightOff: false,
       control: false,
       title: route.params.path,
-      src: url.value
+      src: handleSource()
       //aspectRatio: "16:9",
     });
 
     const playerDom = ref(null);
 
     const whenPlay = () => {
-      console.log(playerDom.value);
       let cover = playerDom.value.$el.querySelector(".play-pause-layer");
       if (!cover.added) {
         cover.addEventListener("dblclick", () => {
@@ -63,6 +73,7 @@ export default {
     };
 
     const getScreenshot = (video) => {
+      video.crossOrigin = "anonymous";
       let canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -78,7 +89,7 @@ export default {
     });
 
     return {
-      url, initFlag, options, whenPlay, playerDom
+      initFlag, options, whenPlay, playerDom
     };
   }
 };
