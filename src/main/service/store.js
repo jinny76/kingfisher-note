@@ -4,10 +4,8 @@ import fs from "fs";
 const rootPath = process.cwd();
 
 let setting = {
-  displayMode: "window",
   noteDir: "note",
-  screenshotDir: "screenshot",
-  pauseWhenWrite: true,
+  screenshotDir: "screenshot"
 }
 
 const install = () => {

@@ -32,7 +32,8 @@
     "pinyin-match": "^1.2.5",
     "vditor": "^3.10.4",
     "vue": "^3.4.15",
-    "vue-router": "^4.3.0"
+    "vue-router": "^4.3.0",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^1.0.1",

@@ -28,6 +28,12 @@
       </el-col>
     </el-row>
     <el-row style="padding: 5px;">
+      <el-col :span="4">自动打开笔记中的视频：</el-col>
+      <el-col :span="20">
+        <el-switch v-model="setting.autoOpenVideo" active-text="是" inactive-text="否"></el-switch>
+      </el-col>
+    </el-row>
+    <el-row style="padding: 5px;">
       <el-col :span="4"></el-col>
       <el-col :span="20">
         <el-button type="primary" @click="saveSetting">保存</el-button>

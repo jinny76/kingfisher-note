@@ -49,7 +49,9 @@ export class Window {
       ...(process.platform === 'linux' ? { icon } : {icon}),
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'), //预加载脚本
-        sandbox: false
+        sandbox: false,
+        webviewTag: true,
+        nodeIntegration: true,
       },
       focusable:true
     };

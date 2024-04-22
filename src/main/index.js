@@ -22,7 +22,9 @@ function createMainWindow() {
     ...(process.platform === 'linux' ? { icon } : {icon}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      webviewTag: true,
+      nodeIntegration: true,
     }
   })
 
@@ -96,5 +98,4 @@ windowManager.listen()
 const streamServer = new StreamServer()
 streamServer.start()
 
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.
+console.log("Websocket server started on ws://localhost:18888")

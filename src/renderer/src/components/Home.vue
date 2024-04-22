@@ -18,7 +18,7 @@
           <el-menu-item index="2-2">打开笔记</el-menu-item>
           <el-sub-menu index="2-3">
             <template #title>打开历史笔记</template>
-            <el-menu-item index="2-3-1">AAA</el-menu-item>
+            <el-menu-item :index="note.name" v-for="note in recentNotes" :key="note.name" @click="openRecentNotes">{{ note.name }}</el-menu-item>
           </el-sub-menu>
           <el-menu-item index="2-4">保存笔记</el-menu-item>
         </el-sub-menu>
@@ -61,6 +61,14 @@ export default {
         case "4":
           mainComp.value = "NoteSetting";
           break;
+        default:
+          if (mainComponent.value.openNote) {
+            let currNote = noteModel.recentNotes.value.find((note) => note.name === index);
+            if (currNote) {
+              mainComponent.value.openNote(currNote);
+            }
+          }
+          break;
       }
     };
 
@@ -75,6 +83,7 @@ export default {
       mainComponent,
       currNote: noteModel.currNote,
       noteList: noteModel.noteList,
+      recentNotes: noteModel.recentNotes
     };
   }
 };

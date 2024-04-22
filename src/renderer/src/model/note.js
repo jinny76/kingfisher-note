@@ -17,6 +17,7 @@ const setting = ref(settingContent ? JSON.parse(settingContent) : {
   noteDir: "note",
   screenshotDir: "screenshot",
   pauseWhenWrite: true,
+  autoOpenVideo: true,
 });
 
 service.invoke("/store/updateSetting", JSON.stringify(setting.value), (result) => {
@@ -29,6 +30,8 @@ const markChanged = () => {
   }
 }
 
+const recentNotes = ref([]);
+
 export default {
-  currNote, noteList, videoUrl, mainComp, setting, markChanged
+  currNote, noteList, videoUrl, mainComp, setting, markChanged, recentNotes
 };
