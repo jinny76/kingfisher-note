@@ -1,5 +1,6 @@
-import { ipcMain, BrowserWindow} from "electron";
+import { ipcMain } from "electron";
 import fs from "fs";
+import storeService from './store'
 
 const rootPath = process.cwd();
 
@@ -13,8 +14,10 @@ const install = (_windowManager) => {
     // save file to "note" folder
     const { time, screenshot } = JSON.parse(params);
 
-    if (!fs.existsSync(`${rootPath}/screenshot`)) {
-      fs.mkdirSync(`${rootPath}/screenshot`);
+    console.log(storeService.setting.screenshotDir)
+
+    if (!fs.existsSync(storeService.setting.screenshotDir)) {
+      fs.mkdirSync(storeService.setting.screenshotDir);
     };
 
     let screenshotId = 0;
@@ -23,7 +26,7 @@ const install = (_windowManager) => {
       const base64Data = screenshot.replace(/^data:image\/\w+;base64,/, "");
       const dataBuffer = Buffer.from(base64Data, "base64");
       screenshotId = new Date().getTime();
-      fs.writeFileSync(`${rootPath}/screenshot/${screenshotId}.png`, dataBuffer);
+      fs.writeFileSync(`${storeService.setting.screenshotDir}/${screenshotId}.png`, dataBuffer);
     }
 
     windowManager.main.focus()
@@ -39,10 +42,23 @@ const install = (_windowManager) => {
     console.log("开始定位视频", params);
     let videoWindow = windowManager.findWindowByRoute("/video/")
     if (videoWindow) {
-      console.log("找到视频窗口")
       videoWindow.webContents.send('/client/locateVideo', params)
     } else {
       windowManager.main.webContents.send('/client/locateVideo', params)
+    }
+  });
+
+  ipcMain.handle('/note/insertContent', (event, params) => {
+    let videoWindow = windowManager.findWindowByRoute("/video/")
+    if (videoWindow) {
+      videoWindow.webContents.send('/client/insertContent', params)
+    }
+  });
+
+  ipcMain.handle('/note/stopVideo', (event, params) => {
+    let videoWindow = windowManager.findWindowByRoute("/video/")
+    if (videoWindow) {
+      videoWindow.webContents.send('/client/stopVideo', params)
     }
   });
 

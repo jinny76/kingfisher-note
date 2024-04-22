@@ -22,6 +22,12 @@
       </el-col>
     </el-row>
     <el-row style="padding: 5px;">
+      <el-col :span="4">编写时暂停：</el-col>
+      <el-col :span="20">
+        <el-switch v-model="setting.pauseWhenWrite" active-text="是" inactive-text="否"></el-switch>
+      </el-col>
+    </el-row>
+    <el-row style="padding: 5px;">
       <el-col :span="4"></el-col>
       <el-col :span="20">
         <el-button type="primary" @click="saveSetting">保存</el-button>
@@ -33,6 +39,7 @@
 <script lang="js">
 import { ref } from "vue";
 import noteModel from "../model/note";
+import service from "../utils/service";
 
 export default {
   name: "NoteSetting",
@@ -46,6 +53,10 @@ export default {
       noteModel.setting.value = setting.value;
       localStorage.setItem("SETTING", JSON.stringify(setting.value));
       noteModel.mainComp.value = "NoteMain";
+
+      service.invoke("/store/updateSetting", JSON.stringify(noteModel.setting.value), (result) => {
+        console.log("更新设置", result);
+      });
     };
 
     return {

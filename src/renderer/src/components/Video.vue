@@ -5,22 +5,24 @@
 </template>
 
 <script lang="js">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
 import { useRoute } from "vue-router";
 import service from "../utils/service";
 import noteModel from "../model/note";
+import { ElMessage } from "element-plus";
 
 export default {
   name: "Home",
   props: {
-    urlStr : {
+    urlStr: {
       type: String
     }
   },
   emits: [],
   components: {},
-  setup (props, {emit}) {
+  setup(props, { emit }) {
     let route = useRoute();
+
     function handleSource() {
       let urlStr = props.urlStr || route.params.path;
       if (urlStr.endsWith("/")) {
@@ -31,14 +33,15 @@ export default {
           urlStr = "kingfisher://" + urlStr.replaceAll("\\", "/");
         } else {
           urlStr = "http://localhost:9555?v=" + encodeURIComponent(urlStr);
-          console.log(urlStr)
+          console.log(urlStr);
         }
       }
       return urlStr;
     }
 
-    watch(()=> props.urlStr, () => {
+    watch(() => props.urlStr, () => {
       options.value.src = handleSource();
+      playVideo();
     });
 
     const initFlag = ref(true);
@@ -56,19 +59,40 @@ export default {
       //aspectRatio: "16:9",
     });
 
+    nextTick(() => {
+      if (options.value.src) {
+        playVideo();
+      }
+    });
+
     const playerDom = ref(null);
 
     const whenPlay = () => {
       let cover = playerDom.value.$el.querySelector(".play-pause-layer");
       if (!cover.added) {
         cover.addEventListener("dblclick", () => {
-          let video = playerDom.value.$el.childNodes[0];
-          service.invoke("/note/insertAll", JSON.stringify({
-            time: video.currentTime,
-            screenshot: getScreenshot(video)
-          }));
+          insertContent();
         });
         cover.added = true;
+      }
+    };
+
+    const insertContent = (type = "all") => {
+      let video = playerDom.value.$el.childNodes[0];
+      if (video) {
+        let data = {};
+
+        if (type === "timestamp" || type === "all") {
+          data.time = video.currentTime;
+        }
+
+        if (type === "screenshot" || type === "all") {
+          data.screenshot = getScreenshot(video);
+        }
+
+        service.invoke("/note/insertAll", JSON.stringify(data));
+      } else {
+        ElMessage.error("视频未加载");
       }
     };
 
@@ -82,14 +106,33 @@ export default {
       return canvas.toDataURL();
     };
 
-    window.electron.ipcRenderer.on('/client/locateVideo', function(event, arg) {
+    window.electron.ipcRenderer.on("/client/locateVideo", function(event, arg) {
       console.log("定位视频", arg);
       let video = playerDom.value.$el.childNodes[0];
       video.currentTime = new Number(arg);
     });
 
+    window.electron.ipcRenderer.on("/client/insertContent", function(event, arg) {
+      let argObj = JSON.parse(arg);
+      insertContent(argObj.type);
+    });
+
+    window.electron.ipcRenderer.on("/client/stopVideo", function(event, arg) {
+      stopVideo();
+    });
+
+    const playVideo = () => {
+      let video = playerDom.value.$el.childNodes[0];
+      video.play();
+    };
+
+    const stopVideo = () => {
+      let video = playerDom.value.$el.childNodes[0];
+      video.pause();
+    };
+
     return {
-      initFlag, options, whenPlay, playerDom
+      initFlag, options, whenPlay, playerDom, playVideo, stopVideo, insertContent
     };
   }
 };

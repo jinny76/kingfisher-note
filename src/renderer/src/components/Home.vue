@@ -23,23 +23,13 @@
           <el-menu-item index="2-4">保存笔记</el-menu-item>
         </el-sub-menu>
         <el-menu-item index="4">设置</el-menu-item>
-        <el-menu-item index="5">{{ currNote.name }}</el-menu-item>
+        <el-menu-item index="5">{{ currNote.name }}{{currNote.changed ? "*": ""}}</el-menu-item>
       </el-menu>
     </el-header>
     <el-main style="padding: 0px;">
-      <component :is="mainComp"></component>
+      <component :is="mainComp" ref="mainComponent"></component>
     </el-main>
   </el-container>
-  <el-dialog v-model="dialogOpenVisible" title="打开笔记" width="500">
-    <el-row v-for="note in noteList" :key="note" style="width: 100%; padding: 5px;">
-      <el-col :span="24" style="cursor: pointer; color: black" @click="openNote(note)">{{ note }}</el-col>
-    </el-row>
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button @click="dialogOpenVisible = false">关闭</el-button>
-      </div>
-    </template>
-  </el-dialog>
 </template>
 
 <script lang="js">
@@ -56,29 +46,17 @@ export default {
   setup () {
     const activeIndex = ref("1");
 
-    const showVideo = computed(() => {
-      return "same" === noteModel.setting.value.displayMode;
-    });
-
     const handleSelect = (index) => {
       switch (index) {
         case "2-1":
-          ElMessageBox.prompt("请输入笔记名称", "新建笔记", {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            inputPattern: /\S/,
-            inputErrorMessage: "笔记名称不能为空"
-          }).then(({ value }) => {
-            noteModel.currNote.value = {
-              name: value + ".kfnote",
-              data: ""
-            };
-          }).catch(() => {
-            console.log("取消新建笔记");
-          });
+          if (mainComponent.value.createNewNote) {
+            mainComponent.value.createNewNote();
+          }
           break;
         case "2-2":
-          dialogOpenVisible.value = true;
+          if (mainComponent.value.listNote) {
+            mainComponent.value.listNote();
+          }
           break;
         case "4":
           mainComp.value = "NoteSetting";
@@ -88,26 +66,15 @@ export default {
 
     const mainComp = noteModel.mainComp;
 
-    const dialogOpenVisible = ref(false);
-
-    const openNote = (note) => {
-      dialogOpenVisible.value = false;
-
-      service.invoke("/store/getNote", JSON.stringify({
-        path: note
-      }), (result) => {
-        noteModel.currNote.value = result;
-      });
-    };
+    const mainComponent = ref();
 
     return {
       activeIndex,
       handleSelect,
       mainComp,
+      mainComponent,
       currNote: noteModel.currNote,
       noteList: noteModel.noteList,
-      dialogOpenVisible,
-      openNote
     };
   }
 };

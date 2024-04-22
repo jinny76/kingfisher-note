@@ -7,6 +7,8 @@ body {
   overflow: hidden;
   background-size: cover;
   user-select: none;
+  padding-right: 0px !important;
+  width: 100% !important;
 }
 
 code {

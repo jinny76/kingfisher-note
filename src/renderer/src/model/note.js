@@ -5,9 +5,6 @@ const currNote = ref(localStorage.getItem("NOTE") ? JSON.parse(localStorage.getI
 console.log("加载上次笔记", currNote.value);
 
 const noteList = ref([]);
-service.invoke("/store/getNoteList", null, (result) => {
-  noteList.value = result;
-});
 
 const videoUrl = ref("");
 
@@ -18,9 +15,20 @@ let settingContent = localStorage.getItem("SETTING");
 const setting = ref(settingContent ? JSON.parse(settingContent) : {
   displayMode: "window",
   noteDir: "note",
-  screenshotDir: "screenshot"
+  screenshotDir: "screenshot",
+  pauseWhenWrite: true,
 });
 
+service.invoke("/store/updateSetting", JSON.stringify(setting.value), (result) => {
+  console.log("更新设置", result);
+});
+
+const markChanged = () => {
+  if (currNote.value.name) {
+    currNote.value.changed = true
+  }
+}
+
 export default {
-  currNote, noteList, videoUrl, mainComp, setting
+  currNote, noteList, videoUrl, mainComp, setting, markChanged
 };
