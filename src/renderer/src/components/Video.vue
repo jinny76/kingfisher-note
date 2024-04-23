@@ -51,7 +51,8 @@ export default {
       if (urlStr && urlStr.indexOf("://") === -1) {
         isVideo.value = true;
         if (!urlStr.startsWith("http://") && !urlStr.startsWith("https://")) {
-          if (urlStr.endsWith(".mp4") || urlStr.endsWith(".webm") || urlStr.endsWith(".ogg")) {
+          if (urlStr.endsWith(".mp4") || urlStr.endsWith(".webm") || urlStr.endsWith(".ogg")
+             || urlStr.endsWith(".mp3") || urlStr.endsWith(".wav")){
             urlStr = "kingfisher://" + urlStr.replaceAll("\\", "/");
           } else {
             urlStr = "http://localhost:9555?t=" + new Date().getTime() + "&v=" + encodeURIComponent(urlStr);

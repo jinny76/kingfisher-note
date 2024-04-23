@@ -24,7 +24,11 @@
         </el-sub-menu>
         <el-menu-item index="4">设置</el-menu-item>
         <el-menu-item index="5">关于</el-menu-item>
-        <el-menu-item index="6">帮助</el-menu-item>
+        <el-sub-menu index="6">
+          <template #title>帮助</template>
+          <el-menu-item index="6-1">使用说明</el-menu-item>
+          <el-menu-item index="6-2">关于</el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="7">正在编辑 &nbsp;<span style="color: chartreuse">{{ currNote.name ? currNote.name.substring(0, currNote.name.indexOf(".")) : "" }}{{currNote.changed ? "*": ""}}</span></el-menu-item>
       </el-menu>
     </el-header>
@@ -33,7 +37,7 @@
     </el-main>
   </el-container>
   <el-dialog v-model="dialogAboutVisible" title="关于" width="400">
-    <p>作者：翠鸟君王</p>
+    <p>作者：太白雪霁</p>
     <p>版本：0.0.1</p>
     <p>日期：2024-04-21</p>
     <template #footer>
@@ -97,10 +101,10 @@ export default {
             settingDialog.value.updateSetting(noteModel.setting.value);
           });
           break;
-        case "5":
+        case "6-2":
           dialogAboutVisible.value = true;
           break;
-        case "6":
+        case "6-1":
           dialogHelpVisible.value = true;
           if (mainComponent.value.showHelp) {
             mainComponent.value.showHelp();

@@ -1,7 +1,7 @@
 <template>
   <div style="padding: 20px;">
     <el-row style="padding: 5px;">
-      <el-col :span="6">视频显示模式：</el-col>
+      <el-col :span="6">音视频显示模式：</el-col>
       <el-col :span="18">
         <el-radio-group v-model="setting.displayMode">
           <el-radio-button label="same">同屏</el-radio-button>
@@ -34,7 +34,7 @@
       </el-col>
     </el-row>
     <el-row style="padding: 5px;">
-      <el-col :span="6">自动打开笔记中的视频：</el-col>
+      <el-col :span="6">自动打开笔记中的音视频：</el-col>
       <el-col :span="18">
         <el-switch v-model="setting.autoOpenVideo" active-text="是" inactive-text="否"></el-switch>
       </el-col>
