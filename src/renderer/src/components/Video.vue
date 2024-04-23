@@ -123,7 +123,8 @@ export default {
             } else if (eventData.action === "locateVideo") {
               let video = document.querySelector("${videoQuery}");
               if (video) {
-                video.currentTime = new Number(eventData.args);
+                let argObj = JSON.parse(eventData.args);
+                video.currentTime = new Number(argObj.location);
               }
             } else if (eventData.action === "stopVideo") {
               let video = document.querySelector("${videoQuery}");
@@ -212,9 +213,10 @@ export default {
 
     let locateVideoListener = function(event, arg) {
       console.log("定位视频", arg);
+      let argObj = JSON.parse(arg);
       if (isVideo.value && playerDom.value?.$el?.childNodes[0]) {
         let video = playerDom.value.$el.childNodes[0];
-        video.currentTime = new Number(arg);
+        video.currentTime = new Number(argObj.location);
       } else {
         service.invoke("/note/webLocateVideo", arg);
       }

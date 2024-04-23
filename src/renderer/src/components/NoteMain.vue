@@ -46,6 +46,7 @@ export default {
     const noteEditor = ref();
     const recentNotes = noteModel.recentNotes;
     let editor;
+    let lastVideo;
 
     onMounted(() => {
       if (noteModel.setting.value.openLastNote) {
@@ -109,11 +110,18 @@ export default {
       openVideo(file.path, true);
     };
 
-    const openVideo = (video, insertNote = false) => {
+    const openVideo = (video, insertNote = false, cb) => {
       if ("same" === noteModel.setting.value.displayMode) {
         noteModel.videoUrl.value = video;
       } else {
         service.send("window-new", { route: "/video/" + encodeURIComponent(video), alwaysOnTop: true });
+      }
+      lastVideo = video;
+
+      if (cb) {
+        setTimeout(() => {
+          cb();
+        }, 2000);
       }
 
       if (insertNote) {
@@ -236,7 +244,7 @@ export default {
           value: noteModel.currNote.value.data ? noteModel.currNote.value.data : "",
           icon: "material",
           keydown: (event) => {
-            if (!event.ctrlKey) {
+            if (!event.ctrlKey && event.code != "Enter") {
               noteModel.markChanged();
               stopVideo();
             }
@@ -253,8 +261,29 @@ export default {
               if (dom.href === "https://" && openBible(dom.innerText)) {
                 return false;
               } else if (dom.href.startsWith("timestamp://")) {
-                service.invoke("/note/locateVideo", dom.href.replace("timestamp://", ""));
-                return false;
+                let content = editor.getValue();
+                let index = content.indexOf(dom.href);
+                content = content.substring(0, index);
+                let videoIndex = content.lastIndexOf("[视频");
+                let videoUrl = "";
+                if (videoIndex !== -1) {
+                  let startIndex = content.indexOf("(", videoIndex);
+                  let endIndex = content.indexOf(")", videoIndex);
+                  videoUrl = decodeURIComponent(content.substring(startIndex + 1, endIndex).replace("kingfisher://", ""));
+                  if (videoUrl.startsWith("https://") || videoUrl.startsWith("http://")) {
+                    videoUrl = website.handleReplacedWebsite(videoUrl);
+                  }
+                }
+                if (lastVideo != videoUrl) {
+                  closeVideo();
+                  nextTick(() => {
+                    openVideo(videoUrl, false, () => {
+                      service.invoke("/note/locateVideo", JSON.stringify({videoUrl: videoUrl, location: dom.href.replace("timestamp://", "")}));
+                    });
+                  })
+                } else {
+                  service.invoke("/note/locateVideo", JSON.stringify({videoUrl: videoUrl, location: dom.href.replace("timestamp://", "")}));
+                }
               } else if (dom.href.startsWith("kingfisher://")) {
                 closeVideo();
                 nextTick(() => {
@@ -498,7 +527,20 @@ export default {
       }
     };
 
-    window.electron.ipcRenderer.on("/client/insertAll", function(event, arg) {
+    const setCursor = function() {
+      let editorElem = document.querySelector(".vditor-sv");
+      var range = document.createRange();
+      var sel = window.getSelection();
+
+      let el = editorElem.children[editorElem.children.length - 1];
+      el = el.children[el.children.length - 1];
+      range.setStart(el, 0);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    };
+
+    electron.ipcRenderer.on("/client/insertAll", function(event, arg) {
       editor.focus();
       let data = JSON.parse(arg);
       if (data) {
@@ -619,6 +661,7 @@ export default {
           path: note.name
         }), (result) => {
           closeVideo();
+          lastVideo = null;
           noteModel.currNote.value = result;
 
           let existNote = recentNotes.value.find((n) => n.name === note.name);
@@ -633,6 +676,11 @@ export default {
 
           openFirstVideo();
           noteModel.lastScreenshot.value = null;
+
+          nextTick(() => {
+            setCursor();
+            editor.focus();
+          });
         });
       }
     };
