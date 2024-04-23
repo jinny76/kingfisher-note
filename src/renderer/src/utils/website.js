@@ -9,6 +9,9 @@ const websites = {
               }
             }, 1000);`
   },
+  "www.youtube.com": {
+    replace: "www.y.com"
+  },
   "open.163.com": {
     videoId: "#open-video_html5_api",
     loadScript: `let timer = setInterval(() => {

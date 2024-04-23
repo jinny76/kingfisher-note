@@ -76,7 +76,9 @@ export default {
     });
 
     const doSave = (cb) => {
-      event.preventDefault();
+      if (event) {
+        event.preventDefault();
+      }
       let note = noteModel.currNote.value;
       if (note.name) {
         note.data = editor.getValue();
@@ -471,7 +473,8 @@ export default {
               click() {
                 backward();
               }
-            }
+            },
+            "export"
           ]
         });
       }
@@ -540,7 +543,7 @@ export default {
       sel.addRange(range);
     };
 
-    electron.ipcRenderer.on("/client/insertAll", function(event, arg) {
+    let insertAllListener = function(event, arg) {
       editor.focus();
       let data = JSON.parse(arg);
       if (data) {
@@ -555,7 +558,13 @@ export default {
         }
         noteModel.markChanged();
       }
-    });
+    };
+    electron.ipcRenderer.on("/client/insertAll", insertAllListener);
+
+    let saveNoteListener = function(event, arg) {
+      doSave();
+    };
+    electron.ipcRenderer.on("/client/saveNote", saveNoteListener);
 
     // format 1.2222 to 0:0:1
     function formatTime(second) {
@@ -575,7 +584,8 @@ export default {
     });
 
     onUnmounted(() => {
-      window.electron.ipcRenderer.removeAllListeners("/client/insertAll");
+      window.electron.ipcRenderer.removeListener("/client/insertAll", insertAllListener);
+      window.electron.ipcRenderer.removeListener("/client/saveNote", saveNoteListener);
     });
 
     const createNewNote = () => {

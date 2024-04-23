@@ -1,5 +1,5 @@
 import  { Window } from './window'
-import { app, shell, protocol, BrowserWindow } from 'electron'
+import { app, shell, protocol, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -49,6 +49,26 @@ function createMainWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  mainWindow.on('close', e => {
+    e.preventDefault();
+    dialog.showMessageBox({
+      type: 'info',
+      title: '提示',
+      message:'确认退出？',
+      buttons: ['确认', '取消'],
+      cancelId: 1,
+    }).then(idx => {
+      if (idx.response == 1) {
+        e.preventDefault();
+      } else {
+        mainWindow.webContents.send("/client/saveNote")
+        setTimeout(() => {
+          app.exit();
+        }, 1000)
+      }
+    })
+  });
 }
 
 // This method will be called when Electron has finished
