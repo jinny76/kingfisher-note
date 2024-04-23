@@ -15,6 +15,7 @@ const app = createApp(App)
     lang: 'zh-CN'
   })
   .mount('#app');
+
 console.log("打开网址", window.location.href);
 if (window.location.href.indexOf("#") !== -1) {
   let hash = window.location.href.split("#")[1];

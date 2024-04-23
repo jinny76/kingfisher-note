@@ -12,6 +12,8 @@ const path = require('path')
 import storeService from './service/store'
 import noteService from './service/note'
 
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+
 function createMainWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({

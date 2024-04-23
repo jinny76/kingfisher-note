@@ -1,8 +1,7 @@
 import { ref } from "vue";
 import service from "../utils/service";
 
-const currNote = ref(localStorage.getItem("NOTE") ? JSON.parse(localStorage.getItem("NOTE")) : {});
-console.log("加载上次笔记", currNote.value);
+const currNote = ref({});
 
 const noteList = ref([]);
 
@@ -18,6 +17,7 @@ const setting = ref(settingContent ? JSON.parse(settingContent) : {
   screenshotDir: "screenshot",
   pauseWhenWrite: true,
   autoOpenVideo: true,
+  openLastNote: true,
 });
 
 service.invoke("/store/updateSetting", JSON.stringify(setting.value), (result) => {

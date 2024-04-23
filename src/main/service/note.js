@@ -66,6 +66,27 @@ const install = (_windowManager) => {
     }
   });
 
+  ipcMain.handle("/note/playVideo", (event, params) => {
+    let videoWindow = windowManager.findWindowByRoute("/video/");
+    if (videoWindow) {
+      videoWindow.webContents.send("/client/playVideo", params);
+    }
+  });
+
+  ipcMain.handle("/note/forward", (event, params) => {
+    let videoWindow = windowManager.findWindowByRoute("/video/");
+    if (videoWindow) {
+      videoWindow.webContents.send("/client/forward", params);
+    }
+  });
+
+  ipcMain.handle("/note/backward", (event, params) => {
+    let videoWindow = windowManager.findWindowByRoute("/video/");
+    if (videoWindow) {
+      videoWindow.webContents.send("/client/backward", params);
+    }
+  });
+
   ipcMain.handle("/note/webInsertContent", (event, params) => {
     ws.send(JSON.stringify({
       action: "insertContent", args: params
@@ -92,6 +113,20 @@ const install = (_windowManager) => {
       action: "stopVideo",
     }));
     console.log("暂停视频", params);
+  });
+
+  ipcMain.handle("/note/webForward", (event, params) => {
+    ws.send(JSON.stringify({
+      action: "forward", args: params
+    }));
+    console.log("快进", params);
+  });
+
+  ipcMain.handle("/note/webBackward", (event, params) => {
+    ws.send(JSON.stringify({
+      action: "backward", args: params
+    }));
+    console.log("快退", params);
   });
 
   const WebSocketServer = require("ws").Server;

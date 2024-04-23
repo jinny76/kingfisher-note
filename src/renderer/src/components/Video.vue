@@ -6,12 +6,13 @@
 </template>
 
 <script lang="js">
-import { computed, ref, watch, nextTick } from "vue";
+import { computed, ref, watch, nextTick, onUnmounted } from "vue";
 import { useRoute } from "vue-router";
 import service from "../utils/service";
 import noteModel from "../model/note";
 import { ElMessage } from "element-plus";
 import utils from "../utils/utils";
+import website from "../utils/website";
 
 export default {
   name: "Home",
@@ -76,6 +77,9 @@ export default {
         utils.runUntil(() => {
           return webview.value != null;
         }, () => {
+          let targetWebsite = website.findWebsite(options.value.src);
+          let videoQuery = targetWebsite?.videoId || "video";
+
           webview.value.executeJavaScript(`
           window.kfsocket = new WebSocket("ws://localhost:18888");
 
@@ -87,12 +91,12 @@ export default {
             let eventData = JSON.parse(event.data);
             if (eventData.action === "insertContent") {
               if (eventData.args === 'timestamp') {
-                let video = document.querySelector("video");
+                let video = document.querySelector("${videoQuery}");
                 if (video) {
                   window.kfsocket.send(JSON.stringify({action: 'insertContent', time: video.currentTime}));
                 }
               } else if (eventData.args === 'screenshot') {
-                let video = document.querySelector("video");
+                let video = document.querySelector("${videoQuery}");
                 if (video) {
                   video.crossOrigin = "anonymous";
                   let canvas = document.createElement("canvas");
@@ -103,7 +107,7 @@ export default {
                   window.kfsocket.send(JSON.stringify({action: 'insertContent', screenshot: canvas.toDataURL()}));
                 }
               } else if (eventData.args === 'all') {
-                let video = document.querySelector("video");
+                let video = document.querySelector("${videoQuery}");
                 if (video) {
                   video.crossOrigin = "anonymous";
                   let canvas = document.createElement("canvas");
@@ -115,33 +119,37 @@ export default {
                 }
               }
             } else if (eventData.action === "locateVideo") {
-              let video = document.querySelector("video");
+              let video = document.querySelector("${videoQuery}");
               if (video) {
                 video.currentTime = new Number(eventData.args);
               }
             } else if (eventData.action === "stopVideo") {
-              let video = document.querySelector("video");
+              let video = document.querySelector("${videoQuery}");
               if (video) {
                 video.pause();
               }
             } else if (eventData.action === "playVideo") {
-              let video = document.querySelector("video");
+              let video = document.querySelector("${videoQuery}");
               if (video) {
                 video.play();
+              }
+            } else if (eventData.action === "forward") {
+              let video = document.querySelector("${videoQuery}");
+              if (video) {
+                video.currentTime = video.currentTime + 5;
+              }
+            } else if (eventData.action === "backward") {
+              let video = document.querySelector("${videoQuery}");
+              if (video) {
+                video.currentTime = video.currentTime >= 5 ? video.currentTime - 5 : 0;
               }
             }
           });
       `);
-          //webview.value.openDevTools();
-          webview.value.executeJavaScript(`
-            let timer = setInterval(() => {
-              let button = document.querySelector(".bpx-player-ctrl-web");
-              if (button) {
-                clearInterval(timer);
-                button.click();
-              }
-            }, 1000);
-          `);
+          webview.value.openDevTools();
+          if (targetWebsite?.loadScript) {
+            webview.value.executeJavaScript(targetWebsite.loadScript);
+          }
         });
       }
     };
@@ -198,24 +206,42 @@ export default {
       return canvas.toDataURL();
     };
 
-    window.electron.ipcRenderer.on("/client/locateVideo", function(event, arg) {
+    let locateVideoListener = function(event, arg) {
       console.log("定位视频", arg);
-      if (isVideo.value) {
+      if (isVideo.value && playerDom.value?.$el?.childNodes[0]){
         let video = playerDom.value.$el.childNodes[0];
         video.currentTime = new Number(arg);
       } else {
         service.invoke("/note/webLocateVideo", arg);
       }
-    });
+    };
+    window.electron.ipcRenderer.on("/client/locateVideo", locateVideoListener);
 
-    window.electron.ipcRenderer.on("/client/insertContent", function(event, arg) {
+    let insertContentListener = function(event, arg) {
       let argObj = JSON.parse(arg);
       insertContent(argObj.type);
-    });
+    };
+    window.electron.ipcRenderer.on("/client/insertContent", insertContentListener);
 
-    window.electron.ipcRenderer.on("/client/stopVideo", function(event, arg) {
+    let stopVideoListener = function(event, arg) {
       stopVideo();
-    });
+    };
+    window.electron.ipcRenderer.on("/client/stopVideo", stopVideoListener);
+
+    let playVideoListener = function(event, arg) {
+      playVideo();
+    };
+    window.electron.ipcRenderer.on("/client/playVideo", playVideoListener);
+
+    let forwardListener = function(event, arg) {
+      forward();
+    };
+    window.electron.ipcRenderer.on("/client/forward", forwardListener);
+
+    let backwardListener = function(event, arg) {
+      backward();
+    };
+    window.electron.ipcRenderer.on("/client/backward", backwardListener);
 
     const playVideo = () => {
       if (isVideo.value) {
@@ -235,10 +261,43 @@ export default {
       }
     };
 
+    const forward = () => {
+      if (isVideo.value) {
+        let video = playerDom.value.$el.childNodes[0];
+        video.currentTime = video.currentTime + 5;
+      } else {
+        service.invoke("/note/webForward", "");
+      }
+    };
+
+    const backward = () => {
+      if (isVideo.value) {
+        let video = playerDom.value.$el.childNodes[0];
+        video.currentTime = video.currentTime >= 5 ? video.currentTime - 5 : 0;
+      } else {
+        service.invoke("/note/webBackward", "");
+      }
+    };
+
     const webview = ref(null);
 
+    onUnmounted(() => {
+      if (webview.value) {
+        webview.value.executeJavaScript(`
+          window.kfsocket.close();
+        `);
+      }
+      window.electron.ipcRenderer.removeListener("/client/locateVideo", locateVideoListener);
+      window.electron.ipcRenderer.removeListener("/client/insertContent", insertContentListener);
+      window.electron.ipcRenderer.removeListener("/client/stopVideo", stopVideoListener);
+      window.electron.ipcRenderer.removeListener("/client/playVideo", playVideoListener);
+      window.electron.ipcRenderer.removeListener("/client/forward", forwardListener);
+      window.electron.ipcRenderer.removeListener("/client/backward", backwardListener);
+    });
+
     return {
-      initFlag, options, whenPlay, playerDom, playVideo, stopVideo, insertContent, isVideo, webview
+      initFlag, options, whenPlay, playerDom, playVideo, stopVideo, insertContent, isVideo, webview,
+      forward, backward
     };
   }
 };
