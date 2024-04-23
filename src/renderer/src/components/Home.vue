@@ -24,6 +24,7 @@
         </el-sub-menu>
         <el-menu-item index="4">设置</el-menu-item>
         <el-menu-item index="5">关于</el-menu-item>
+        <el-menu-item index="6">帮助</el-menu-item>
         <el-menu-item index="7">正在编辑 &nbsp;<span style="color: chartreuse">{{ currNote.name ? currNote.name.substring(0, currNote.name.indexOf(".")) : "" }}{{currNote.changed ? "*": ""}}</span></el-menu-item>
       </el-menu>
     </el-header>
@@ -50,15 +51,22 @@
       </div>
     </template>
   </el-dialog>
+  <el-dialog v-model="dialogHelpVisible" title="笔记" width="1200">
+    <div id="idHelp"></div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogHelpVisible = false">关闭</el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script lang="js">
-import { computed, nextTick, ref } from "vue";
+import { nextTick, ref } from "vue";
 import NoteMain from "./NoteMain.vue";
 import NoteSetting from "./NoteSetting.vue";
 import noteModel from "../model/note";
 import service from "../utils/service";
-import { ElMessageBox } from "element-plus";
 
 export default {
   name: "Home",
@@ -92,6 +100,12 @@ export default {
         case "5":
           dialogAboutVisible.value = true;
           break;
+        case "6":
+          dialogHelpVisible.value = true;
+          if (mainComponent.value.showHelp) {
+            mainComponent.value.showHelp();
+          }
+          break;
         default:
           if (mainComponent.value.openNote) {
             let currNote = noteModel.recentNotes.value.find((note) => note.name === index);
@@ -109,6 +123,7 @@ export default {
 
     const dialogAboutVisible = ref(false);
     const dialogSettingVisible = ref(false);
+    const dialogHelpVisible = ref(false);
 
     const settingDialog = ref();
 
@@ -126,6 +141,7 @@ export default {
     return {
       dialogAboutVisible,
       dialogSettingVisible,
+      dialogHelpVisible,
       activeIndex,
       handleSelect,
       mainComp,

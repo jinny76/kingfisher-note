@@ -131,6 +131,13 @@ const install = (_windowManager) => {
     console.log("快退", params);
   });
 
+  ipcMain.handle("/note/closeVideo", (event, params) => {
+    let videoWindow = windowManager.findWindowByRoute("/video/");
+    if (videoWindow) {
+      videoWindow.close();
+    }
+  });
+
   ipcMain.handle("/note/ocr", async (event, params) => {
     let screenshot = `${storeService.setting.screenshotDir}/${params}.png`;
     let sharp = Sharp(screenshot);

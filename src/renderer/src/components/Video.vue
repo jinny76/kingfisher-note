@@ -27,6 +27,7 @@ export default {
     let route = useRoute();
     const initFlag = ref(true);
     const options = ref({
+      crossorigin: "Anonymous",
       muted: false,
       webFullScreen: true,
       speedRate: ["0.75", "1.0", "1.25", "1.5", "2.0"],
@@ -50,11 +51,11 @@ export default {
       if (urlStr && urlStr.indexOf("://") === -1) {
         isVideo.value = true;
         if (!urlStr.startsWith("http://") && !urlStr.startsWith("https://")) {
-          if (urlStr.endsWith(".mp4")) {
+          if (urlStr.endsWith(".mp4") || urlStr.endsWith(".webm") || urlStr.endsWith(".ogg")) {
             urlStr = "kingfisher://" + urlStr.replaceAll("\\", "/");
           } else {
-            urlStr = "http://localhost:9555?v=" + encodeURIComponent(urlStr);
-            console.log(urlStr);
+            urlStr = "http://localhost:9555?t=" + new Date().getTime() + "&v=" + encodeURIComponent(urlStr);
+            ElMessage.warning("视频格式限制，无法插入时间签和截图");
           }
         }
       } else {
@@ -199,7 +200,7 @@ export default {
     };
 
     const getScreenshot = (video) => {
-      video.crossOrigin = "anonymous";
+      video.crossOrigin = "Anonymous";
       let canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -210,7 +211,7 @@ export default {
 
     let locateVideoListener = function(event, arg) {
       console.log("定位视频", arg);
-      if (isVideo.value && playerDom.value?.$el?.childNodes[0]){
+      if (isVideo.value && playerDom.value?.$el?.childNodes[0]) {
         let video = playerDom.value.$el.childNodes[0];
         video.currentTime = new Number(arg);
       } else {
@@ -248,6 +249,7 @@ export default {
     const playVideo = () => {
       if (isVideo.value) {
         let video = playerDom.value.$el.childNodes[0];
+        video.crossOrigin = "Anonymous";
         video.play();
       } else {
         service.invoke("/note/webPlayVideo", "");

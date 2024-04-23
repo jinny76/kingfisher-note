@@ -3,11 +3,12 @@
     <el-aside :width="videoWidth" style="margin: 0px; padding: 0px;">
       <video-window v-if="videoUrl != '' && videoWidth !== '0%'" :url-str="videoUrl" ref="video"></video-window>
     </el-aside>
+    <div id="dragBar-dept" class="vertical-dragbar"></div>
     <el-main style="margin: 0px; padding: 0px;" id="idMainContainer">
       <div ref="noteEditor" id="idNoteEditor"></div>
     </el-main>
   </el-container>
-  <input type="file" @change="selectFileAndPlay" style="display: none" ref="fileInput" accept="video/mp4" />
+  <input type="file" @change="selectFileAndPlay" style="display: none" ref="fileInput" accept="video/*,*.mkv" />
   <el-dialog v-model="dialogOpenVisible" title="打开笔记" width="500">
     <el-input v-model="noteSearch" placeholder="搜索"></el-input>
     <el-table :data="noteList" style="width: 100%" @row-click="openNote" max-height="200px">
@@ -35,6 +36,7 @@ import service from "../utils/service";
 import noteModel from "../model/note";
 import utils from "../utils/utils";
 import website from "../utils/website";
+import helpContent from "../help.md?raw";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 export default {
@@ -64,6 +66,8 @@ export default {
       if (recentNotesStr) {
         recentNotes.value = JSON.parse(recentNotesStr);
       }
+
+      setLayoutDrag("dragBar-dept");
     });
 
     const showVideo = computed(() => {
@@ -164,17 +168,20 @@ export default {
             click: (dom) => {
               if (dom.href.startsWith("timestamp://")) {
                 service.invoke("/note/locateVideo", dom.href.replace("timestamp://", ""));
+                return false;
               } else if (dom.href.startsWith("kingfisher://")) {
-                openVideo("");
+                closeVideo();
                 nextTick(() => {
                   openVideo(decodeURIComponent(dom.href.replace("kingfisher://", "")));
                 });
+                return false;
               } else if (dom.href.startsWith("http://") || dom.href.startsWith("https://")) {
-                openVideo("");
+                closeVideo();
                 nextTick(() => {
                   let url = website.handleReplacedWebsite(dom.href);
                   openVideo(decodeURIComponent(url));
                 });
+                return false;
               }
             }
           },
@@ -183,7 +190,7 @@ export default {
             "list", "ordered-list", "check", "outdent", "indent", "code", "inline-code",
             "insert-after", "insert-before", "undo", "redo", "link", "table", "help", "|",
             {
-              hotkey: "⇧N",
+              hotkey: "⌘N",
               name: "load",
               tipPosition: "s",
               tip: "打开",
@@ -194,7 +201,7 @@ export default {
               }
             },
             {
-              hotkey: "⇧S",
+              hotkey: "⌘S",
               name: "save",
               tipPosition: "s",
               tip: "保存",
@@ -309,7 +316,7 @@ export default {
                         ElMessage.error("识别文字失败");
                       }
                     }
-                  })
+                  });
                 } else {
                   ElMessage.warning("请先截图");
                 }
@@ -390,6 +397,16 @@ export default {
         }
       } else {
         service.invoke("/note/backward", "");
+      }
+    };
+
+    const closeVideo = () => {
+      if (noteModel.setting.value.displayMode === "same") {
+        if (video.value) {
+          openVideo("");
+        }
+      } else {
+        service.invoke("/note/closeVideo", "");
       }
     };
 
@@ -513,6 +530,7 @@ export default {
         service.invoke("/store/getNote", JSON.stringify({
           path: note.name
         }), (result) => {
+          closeVideo();
           noteModel.currNote.value = result;
 
           let existNote = recentNotes.value.find((n) => n.name === note.name);
@@ -520,6 +538,9 @@ export default {
             recentNotes.value.splice(recentNotes.value.indexOf(existNote), 1);
           }
           recentNotes.value.unshift(note);
+          if (recentNotes.value.length > 10) {
+            recentNotes.value.pop();
+          }
           localStorage.setItem("RECENT_NOTES", JSON.stringify(recentNotes.value));
 
           openFirstVideo();
@@ -544,6 +565,123 @@ export default {
       });
     });
 
+    function setLayoutDrag(dragId) {
+      const resize = document.getElementById(dragId);
+      let previousElement = resize.previousSibling;
+      let nextElement = resize.nextSibling;
+      let previousTag = previousElement.tagName;
+      let nextTag = nextElement.tagName;
+
+      resize.onmousedown = e => {
+        const startX = e.clientX;
+        const startY = e.clientY;
+        let type = "";
+        if (previousTag === "ASIDE" && nextTag === "MAIN") {
+          type = "ASIDE-MAIN";
+        } else if (previousTag === "MAIN" && nextTag === "ASIDE") {
+          type = "MAIN-ASIDE";
+        } else if ((previousTag === "HEADER" && nextTag === "MAIN") || (previousTag === "FOOTER" && nextTag === "MAIN")) {
+          type = "HEADER-MAIN";
+        } else if ((previousTag === "MAIN" && nextTag === "HEADER") || (previousTag === "MAIN" && nextTag === "FOOTER")) {
+          type = "MAIN-HEADER";
+        }
+
+
+        let initWidth = 0, initHeight = 0;
+        if (type === "ASIDE-MAIN") {
+          initWidth = previousElement.clientWidth;
+        } else if (type === "MAIN-ASIDE") {
+          initWidth = nextElement.clientWidth;
+        } else if (type === "HEADER-MAIN") {
+          initHeight = previousElement.clientHeight;
+        } else if (type === "MAIN-HEADER") {
+          initHeight = nextElement.clientHeight;
+        }
+
+        document.onmousemove = k => {
+          const endX = k.clientX;
+          const endY = k.clientY;
+          let moveLen = endX - startX; // 横向移动宽度
+          let moveHeight = endY - startY; // 纵向移动高度
+          switch (type) {
+            case "ASIDE-MAIN":
+              let asideMainWidth = initWidth + moveLen;
+              if (moveLen < 0) { // 向左移
+                if (asideMainWidth > 90) { // 左侧剩90
+                  previousElement.style.width = asideMainWidth + "px";
+                }
+              } else { // 向右移动
+                if (nextElement.clientWidth > 90) { // 右侧剩90
+                  previousElement.style.width = asideMainWidth + "px";
+                }
+
+              }
+              break;
+            case "MAIN-ASIDE":
+              let mainAsideWidth = initWidth - moveLen;
+              if (moveLen < 0) { // 向左移
+                if (previousElement.clientWidth > 90) { // 左侧剩90
+                  nextElement.style.width = mainAsideWidth + "px";
+                }
+              } else { // 向右移动
+                if (mainAsideWidth > 90) {
+                  nextElement.style.width = mainAsideWidth + "px";
+                }
+              }
+              break;
+            case "HEADER-MAIN": {
+              let headerMainHeight = initHeight + moveHeight;
+              if (moveHeight < 0) { // 向上移
+                if (headerMainHeight > 60) { // 上侧剩90
+                  previousElement.style.height = headerMainHeight + "px";
+                }
+              } else { // 向下移动
+                if (nextElement.clientHeight > 60) { // 下侧剩90
+                  previousElement.style.height = headerMainHeight + "px";
+                }
+
+              }
+              break;
+            }
+            case "MAIN-HEADER": {
+              let mainHeaderHeight = initHeight - moveHeight;
+              if (moveHeight < 0) { // 向上移
+                if (previousElement.clientHeight > 60) { // 左侧剩90
+                  nextElement.style.height = mainHeaderHeight + "px";
+                }
+              } else { // 向下移动
+                if (mainHeaderHeight > 60) {
+                  nextElement.style.height = mainHeaderHeight + "px";
+                }
+              }
+              break;
+            }
+            default:
+          }
+        };
+        document.onmouseup = evt => {
+          document.onmousemove = null;
+          document.onmouseup = null;
+          resize.releaseCapture && resize.releaseCapture();
+        };
+        resize.setCapture && resize.setCapture();
+        return false;
+      };
+    }
+
+    const showHelp = () => {
+      nextTick(() => {
+        Vditor.preview(document.getElementById("idHelp"), helpContent, {
+          cdn: "https://dev.kingfisher.live/resource",
+          theme: "dark",
+          width: "100%",
+          height: "100%",
+          mode: "sv",
+          icon: "material"
+        });
+      });
+    };
+
     return {
       noteEditor,
       editor,
@@ -560,7 +698,8 @@ export default {
       noteList,
       insertContent,
       noteSearch,
-      doSave
+      doSave,
+      showHelp
     };
   }
 };
@@ -568,4 +707,10 @@ export default {
 </script>
 
 <style>
+.vertical-dragbar {
+  width: 5px;
+  height: 100%;
+  background: rgb(238, 238, 238);
+  cursor: e-resize;
+}
 </style>
