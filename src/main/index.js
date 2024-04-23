@@ -100,4 +100,5 @@ windowManager.listen()
 const streamServer = new StreamServer()
 streamServer.start()
 
+
 console.log("Websocket server started on ws://localhost:18888")

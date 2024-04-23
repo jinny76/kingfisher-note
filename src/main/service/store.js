@@ -75,6 +75,35 @@ const install = () => {
     };
   });
 
+  ipcMain.handle('/store/newNote', (event, params) => {
+    console.log("开始新建文件")
+    if (setting.noteDir) {
+      if (!fs.existsSync(setting.noteDir)) {
+        fs.mkdirSync(setting.noteDir);
+      }
+
+      let file = `${params}.kfnote`;
+      if (!fs.existsSync(`${setting.noteDir}/${file}`)) {
+        fs.writeFileSync(`${setting.noteDir}/${file}`, "");
+        return {
+          code: 200,
+          message: "保存成功"
+        };
+      } else {
+        return {
+          code: 500,
+          message: "文件已存在"
+        };
+      }
+    } else {
+      return {
+        code: 500,
+        message: "保存失败, 未设置笔记目录"
+      }
+    }
+    return setting;
+  });
+
   console.log("注册存储服务")
 }
 

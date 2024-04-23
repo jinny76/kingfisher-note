@@ -146,7 +146,9 @@ export default {
             }
           });
       `);
-          webview.value.openDevTools();
+          if (import.meta.env.DEV) {
+            webview.value.openDevTools();
+          }
           if (targetWebsite?.loadScript) {
             webview.value.executeJavaScript(targetWebsite.loadScript);
           }

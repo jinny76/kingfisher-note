@@ -24,7 +24,7 @@
         </el-sub-menu>
         <el-menu-item index="4">设置</el-menu-item>
         <el-menu-item index="5">关于</el-menu-item>
-        <el-menu-item index="7">{{ currNote.name }}{{currNote.changed ? "*": ""}}</el-menu-item>
+        <el-menu-item index="7">正在编辑 &nbsp;<span style="color: chartreuse">{{ currNote.name ? currNote.name.substring(0, currNote.name.indexOf(".")) : "" }}{{currNote.changed ? "*": ""}}</span></el-menu-item>
       </el-menu>
     </el-header>
     <el-main style="padding: 0px;">

@@ -9,6 +9,8 @@ const videoUrl = ref("");
 
 const mainComp = ref("NoteMain");
 
+const lastScreenshot = ref();
+
 let settingContent = localStorage.getItem("SETTING");
 
 const setting = ref(settingContent ? JSON.parse(settingContent) : {
@@ -33,5 +35,5 @@ const markChanged = () => {
 const recentNotes = ref([]);
 
 export default {
-  currNote, noteList, videoUrl, mainComp, setting, markChanged, recentNotes
+  currNote, noteList, videoUrl, mainComp, setting, markChanged, recentNotes, lastScreenshot
 };

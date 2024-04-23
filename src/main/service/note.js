@@ -1,6 +1,8 @@
 import { ipcMain } from "electron";
 import fs from "fs";
 import storeService from "./store";
+import { createWorker } from "tesseract.js";
+import Sharp from "sharp";
 
 const rootPath = process.cwd();
 
@@ -103,14 +105,14 @@ const install = (_windowManager) => {
 
   ipcMain.handle("/note/webPlayVideo", (event, params) => {
     ws.send(JSON.stringify({
-      action: "playVideo",
+      action: "playVideo"
     }));
     console.log("播放视频", params);
   });
 
   ipcMain.handle("/note/webStopVideo", (event, params) => {
     ws.send(JSON.stringify({
-      action: "stopVideo",
+      action: "stopVideo"
     }));
     console.log("暂停视频", params);
   });
@@ -129,6 +131,36 @@ const install = (_windowManager) => {
     console.log("快退", params);
   });
 
+  ipcMain.handle("/note/ocr", async (event, params) => {
+    let screenshot = `${storeService.setting.screenshotDir}/${params}.png`;
+    let sharp = Sharp(screenshot);
+    // crop the image bottom part, convert to gray mode and write to a new file
+    let { width, height } = await sharp.metadata();
+    let cropHeight = height * 0.2;
+    let cropWidth = width;
+    let cropX = 0;
+    let cropY = height - cropHeight;
+    let screenshotBuffer = await sharp.extract({ left: cropX, top: cropY, width: cropWidth, height: cropHeight }).sharpen().greyscale().toBuffer();
+
+    screenshot = screenshot.replace(".png", "-crop.png");
+    fs.writeFileSync(screenshot, screenshotBuffer);
+
+    if (worker) {
+      const { data: { text } } = await worker.recognize(screenshot);
+      console.log(text);
+      return {
+        code: 200,
+        message: "识别成功",
+        data: text
+      };
+    } else {
+      return {
+        code: 500,
+        message: "识别失败"
+      };
+    }
+  });
+
   const WebSocketServer = require("ws").Server;
   let wss = new WebSocketServer({ port: 18888 });
   let ws;
@@ -143,6 +175,12 @@ const install = (_windowManager) => {
       }
     });
   });
+
+  let worker = null;
+
+  (async () => {
+    worker = await createWorker("eng+chi_sim");
+  })();
 
   console.log("注册笔记服务");
 };
