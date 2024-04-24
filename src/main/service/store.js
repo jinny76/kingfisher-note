@@ -3,6 +3,20 @@ import fs from "fs";
 
 const rootPath = process.cwd();
 
+let noteMeta = {}
+
+const loadNoteMeta = () => {
+  if (fs.existsSync(`${rootPath}/noteMeta.json`)) {
+    noteMeta = JSON.parse(fs.readFileSync(`${rootPath}/noteMeta.json`, "utf-8"));
+  }
+}
+
+loadNoteMeta();
+
+const saveNoteMeta = () => {
+  fs.writeFileSync(`${rootPath}/noteMeta.json`, JSON.stringify(noteMeta));
+}
+
 let setting = {
   noteDir: "note",
   screenshotDir: "screenshot"
@@ -12,7 +26,13 @@ const install = () => {
   ipcMain.handle('/store/saveNote', (event, params) => {
     console.log("开始保存文件");
     // save file to "note" folder
-    const { path, data } = JSON.parse(params);
+    const { path, data, tags } = JSON.parse(params);
+
+    if (tags) {
+      noteMeta[path] = noteMeta[path] || {};
+      noteMeta[path].tags = tags;
+    }
+    saveNoteMeta();
 
     if (setting.noteDir) {
       if (!fs.existsSync(setting.noteDir)) {
@@ -43,6 +63,7 @@ const install = () => {
     return files.map(file => {
       return {
         name: file,
+        tags: noteMeta[file] ? noteMeta[file].tags : [],
         time: fs.statSync(`${setting.noteDir}/${file}`).mtime
       }
     });
@@ -59,6 +80,7 @@ const install = () => {
 
     return {
       name : path,
+      tags: noteMeta[path] ? noteMeta[path].tags : [],
       data : fs.readFileSync(`${setting.noteDir}/${path}`, "utf-8")
     };
   });

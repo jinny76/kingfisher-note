@@ -3,19 +3,30 @@
     <el-aside :width="videoWidth" style="margin: 0px; padding: 0px;">
       <video-window v-if="videoUrl != '' && videoWidth !== '0%'" :url-str="videoUrl" ref="video"></video-window>
     </el-aside>
-    <div id="dragBar-dept" class="vertical-dragbar"></div>
+    <div id="dragBar-dept" class="vertical-dragbar" v-show="videoWidth !== '0%'"></div>
     <el-main style="margin: 0px; padding: 0px;" id="idMainContainer">
       <div ref="noteEditor" id="idNoteEditor"></div>
     </el-main>
   </el-container>
   <input type="file" @change="selectFileAndPlay" style="display: none" ref="fileInput" accept="video/*,audio/*" />
-  <el-dialog v-model="dialogOpenVisible" title="打开笔记" width="500">
+  <el-dialog v-model="dialogOpenVisible" title="打开笔记" width="800">
     <el-input v-model="noteSearch" placeholder="搜索"></el-input>
     <el-table :data="noteList" style="width: 100%" @row-click="openNote" max-height="200px">
-      <el-table-column prop="name" label="名称" width="280" />
+      <el-table-column prop="name" label="名称" width="280">
+        <template #default="scope">
+          {{ scope.row.name.substring(0, scope.row.name.indexOf("."))}}
+        </template>
+      </el-table-column>
       <el-table-column prop="time" label="修改时间" width="180">
         <template #default="scope">
           {{ scope.row.time.toLocaleString() }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="time" label="标签" width="300">
+        <template #default="scope">
+          <div style="display: flex; overflow: hidden">
+            <div v-for="tag in scope.row.tags" :key="tag" class="tag" :style="{borderColor:tags.find(t=>t.value === tag)?.color || '#FFFFF'}">{{tag}}</div>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -86,7 +97,8 @@ export default {
         localStorage.setItem("NOTE", JSON.stringify(note));
         service.invoke("/store/saveNote", JSON.stringify({
           path: note.name,
-          data: note.data
+          data: note.data,
+          tags: note.tags
         }), (result) => {
           console.log("保存笔记成功", result);
           ElMessage.success("保存笔记成功");
@@ -445,7 +457,7 @@ export default {
               hotkey: "⌘P",
               name: "play",
               tipPosition: "s",
-              tip: "继续播放",
+              tip: "切换播放状态",
               className: "right",
               icon: "<svg t=\"1713835405732\" class=\"icon\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"22517\" width=\"200\" height=\"200\"><path d=\"M512 1024a512 512 0 1 1 512-512 512 512 0 0 1-512 512z m0-981.333333a469.333333 469.333333 0 1 0 469.333333 469.333333A469.333333 469.333333 0 0 0 512 42.666667z m255.445333 473.344a20.458667 20.458667 0 0 1-1.450666 4.16 18.261333 18.261333 0 0 1-0.874667 2.496 12.245333 12.245333 0 0 1-0.874667 0.96 22.741333 22.741333 0 0 1-2.901333 3.2 20.501333 20.501333 0 0 1-3.306667 2.794666 12.48 12.48 0 0 1-1.002666 0.853334l-382.656 213.333333a20.778667 20.778667 0 0 1-3.2 1.045333c-0.256 0-0.533333 0.149333-0.810667 0.256a22.144 22.144 0 0 1-6.272 1.258667c-0.490667 0-0.917333 0.298667-1.429333 0.298667a21.504 21.504 0 0 1-2.88-0.576 23.594667 23.594667 0 0 1-3.242667-0.661334 19.2 19.2 0 0 1-5.056-2.389333 18.794667 18.794667 0 0 1-2.133333-1.472 20.672 20.672 0 0 1-3.562667-3.904 18.389333 18.389333 0 0 1-1.514667-1.664c-0.234667-0.384-0.234667-0.832-0.426666-1.216a21.610667 21.610667 0 0 1-1.301334-3.690667 21.098667 21.098667 0 0 1-0.96-4.778666c0-0.341333-0.192-0.64-0.192-0.981334V298.666667c0-0.341333 0.170667-0.64 0.192-0.981334a20.864 20.864 0 0 1 0.96-4.778666 21.610667 21.610667 0 0 1 1.301334-3.690667c0.192-0.384 0.192-0.832 0.426666-1.216a18.389333 18.389333 0 0 1 1.514667-1.664 20.672 20.672 0 0 1 3.562667-3.904 18.794667 18.794667 0 0 1 2.133333-1.472 19.2 19.2 0 0 1 5.056-2.389333 23.594667 23.594667 0 0 1 3.242667-0.661334A21.504 21.504 0 0 1 362.666667 277.333333c0.512 0 0.938667 0.256 1.429333 0.298667a21.994667 21.994667 0 0 1 6.272 1.258667c0.277333 0 0.554667 0.149333 0.810667 0.256a20.778667 20.778667 0 0 1 3.2 1.045333l382.656 213.333333a12.48 12.48 0 0 1 1.002666 0.853334 20.501333 20.501333 0 0 1 3.306667 2.794666 22.741333 22.741333 0 0 1 2.901333 3.2 12.245333 12.245333 0 0 1 0.874667 0.96 17.301333 17.301333 0 0 1 0.874667 2.496 20.458667 20.458667 0 0 1 1.450666 4.16 27.072 27.072 0 0 1 0 8.021334zM384 689.173333L701.866667 512 384 334.933333v354.346667z\" fill=\"#FFFFFF\" p-id=\"22518\"></path></svg>",
               click() {
@@ -707,7 +719,18 @@ export default {
 
     const noteList = computed(() => {
       return noteModel.noteList.value.filter((note) => {
-        return utils.pinyinMatch(note.name, noteSearch.value);
+        let matched = false;
+        if (note.tags) {
+          note.tags.every(tag=>{
+            if (utils.pinyinMatch(tag, noteSearch.value)) {
+              matched = true;
+              return false;
+            }
+            return true;
+          })
+        }
+
+        return matched || utils.pinyinMatch(note.name, noteSearch.value);
       });
     });
 
@@ -845,7 +868,8 @@ export default {
       insertContent,
       noteSearch,
       doSave,
-      showHelp
+      showHelp,
+      tags: noteModel.tags
     };
   }
 };
@@ -858,5 +882,14 @@ export default {
   height: 100%;
   background: rgb(238, 238, 238);
   cursor: e-resize;
+}
+
+.tag {
+  border-width: 1px;
+  border-style: solid;
+  border-radius:3px;
+  margin: 2px;
+  padding: 2px 5px 2px 5px;
+  font-size: 9px;
 }
 </style>

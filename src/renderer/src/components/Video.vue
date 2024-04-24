@@ -134,7 +134,11 @@ export default {
             } else if (eventData.action === "playVideo") {
               let video = document.querySelector("${videoQuery}");
               if (video) {
-                video.play();
+                if (video.paused) {
+                  video.play();
+                } else {
+                  video.pause();
+                }
               }
             } else if (eventData.action === "forward") {
               let video = document.querySelector("${videoQuery}");
@@ -253,7 +257,11 @@ export default {
       if (isVideo.value) {
         let video = playerDom.value.$el.childNodes[0];
         video.crossOrigin = "Anonymous";
-        video.play();
+        if (video.paused) {
+          video.play();
+        } else {
+          video.pause();
+        }
       } else {
         service.invoke("/note/webPlayVideo", "");
       }

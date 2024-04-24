@@ -1,12 +1,12 @@
 <template>
   <el-container style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
-    <el-header style="padding: 0px">
+    <el-header style="padding: 0px; display: flex; justify-content: space-between">
       <el-menu
         :default-active="activeIndex"
         class="el-menu-demo"
         mode="horizontal"
+        style="width: 400px;"
         @select="handleSelect"
-        style="width: 100%"
         active-text-color="#ffd04b"
         background-color="#545c64"
         text-color="#fff"
@@ -18,7 +18,7 @@
           <el-menu-item index="2-2">打开笔记</el-menu-item>
           <el-sub-menu index="2-3">
             <template #title>打开历史笔记</template>
-            <el-menu-item :index="note.name" v-for="note in recentNotes" :key="note.name">{{ note.name }}</el-menu-item>
+            <el-menu-item :index="note.name" v-for="note in recentNotes" :key="note.name">{{ note.name.substring(0, note.name.indexOf(".")) }}</el-menu-item>
           </el-sub-menu>
           <el-menu-item index="2-4">保存笔记</el-menu-item>
         </el-sub-menu>
@@ -29,8 +29,32 @@
           <el-menu-item index="6-1">使用说明</el-menu-item>
           <el-menu-item index="6-2">关于</el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="7">正在编辑 &nbsp;<span style="color: chartreuse">{{ currNote.name ? currNote.name.substring(0, currNote.name.indexOf(".")) : "" }}{{currNote.changed ? "*": ""}}</span></el-menu-item>
       </el-menu>
+      <div class="title-bar">
+        <div>正在编辑 &nbsp;<span style="color: chartreuse">{{ currNote.name ? currNote.name.substring(0, currNote.name.indexOf(".")) : "" }}{{currNote.changed ? "*": ""}}</span></div>
+        <div style="padding-left: 10px">
+          <el-select
+            v-model="currNote.tags"
+            multiple
+            filterable
+            allow-create
+            collapse-tags
+            collapse-tags-tooltip
+            :max-collapse-tags="3"
+            default-first-option
+            :reserve-keyword="false"
+            placeholder="选择标签"
+            style="width: 300px"
+          >
+            <el-option
+              v-for="item in tags"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </div>
+      </div>
     </el-header>
     <el-main style="padding: 0px;">
       <component :is="mainComp" ref="mainComponent"></component>
@@ -154,9 +178,24 @@ export default {
       noteList: noteModel.noteList,
       recentNotes: noteModel.recentNotes,
       saveSetting,
-      settingDialog
+      settingDialog,
+      tags: noteModel.tags
     };
   }
 };
 
 </script>
+
+<style>
+.el-header {
+  height: 40px;
+}
+
+.el-menu--horizontal {
+  height: 40px;
+}
+
+.title-bar {
+  display: flex; flex-grow: 1; height: 100%; align-items: center; background-color: rgb(84, 92, 100); font-size:14px;
+}
+</style>
