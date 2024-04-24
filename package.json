@@ -1,6 +1,6 @@
 {
   "name": "KingfisherNote",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "翠鸟笔记，一款音视频笔记软件",
   "main": "./out/main/index.js",
   "author": "Jinni",

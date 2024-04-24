@@ -87,8 +87,8 @@
   </el-dialog>
   <el-dialog v-model="dialogAboutVisible" title="关于" width="400">
     <p>作者：太白雪霁</p>
-    <p>版本：0.0.1</p>
-    <p>日期：2024-04-21</p>
+    <p>版本：0.0.2</p>
+    <p>日期：2024-04-25</p>
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="dialogAboutVisible = false">关闭</el-button>
