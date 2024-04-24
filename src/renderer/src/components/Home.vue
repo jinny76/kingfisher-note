@@ -104,7 +104,7 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="dialogConvertVisible" title="转换" width="1200">
+  <el-dialog v-model="dialogConvertVisible" title="视频转换" width="1200">
     <el-upload
       v-model:file-list="videoList"
       :auto-upload="false"
@@ -113,7 +113,7 @@
       <el-button type="primary">选择视频</el-button>
       <template #tip>
         <div class="el-upload__tip">
-          可以把其他类型的视频文件转换为MP4
+          由于播放器不支持除了MP4格式以外的视频抓图和定位, 我们可以把其他类型的视频文件转换为MP4
         </div>
       </template>
     </el-upload>
