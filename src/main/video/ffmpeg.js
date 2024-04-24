@@ -15,7 +15,7 @@ class Ffmepg {
       .input(input)
       .nativeFramerate()
       .videoCodec('libx264')
-      .audioCodec('copy')
+      .audioCodec('mp3')
       .format('mp4')
       .outputOptions('-movflags', 'frag_keyframe+empty_moov+faststart')
       .on('progress', function (progress) {
