@@ -42,6 +42,8 @@ const tags = ref([
   { value: "生活", label: "生活", color: "#e1e188" },
 ])
 
+const versions = ref([])
+
 export default {
-  currNote, noteList, videoUrl, mainComp, setting, markChanged, recentNotes, lastScreenshot, tags
+  currNote, noteList, videoUrl, mainComp, setting, markChanged, recentNotes, lastScreenshot, tags, versions
 };

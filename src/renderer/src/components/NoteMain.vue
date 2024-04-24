@@ -10,8 +10,8 @@
   </el-container>
   <input type="file" @change="selectFileAndPlay" style="display: none" ref="fileInput" accept="video/*,audio/*" />
   <el-dialog v-model="dialogOpenVisible" title="打开笔记" width="800">
-    <el-input v-model="noteSearch" placeholder="搜索"></el-input>
-    <el-table :data="noteList" style="width: 100%" @row-click="openNote" max-height="200px">
+    <el-input v-model="noteSearch" placeholder="搜索笔记, 可以根据名字和标签搜索, 支持拼音搜索"></el-input>
+    <el-table :data="noteList" style="width: 100%" @row-click="openNote" max-height="200px" empty-text="没有找到笔记">
       <el-table-column prop="name" label="名称" width="280">
         <template #default="scope">
           {{ scope.row.name.substring(0, scope.row.name.indexOf("."))}}
@@ -64,8 +64,7 @@ export default {
         setTimeout(() => {
           let lastNote = localStorage.getItem("NOTE");
           if (lastNote) {
-            noteModel.currNote.value = JSON.parse(lastNote);
-            openFirstVideo();
+            callOpen(JSON.parse(lastNote));
           }
         }, 1000);
       }
@@ -543,16 +542,18 @@ export default {
     };
 
     const setCursor = function() {
-      let editorElem = document.querySelector(".vditor-sv");
-      var range = document.createRange();
-      var sel = window.getSelection();
+      try {
+        let editorElem = document.querySelector(".vditor-sv");
+        var range = document.createRange();
+        var sel = window.getSelection();
 
-      let el = editorElem.children[editorElem.children.length - 1];
-      el = el.children[el.children.length - 1];
-      range.setStart(el, 0);
-      range.collapse(true);
-      sel.removeAllRanges();
-      sel.addRange(range);
+        let el = editorElem.children[editorElem.children.length - 1];
+        el = el.children[el.children.length - 1];
+        range.setStart(el, 0);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } catch (e) { }
     };
 
     let insertAllListener = function(event, arg) {
@@ -667,45 +668,60 @@ export default {
           cancelButtonText: "不保存",
           type: "warning"
         }).then(() => {
-          doSave(callOpen);
+          doSave(()=>{
+            callOpen(note)
+          });
         }).catch(() => {
           console.log("不保存笔记");
-          callOpen();
+          callOpen(note);
         });
       } else {
-        callOpen();
-      }
-
-      function callOpen() {
-        dialogOpenVisible.value = false;
-
-        service.invoke("/store/getNote", JSON.stringify({
-          path: note.name
-        }), (result) => {
-          closeVideo();
-          lastVideo = null;
-          noteModel.currNote.value = result;
-
-          let existNote = recentNotes.value.find((n) => n.name === note.name);
-          if (existNote) {
-            recentNotes.value.splice(recentNotes.value.indexOf(existNote), 1);
-          }
-          recentNotes.value.unshift(note);
-          if (recentNotes.value.length > 10) {
-            recentNotes.value.pop();
-          }
-          localStorage.setItem("RECENT_NOTES", JSON.stringify(recentNotes.value));
-
-          openFirstVideo();
-          noteModel.lastScreenshot.value = null;
-
-          nextTick(() => {
-            setCursor();
-            editor.focus();
-          });
-        });
+        callOpen(note);
       }
     };
+
+    function callOpen(note, time) {
+      dialogOpenVisible.value = false;
+
+      service.invoke("/store/getNote", JSON.stringify({
+        path: note.name,
+        time: time
+      }), (result) => {
+        closeVideo();
+        lastVideo = null;
+        noteModel.currNote.value = result;
+
+        let existNote = recentNotes.value.find((n) => n.name === note.name);
+        if (existNote) {
+          recentNotes.value.splice(recentNotes.value.indexOf(existNote), 1);
+        }
+        recentNotes.value.unshift(note);
+        if (recentNotes.value.length > 10) {
+          recentNotes.value.pop();
+        }
+        localStorage.setItem("RECENT_NOTES", JSON.stringify(recentNotes.value));
+
+        openFirstVideo();
+        noteModel.lastScreenshot.value = null;
+
+        nextTick(() => {
+          setCursor();
+          editor.focus();
+
+          loadVersions()
+        });
+      });
+    }
+
+    const loadVersions = ()=>{
+      if (noteModel.currNote.value.name) {
+        service.invoke("/store/getNoteVersions", JSON.stringify({
+          path: noteModel.currNote.value.name
+        }), (result) => {
+          noteModel.versions.value = result;
+        });
+      }
+    }
 
     const insertContent = (type) => {
       if (video.value) {
@@ -851,7 +867,57 @@ export default {
       });
     };
 
+    const loadVersion = (time)=>{
+      let note = {
+        name: noteModel.currNote.value.name
+      }
+      if (noteModel.currNote.value.changed) {
+        ElMessageBox.confirm("当前笔记已修改，是否保存？", "提示", {
+          confirmButtonText: "保存",
+          cancelButtonText: "不保存",
+          type: "warning"
+        }).then(() => {
+          doSave(()=>{
+            callOpen(note, time)
+          });
+        }).catch(() => {
+          console.log("不保存笔记");
+          callOpen(note, time);
+        });
+      } else {
+        callOpen(note, time);
+      }
+    }
+
+    const doDelete = ()=>{
+      if (noteModel.currNote.value.name) {
+        ElMessageBox.confirm("确定删除笔记？", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }).then(() => {
+          service.invoke("/store/deleteNote", JSON.stringify({path: noteModel.currNote.value.name}), (result) => {
+            if (result.code === 200) {
+              ElMessage.success("删除成功");
+              noteModel.currNote.value = {
+                name: "",
+                data: ""
+              };
+            } else {
+              ElMessage.warning(result.message);
+            }
+          });
+        }).catch(() => {
+          console.log("取消删除笔记");
+        });
+      } else {
+        ElMessage.warning("请先打开笔记");
+      }
+    }
+
     return {
+      loadVersion,
+      doDelete,
       noteEditor,
       editor,
       video,

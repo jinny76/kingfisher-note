@@ -3,6 +3,7 @@ import fs from "fs";
 import storeService from "./store";
 import { createWorker } from "tesseract.js";
 import Sharp from "sharp";
+import { convert } from "../video/server";
 
 const rootPath = process.cwd();
 
@@ -86,6 +87,14 @@ const install = (_windowManager) => {
     let videoWindow = windowManager.findWindowByRoute("/video/");
     if (videoWindow) {
       videoWindow.webContents.send("/client/backward", params);
+    }
+  });
+
+  ipcMain.handle("/note/convert", async(event, params) => {
+    let request = JSON.parse(params);
+    await convert(request.files, request.options.h264 ? "h264" :null, request.options.mp3? "mp3": null);
+    return {
+      code : 200
     }
   });
 

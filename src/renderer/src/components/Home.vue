@@ -21,9 +21,10 @@
             <el-menu-item :index="note.name" v-for="note in recentNotes" :key="note.name">{{ note.name.substring(0, note.name.indexOf(".")) }}</el-menu-item>
           </el-sub-menu>
           <el-menu-item index="2-4">保存笔记</el-menu-item>
+          <el-menu-item index="2-5">删除笔记</el-menu-item>
+          <el-menu-item index="2-10">转换视频</el-menu-item>
         </el-sub-menu>
         <el-menu-item index="4">设置</el-menu-item>
-        <el-menu-item index="5">关于</el-menu-item>
         <el-sub-menu index="6">
           <template #title>帮助</template>
           <el-menu-item index="6-1">使用说明</el-menu-item>
@@ -32,8 +33,8 @@
       </el-menu>
       <div class="title-bar">
         <div>正在编辑 &nbsp;<span style="color: chartreuse">{{ currNote.name ? currNote.name.substring(0, currNote.name.indexOf(".")) : "" }}{{currNote.changed ? "*": ""}}</span></div>
-        <div style="padding-left: 10px">
-          <el-select
+        <div style="padding-left: 40px">
+          标签: <el-select
             v-model="currNote.tags"
             multiple
             filterable
@@ -54,12 +55,36 @@
             />
           </el-select>
         </div>
+        <div style="padding-left: 40px">
+          版本: <el-select
+          v-model="currVersion"
+          filterable
+          placeholder="加载历史版本"
+          style="width: 300px"
+          @change="loadVersion"
+        >
+          <el-option
+            v-for="version in versions"
+            :key="version.label"
+            :label="version.label"
+            :value="version.time"
+          />
+        </el-select>
+        </div>
       </div>
     </el-header>
     <el-main style="padding: 0px;">
       <component :is="mainComp" ref="mainComponent"></component>
     </el-main>
   </el-container>
+  <el-dialog v-model="dialogHelpVisible" title="使用帮助" width="1200">
+    <div id="idHelp" style="height: 600px; overflow-y: auto"></div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogHelpVisible = false">关闭</el-button>
+      </div>
+    </template>
+  </el-dialog>
   <el-dialog v-model="dialogAboutVisible" title="关于" width="400">
     <p>作者：太白雪霁</p>
     <p>版本：0.0.1</p>
@@ -79,11 +104,36 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="dialogHelpVisible" title="笔记" width="1200">
-    <div id="idHelp"></div>
+  <el-dialog v-model="dialogConvertVisible" title="转换" width="1200">
+    <el-upload
+      v-model:file-list="videoList"
+      :auto-upload="false"
+      :multiple="false"
+    >
+      <el-button type="primary">选择视频</el-button>
+      <template #tip>
+        <div class="el-upload__tip">
+          可以把其他类型的视频文件转换为MP4
+        </div>
+      </template>
+    </el-upload>
+    <div style="width: 100%">
+      <el-checkbox v-model="convertOptions.h264">H264</el-checkbox>
+      <el-checkbox v-model="convertOptions.mp3">MP3</el-checkbox>
+    </div>
+    <el-progress
+      :percentage="100"
+      :stroke-width="15"
+      status="success"
+      striped
+      striped-flow
+      :duration="10"
+      v-show="showProgress"
+    />
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="dialogHelpVisible = false">关闭</el-button>
+        <el-button @click="doConvert">转换</el-button>
+        <el-button @click="dialogConvertVisible = false">关闭</el-button>
       </div>
     </template>
   </el-dialog>
@@ -95,6 +145,7 @@ import NoteMain from "./NoteMain.vue";
 import NoteSetting from "./NoteSetting.vue";
 import noteModel from "../model/note";
 import service from "../utils/service";
+import { ElMessage } from "element-plus";
 
 export default {
   name: "Home",
@@ -118,6 +169,15 @@ export default {
           if (mainComponent.value.doSave) {
             mainComponent.value.doSave();
           }
+          break;
+        case "2-5":
+          if (mainComponent.value.doDelete) {
+            mainComponent.value.doDelete();
+          }
+          break;
+        case "2-10":
+          videoList.value = [];
+          dialogConvertVisible.value = true;
           break;
         case "4":
           dialogSettingVisible.value = true;
@@ -152,6 +212,7 @@ export default {
     const dialogAboutVisible = ref(false);
     const dialogSettingVisible = ref(false);
     const dialogHelpVisible = ref(false);
+    const dialogConvertVisible = ref(false);
 
     const settingDialog = ref();
 
@@ -166,11 +227,62 @@ export default {
       dialogSettingVisible.value = false;
     };
 
+    const videoList = ref([
+    ])
+
+    const showProgress = ref(false)
+
+    const convertOptions = ref({
+      h264:false, mp3:false
+    });
+
+    const versions = noteModel.versions;
+
+    const doConvert = () => {
+      console.log("转换视频", videoList.value);
+      showProgress.value = true;
+      service.invoke("/note/convert", JSON.stringify({
+        files: videoList.value.map((file) => {
+          let raw = file.raw
+          return {
+            name: raw.name,
+            path: raw.path,
+            size: raw.size,
+            type: raw.type,
+            lastModified: raw.lastModified,
+          }
+        }),
+        options: convertOptions.value
+      }), (result) => {
+        showProgress.value = false;
+        console.log("转换成功", result);
+        ElMessage.success("转换成功");
+        dialogConvertVisible.value = false;
+      }, (error)=>{
+        console.error("转换失败", error);
+        ElMessage.error("转换失败");
+        showProgress.value = false;
+      });
+    };
+
+    const loadVersion = (time) => {
+      console.log("加载历史版本", time);
+      if (mainComponent.value.loadVersion) {
+        mainComponent.value.loadVersion(time);
+      }
+    };
+
     return {
+      loadVersion,
+      convertOptions,
+      showProgress,
       dialogAboutVisible,
       dialogSettingVisible,
       dialogHelpVisible,
+      dialogConvertVisible,
+      videoList,
       activeIndex,
+      doConvert,
       handleSelect,
       mainComp,
       mainComponent,
@@ -179,7 +291,9 @@ export default {
       recentNotes: noteModel.recentNotes,
       saveSetting,
       settingDialog,
-      tags: noteModel.tags
+      tags: noteModel.tags,
+      versions,
+      currVersion: ref("")
     };
   }
 };

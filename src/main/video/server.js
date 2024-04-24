@@ -35,4 +35,16 @@ class StreamServer {
   }
 }
 
+export const convert = async (videoList, vcodec, acodec) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  console.log(videoList);
+  for (let i=0; i < videoList.length; i++) {
+    await ffmpeg.convert(videoList[i].path, vcodec, acodec);
+  }
+  return {
+    code: 200
+  };
+}
+
 export default StreamServer;
