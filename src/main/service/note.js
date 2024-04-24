@@ -2,7 +2,6 @@ import { ipcMain } from "electron";
 import fs from "fs";
 import storeService from "./store";
 import { createWorker } from "tesseract.js";
-import Sharp from "sharp";
 import { convert } from "../video/server";
 
 const rootPath = process.cwd();
@@ -149,17 +148,6 @@ const install = (_windowManager) => {
 
   ipcMain.handle("/note/ocr", async (event, params) => {
     let screenshot = `${storeService.setting.screenshotDir}/${params}.png`;
-    let sharp = Sharp(screenshot);
-    // crop the image bottom part, convert to gray mode and write to a new file
-    let { width, height } = await sharp.metadata();
-    let cropHeight = height * 0.2;
-    let cropWidth = width;
-    let cropX = 0;
-    let cropY = height - cropHeight;
-    let screenshotBuffer = await sharp.extract({ left: cropX, top: cropY, width: cropWidth, height: cropHeight }).sharpen().greyscale().toBuffer();
-
-    screenshot = screenshot.replace(".png", "-crop.png");
-    fs.writeFileSync(screenshot, screenshotBuffer);
 
     if (worker) {
       const { data: { text } } = await worker.recognize(screenshot);

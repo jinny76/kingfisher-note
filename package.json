@@ -30,7 +30,6 @@
     "hls.js": "^1.5.8",
     "hotkeys-js": "^3.13.7",
     "pinyin-match": "^1.2.5",
-    "sharp": "^0.33.3",
     "tesseract.js": "^5.0.5",
     "vditor": "^3.10.4",
     "vue": "^3.4.15",
