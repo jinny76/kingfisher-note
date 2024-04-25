@@ -1,22 +1,23 @@
 import  { Window } from './window'
-import { app, shell, protocol, BrowserWindow, dialog } from 'electron'
+import { app, shell, protocol, BrowserWindow, dialog, ipcMain, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import StreamServer from "./video/server"
+import storeService from './service/store'
+import noteService from './service/note'
+import { checkUpdate } from './update'
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const path = require('path')
 
 
-import storeService from './service/store'
-import noteService from './service/note'
-
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
+let mainWindow = null;
 function createMainWindow() {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     fullscreenable:true,
     simpleFullscreen:true,
     show: false,
@@ -29,6 +30,8 @@ function createMainWindow() {
       nodeIntegration: true,
     }
   })
+
+  Menu.setApplicationMenu(null);
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.maximize()
@@ -101,6 +104,8 @@ app.whenReady().then(() => {
 
   storeService.install()
   noteService.install(windowManager)
+
+  checkUpdate(mainWindow, ipcMain);
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

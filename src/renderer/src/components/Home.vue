@@ -32,7 +32,7 @@
         </el-sub-menu>
       </el-menu>
       <div class="title-bar">
-        <div>正在编辑 &nbsp;<span style="color: chartreuse">{{ currNote.name ? currNote.name.substring(0, currNote.name.indexOf(".")) : "" }}{{currNote.changed ? "*": ""}}</span></div>
+        <div>正在编辑 &nbsp;<el-badge :is-dot="currNote.changed" style="color: chartreuse" :offset="[6,0]">{{ currNote.name ? currNote.name.substring(0, currNote.name.indexOf(".")) : "" }}</el-badge></div>
         <div style="padding-left: 40px">
           标签: <el-select
             v-model="currNote.tags"
@@ -70,6 +70,18 @@
             :value="version.time"
           />
         </el-select>
+        </div>
+        <div style="padding-left: 40px; display: flex" v-if="startUpdate">
+          更新: <el-progress
+          :text-inside="true"
+          :percentage="updateProgress"
+          :stroke-width="15"
+          status="success"
+          striped
+          striped-flow
+          :duration="10"
+          style="width: 200px; padding-left: 5px;"
+        />
         </div>
       </div>
     </el-header>
@@ -145,13 +157,51 @@ import NoteMain from "./NoteMain.vue";
 import NoteSetting from "./NoteSetting.vue";
 import noteModel from "../model/note";
 import service from "../utils/service";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 export default {
   name: "Home",
   components: { NoteMain, NoteSetting },
   setup () {
     const activeIndex = ref("1");
+
+    let newVersionListener = function(event, arg) {
+      console.log("新版本", arg);
+      startUpdate.value = true;
+    };
+    window.electron.ipcRenderer.on("/client/updateAvailable", newVersionListener);
+
+    let updateProgressListener = function(event, arg) {
+      console.log("更新进度", arg);
+      updateProgress.value = arg.percent;
+    };
+    window.electron.ipcRenderer.on("/client/updateProgress", updateProgressListener);
+
+    let downloadedListener = function() {
+      startUpdate.value = false;
+      ElMessageBox.confirm("更新完成, 重启生效", "提示", {
+        confirmButtonText: "重启",
+        cancelButtonText: "取消",
+        type: "warning",
+      }).then(() => {
+        if (mainComponent.value.doSave && noteModel.currNote.value.changed) {
+          mainComponent.value.doSave();
+          setTimeout(() => {
+            service.invoke("/update/install", "", (result) => {
+              console.log("重启", result);
+            });
+          }, 1000);
+        } else {
+          service.invoke("/update/install", "", (result) => {
+            console.log("重启", result);
+          });
+        }
+      });
+    };
+    window.electron.ipcRenderer.on("/client/downloaded", downloadedListener);
+
+    const startUpdate = ref(false);
+    const updateProgress = ref(0);
 
     const handleSelect = (index) => {
       switch (index) {
@@ -273,6 +323,8 @@ export default {
     };
 
     return {
+      startUpdate,
+      updateProgress,
       loadVersion,
       convertOptions,
       showProgress,

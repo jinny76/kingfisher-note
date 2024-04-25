@@ -575,7 +575,9 @@ export default {
     electron.ipcRenderer.on("/client/insertAll", insertAllListener);
 
     let saveNoteListener = function(event, arg) {
-      doSave();
+      if (noteModel.currNote.value.changed) {
+        doSave();
+      }
     };
     electron.ipcRenderer.on("/client/saveNote", saveNoteListener);
 
