@@ -158,12 +158,19 @@ import NoteSetting from "./NoteSetting.vue";
 import noteModel from "../model/note";
 import service from "../utils/service";
 import { ElMessage, ElMessageBox } from "element-plus";
+import keyManager from '../utils/keys'
 
 export default {
   name: "Home",
   components: { NoteMain, NoteSetting },
   setup () {
     const activeIndex = ref("1");
+
+    keyManager.registerHotkeyProcessor("ctrl+alt+1", ()=>{
+      service.invoke("/system/openDevTools", "", (result) => {
+        console.log("打开开发者工具", result);
+      });
+    }, "打开开发者工具")
 
     window.electron.ipcRenderer.on("/client/error", function(event, arg) {
       console.error("错误", JSON.parse(arg));

@@ -19,15 +19,11 @@ const setting = ref({
 });
 
 service.invoke("/store/getSetting", "", (result) => {
-  if (result) {
-    Object.keys(result).map(key => {
-      setting.value[key] = result[key];
+  if (result?.setting) {
+    Object.keys(result.setting).map(key => {
+      setting.value[key] = result.setting[key];
     });
   }
-});
-
-service.invoke("/store/updateSetting", JSON.stringify(setting.value), (result) => {
-  console.log("更新设置", result);
 });
 
 const markChanged = () => {

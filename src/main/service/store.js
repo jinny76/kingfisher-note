@@ -163,7 +163,7 @@ const install = () => {
         setting[key] = newSetting[key];
       });
       console.log("更新设置", setting);
-      fs.writeFileSync(`${rootPath}/setting.json`, JSON.stringify(setting), "utf-8");
+      fs.writeFileSync(`${rootPath}/kfnote/setting.json`, JSON.stringify(setting), "utf-8");
     }
     return {
       code: 200
