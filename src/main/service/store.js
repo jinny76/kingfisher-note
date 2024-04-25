@@ -3,6 +3,8 @@ import fs from "fs";
 
 const rootPath = process.cwd();
 
+console.log("当前路径", rootPath);
+
 let noteMeta = {};
 
 const loadNoteMeta = () => {
