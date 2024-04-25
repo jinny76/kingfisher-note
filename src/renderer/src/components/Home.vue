@@ -374,6 +374,12 @@ export default {
 }
 
 .title-bar {
-  display: flex; flex-grow: 1; height: 100%; align-items: center; background-color: rgb(84, 92, 100); font-size:14px;
+  display: flex;
+  flex-grow: 1;
+  height: 100%;
+  align-items: center;
+  background-color: rgb(84, 92, 100);
+  font-size:14px;
+  min-width: 1520px;
 }
 </style>

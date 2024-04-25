@@ -142,11 +142,19 @@ const install = () => {
       target = `${target}.${time}.bak`;
     }
 
-    return {
-      name: path,
-      tags: noteMeta[path] ? noteMeta[path].tags : [],
-      data: fs.readFileSync(`${setting.noteDir}/${target}`, "utf-8")
-    };
+    if (fs.existsSync(`${setting.noteDir}/${target}`)) {
+      return {
+        name: path,
+        tags: noteMeta[path] ? noteMeta[path].tags : [],
+        data: fs.readFileSync(`${setting.noteDir}/${target}`, "utf-8")
+      };
+    } else {
+      return {
+        name: path,
+        tags: noteMeta[path] ? noteMeta[path].tags : [],
+        data: ""
+      }
+    }
   });
 
   ipcMain.handle("/store/getSetting", (event, params) => {
