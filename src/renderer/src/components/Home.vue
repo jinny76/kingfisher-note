@@ -60,7 +60,7 @@
           v-model="currVersion"
           filterable
           placeholder="加载历史版本"
-          style="width: 300px"
+          style="width: 180px"
           @change="loadVersion"
         >
           <el-option
@@ -80,7 +80,7 @@
           striped
           striped-flow
           :duration="10"
-          style="width: 200px; padding-left: 5px;"
+          style="width: 150px; padding-left: 5px;"
         />
         </div>
       </div>
@@ -165,6 +165,10 @@ export default {
   setup () {
     const activeIndex = ref("1");
 
+    window.electron.ipcRenderer.on("/client/error", function(event, arg) {
+      console.error("错误", JSON.parse(arg));
+    });
+
     let newVersionListener = function(event, arg) {
       console.log("新版本", arg);
       startUpdate.value = true;
@@ -196,6 +200,8 @@ export default {
             console.log("重启", result);
           });
         }
+      }).catch(() => {
+        console.log("取消重启");
       });
     };
     window.electron.ipcRenderer.on("/client/downloaded", downloadedListener);

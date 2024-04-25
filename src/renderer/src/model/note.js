@@ -13,14 +13,22 @@ const lastScreenshot = ref();
 
 let settingContent = localStorage.getItem("SETTING");
 
-const setting = ref(settingContent ? JSON.parse(settingContent) : {
-  displayMode: "window",
-  noteDir: "note",
-  screenshotDir: "screenshot",
-  pauseWhenWrite: true,
-  autoOpenVideo: true,
-  openLastNote: true,
-});
+const setting = ref({});
+
+const info = ref({});
+
+service.invoke("/system/info", "", (result) => {
+  console.log("系统信息", result);
+  info.value = result;
+  setting.value = settingContent ? JSON.parse(settingContent) : {
+    displayMode: "window",
+    noteDir: result.info.platform === 'win32' ? "note" : result.info.cwd + "/note",
+    screenshotDir: result.info.platform === 'win32' ? "screenshot" : result.info.cwd + "/screenshot",
+    pauseWhenWrite: true,
+    autoOpenVideo: true,
+    openLastNote: true,
+  }
+})
 
 service.invoke("/store/updateSetting", JSON.stringify(setting.value), (result) => {
   console.log("更新设置", result);

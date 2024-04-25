@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, Menu, Tray } from "electron";
 import path, { join } from "path";
-import icon from '../../resources/icon.png?asset'
+import icon from "../../resources/icon.png?asset";
 
 // 新建窗口时可以传入的一些options配置项
 export const windowsCfg = {
@@ -143,13 +143,14 @@ export class Window {
       winURL = args.route
         ? `${path.join(__dirname, '../renderer/index.html#')}${args.route}`
         : path.join(__dirname, '../renderer/index.html');
+      win.loadURL("file://" + winURL);
     } else {
       winURL = args.route
         ? `${process.env['ELECTRON_RENDERER_URL']}/#${args.route}?winId=${args.id}`
         : `${process.env['ELECTRON_RENDERER_URL']}/#?winId=${args.id}`;
+      win.loadURL(winURL);
     }
     console.log("新窗口地址:", winURL);
-    win.loadURL(winURL);
 
     win.once("ready-to-show", () => {
       win.maximize();

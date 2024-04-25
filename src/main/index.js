@@ -1,12 +1,13 @@
-import  { Window } from './window'
-import { app, shell, protocol, BrowserWindow, dialog, ipcMain, Menu } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
-import StreamServer from "./video/server"
-import storeService from './service/store'
-import noteService from './service/note'
-import { checkUpdate } from './update'
+import { Window } from "./window";
+import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, shell } from "electron";
+import { join } from "path";
+import { electronApp, is, optimizer } from "@electron-toolkit/utils";
+import icon from "../../resources/icon.png?asset";
+import StreamServer from "./video/server";
+import storeService from "./service/store";
+import noteService from "./service/note";
+import systemService from "./service/system";
+import { checkUpdate } from "./update";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const path = require('path')
@@ -74,6 +75,13 @@ function createMainWindow() {
   });
 }
 
+process.on('uncaughtException', function (error) {
+  console.error(error);
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send("/client/error", JSON.stringify(error));
+  }
+})
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -104,6 +112,7 @@ app.whenReady().then(() => {
 
   storeService.install()
   noteService.install(windowManager)
+  systemService.install()
 
   checkUpdate(mainWindow, ipcMain);
 })
