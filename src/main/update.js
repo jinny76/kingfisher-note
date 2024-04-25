@@ -11,7 +11,7 @@ export const checkUpdate = (win, ipcMain) => {
   // 监听渲染进程的 install 事件，触发退出应用并安装
   ipcMain.handle('/update/install', () => autoUpdater.quitAndInstall());
 
-  if (process.env.NODE_ENV === 'development') {
+  /*if (process.env.NODE_ENV === 'development') {
     setTimeout(() => {
       mainWin.webContents.send('/client/updateAvailable', {});
 
@@ -28,7 +28,7 @@ export const checkUpdate = (win, ipcMain) => {
         }
       }, 1000)
     }, 3000)
-  }
+  }*/
 };
 
 autoUpdater.on('update-available', (info) => {

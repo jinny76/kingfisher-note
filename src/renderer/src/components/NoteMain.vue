@@ -10,11 +10,17 @@
   </el-container>
   <input type="file" @change="selectFileAndPlay" style="display: none" ref="fileInput" accept="video/*,audio/*" />
   <el-dialog v-model="dialogOpenVisible" title="打开笔记" width="800">
-    <el-input v-model="noteSearch" placeholder="搜索笔记, 可以根据名字和标签搜索, 支持拼音搜索"></el-input>
-    <el-table :data="noteList" style="width: 100%" @row-click="openNote" max-height="200px" empty-text="没有找到笔记">
+    <el-input v-model="noteSearch" placeholder="搜索笔记, 可以根据名字和标签搜索, 支持拼音搜索">
+      <template #append>
+        全文：
+        <el-switch v-model="fullTextSearch" />
+      </template>
+    </el-input>
+    <el-table :data="noteList" style="width: 100%" @row-click="openNote" max-height="200px" empty-text="没有找到笔记"
+              v-if="!fullTextSearch">
       <el-table-column prop="name" label="名称" width="280">
         <template #default="scope">
-          {{ scope.row.name.substring(0, scope.row.name.indexOf("."))}}
+          {{ scope.row.name.substring(0, scope.row.name.indexOf(".")) }}
         </template>
       </el-table-column>
       <el-table-column prop="time" label="修改时间" width="180">
@@ -25,8 +31,28 @@
       <el-table-column prop="time" label="标签" width="300">
         <template #default="scope">
           <div style="display: flex; overflow: hidden">
-            <div v-for="tag in scope.row.tags" :key="tag" class="tag" :style="{borderColor:tags.find(t=>t.value === tag)?.color || '#FFFFF'}">{{tag}}</div>
+            <div v-for="tag in scope.row.tags" :key="tag" class="tag"
+                 :style="{borderColor:tags.find(t=>t.value === tag)?.color || '#FFFFF'}">{{ tag }}
+            </div>
           </div>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-table :data="noteList" style="width: 100%" @row-click="openNote" max-height="200px" empty-text="没有找到笔记"
+              v-else>
+      <el-table-column prop="name" label="名称" width="280">
+        <template #default="scope">
+          {{ scope.row.name.substring(0, scope.row.name.indexOf(".")) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="time" label="行号" width="80">
+        <template #default="scope">
+          {{ scope.row.line }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="time" label="内容" width="400">
+        <template #default="scope">
+          <div style="overflow: hidden">{{ scope.row.content }}</div>
         </template>
       </el-table-column>
     </el-table>
@@ -292,11 +318,17 @@ export default {
                   closeVideo();
                   nextTick(() => {
                     openVideo(videoUrl, false, () => {
-                      service.invoke("/note/locateVideo", JSON.stringify({videoUrl: videoUrl, location: dom.href.replace("timestamp://", "")}));
+                      service.invoke("/note/locateVideo", JSON.stringify({
+                        videoUrl: videoUrl,
+                        location: dom.href.replace("timestamp://", "")
+                      }));
                     });
-                  })
+                  });
                 } else {
-                  service.invoke("/note/locateVideo", JSON.stringify({videoUrl: videoUrl, location: dom.href.replace("timestamp://", "")}));
+                  service.invoke("/note/locateVideo", JSON.stringify({
+                    videoUrl: videoUrl,
+                    location: dom.href.replace("timestamp://", "")
+                  }));
                 }
               } else if (dom.href.startsWith("kingfisher://")) {
                 closeVideo();
@@ -554,7 +586,8 @@ export default {
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
-      } catch (e) { }
+      } catch (e) {
+      }
     };
 
     let insertAllListener = function(event, arg) {
@@ -628,9 +661,17 @@ export default {
 
     const listNote = () => {
       dialogOpenVisible.value = true;
-      service.invoke("/store/getNoteList", null, (result) => {
-        noteModel.noteList.value = result;
-      });
+      if (!fullTextSearch.value) {
+        service.invoke("/store/getNoteList", null, (result) => {
+          noteModel.noteList.value = result;
+          dataVersion.value++;
+        });
+      } else {
+        service.invoke("/store/searchAllLinesFromNotes", JSON.stringify({ keyword: noteSearch.value }), (result) => {
+          noteModel.noteList.value = result.result;
+          dataVersion.value++;
+        });
+      }
     };
 
     const dialogOpenVisible = ref(false);
@@ -671,8 +712,8 @@ export default {
           cancelButtonText: "不保存",
           type: "warning"
         }).then(() => {
-          doSave(()=>{
-            callOpen(note)
+          doSave(() => {
+            callOpen(note);
           });
         }).catch(() => {
           console.log("不保存笔记");
@@ -685,6 +726,7 @@ export default {
 
     function callOpen(note, time) {
       dialogOpenVisible.value = false;
+      noteModel.currVersion.value = null;
 
       service.invoke("/store/getNote", JSON.stringify({
         path: note.name,
@@ -711,12 +753,12 @@ export default {
           setCursor();
           editor.focus();
 
-          loadVersions()
+          loadVersions();
         });
       });
     }
 
-    const loadVersions = ()=>{
+    const loadVersions = () => {
       if (noteModel.currNote.value.name) {
         service.invoke("/store/getNoteVersions", JSON.stringify({
           path: noteModel.currNote.value.name
@@ -724,7 +766,7 @@ export default {
           noteModel.versions.value = result;
         });
       }
-    }
+    };
 
     const insertContent = (type) => {
       if (video.value) {
@@ -735,22 +777,41 @@ export default {
     };
 
     const noteSearch = ref("");
+    const fullTextSearch = ref(false);
+
+    watch(noteSearch, (val) => {
+      if (fullTextSearch.value) {
+        listNote();
+      }
+    });
+
+    watch(fullTextSearch, () => {
+      if (!fullTextSearch.value) {
+        listNote();
+      }
+    });
+
+    const dataVersion = ref(Date.now());
 
     const noteList = computed(() => {
-      return noteModel.noteList.value.filter((note) => {
-        let matched = false;
-        if (note.tags) {
-          note.tags.every(tag=>{
-            if (utils.pinyinMatch(tag, noteSearch.value)) {
-              matched = true;
-              return false;
-            }
-            return true;
-          })
-        }
+      if (!fullTextSearch.value && dataVersion.value) {
+        return noteModel.noteList.value.filter((note) => {
+          let matched = false;
+          if (note.tags) {
+            note.tags.every(tag => {
+              if (utils.pinyinMatch(tag, noteSearch.value)) {
+                matched = true;
+                return false;
+              }
+              return true;
+            });
+          }
 
-        return matched || utils.pinyinMatch(note.name, noteSearch.value);
-      });
+          return matched || utils.pinyinMatch(note.name, noteSearch.value);
+        });
+      } else {
+        return noteModel.noteList.value;
+      }
     });
 
     function setLayoutDrag(dragId) {
@@ -870,18 +931,18 @@ export default {
       });
     };
 
-    const loadVersion = (time)=>{
+    const loadVersion = (time) => {
       let note = {
         name: noteModel.currNote.value.name
-      }
+      };
       if (noteModel.currNote.value.changed) {
         ElMessageBox.confirm("当前笔记已修改，是否保存？", "提示", {
           confirmButtonText: "保存",
           cancelButtonText: "不保存",
           type: "warning"
         }).then(() => {
-          doSave(()=>{
-            callOpen(note, time)
+          doSave(() => {
+            callOpen(note, time);
           });
         }).catch(() => {
           console.log("不保存笔记");
@@ -890,16 +951,16 @@ export default {
       } else {
         callOpen(note, time);
       }
-    }
+    };
 
-    const doDelete = ()=>{
+    const doDelete = () => {
       if (noteModel.currNote.value.name) {
         ElMessageBox.confirm("确定删除笔记？", "提示", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning"
         }).then(() => {
-          service.invoke("/store/deleteNote", JSON.stringify({path: noteModel.currNote.value.name}), (result) => {
+          service.invoke("/store/deleteNote", JSON.stringify({ path: noteModel.currNote.value.name }), (result) => {
             if (result.code === 200) {
               ElMessage.success("删除成功");
               noteModel.currNote.value = {
@@ -916,7 +977,7 @@ export default {
       } else {
         ElMessage.warning("请先打开笔记");
       }
-    }
+    };
 
     return {
       loadVersion,
@@ -936,6 +997,7 @@ export default {
       noteList,
       insertContent,
       noteSearch,
+      fullTextSearch,
       doSave,
       showHelp,
       tags: noteModel.tags
@@ -956,9 +1018,9 @@ export default {
 .tag {
   border-width: 1px;
   border-style: solid;
-  border-radius:3px;
+  border-radius: 3px;
   margin: 2px;
   padding: 2px 5px 2px 5px;
-  font-size: 9px;
+  font-size: 12px;
 }
 </style>

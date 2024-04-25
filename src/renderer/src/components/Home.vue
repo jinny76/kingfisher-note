@@ -62,6 +62,7 @@
           placeholder="加载历史版本"
           style="width: 180px"
           @change="loadVersion"
+          empty-text="没有历史版本"
         >
           <el-option
             v-for="version in versions"
@@ -357,7 +358,7 @@ export default {
       settingDialog,
       tags: noteModel.tags,
       versions,
-      currVersion: ref("")
+      currVersion: noteModel.currVersion,
     };
   }
 };

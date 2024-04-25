@@ -61,13 +61,11 @@ const install = () => {
       fs.writeFileSync(`${setting.noteDir}/${path}`, data);
       fs.writeFileSync(`${setting.noteDir}/${path}.${new Date().getTime()}.bak`, data);
       return {
-        code: 200,
-        message: "保存成功"
+        code: 200, message: "保存成功"
       };
     } else {
       return {
-        code: 500,
-        message: "保存失败, 未设置笔记目录"
+        code: 500, message: "保存失败, 未设置笔记目录"
       };
     }
   });
@@ -77,16 +75,14 @@ const install = () => {
 
     if (!fs.existsSync(`${setting.noteDir}/${path}`)) {
       return {
-        code: 500,
-        message: "文件不存在"
+        code: 500, message: "文件不存在"
       };
     } else {
       fs.unlinkSync(`${setting.noteDir}/${path}`);
       delete noteMeta[path];
       saveNoteMeta();
       return {
-        code: 200,
-        message: "删除成功"
+        code: 200, message: "删除成功"
       };
     }
   });
@@ -133,10 +129,6 @@ const install = () => {
     // get file from "note" folder
     let { path, time } = JSON.parse(params);
 
-    if (!fs.existsSync(`${setting.noteDir}/${path}`)) {
-      return "";
-    }
-
     let target = path;
     if (time) {
       target = `${target}.${time}.bak`;
@@ -150,17 +142,14 @@ const install = () => {
       };
     } else {
       return {
-        name: path,
-        tags: noteMeta[path] ? noteMeta[path].tags : [],
-        data: ""
-      }
+        name: path, tags: noteMeta[path] ? noteMeta[path].tags : [], data: ""
+      };
     }
   });
 
   ipcMain.handle("/store/getSetting", (event, params) => {
     return {
-      code: 200,
-      setting: setting
+      code: 200, setting: setting
     };
   });
 
@@ -189,21 +178,46 @@ const install = () => {
       if (!fs.existsSync(`${setting.noteDir}/${file}`)) {
         fs.writeFileSync(`${setting.noteDir}/${file}`, "");
         return {
-          code: 200,
-          message: "保存成功"
+          code: 200, message: "保存成功"
         };
       } else {
         return {
-          code: 500,
-          message: "文件已存在"
+          code: 500, message: "文件已存在"
         };
       }
     } else {
       return {
-        code: 500,
-        message: "保存失败, 未设置笔记目录"
+        code: 500, message: "保存失败, 未设置笔记目录"
       };
     }
+  });
+
+  ipcMain.handle("/store/searchAllLinesFromNotes", (event, params) => {
+    console.log("开始搜索所有笔记");
+    const { keyword } = JSON.parse(params);
+    const files = fs.readdirSync(setting.noteDir);
+    let result = [];
+    if (keyword) {
+      files.forEach(file => {
+        if (file.endsWith(".kfnote")) {
+          const data = fs.readFileSync(`${setting.noteDir}/${file}`, "utf-8");
+          const lines = data.split("\n");
+          lines.every((line, index) => {
+            if (line.toLowerCase().indexOf(keyword.toLowerCase()) !== -1) {
+              result.push({
+                name: file, line: index + 1, content: line
+              });
+              return false;
+            } else {
+              return true;
+            }
+          });
+        }
+      });
+    }
+    return {
+      code: 200, result: result
+    };
   });
 
   console.log("注册存储服务");

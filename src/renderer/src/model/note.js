@@ -44,6 +44,8 @@ const tags = ref([
 
 const versions = ref([]);
 
+const currVersion = ref(null)
+
 export default {
-  currNote, noteList, videoUrl, mainComp, setting, markChanged, recentNotes, lastScreenshot, tags, versions
+  currNote, noteList, videoUrl, mainComp, setting, markChanged, recentNotes, lastScreenshot, tags, versions, currVersion
 };
