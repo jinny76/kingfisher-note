@@ -274,7 +274,6 @@ export default {
 
     const saveSetting = () => {
       noteModel.setting.value = settingDialog.value.setting;
-      localStorage.setItem("SETTING", JSON.stringify(settingDialog.value.setting));
 
       service.invoke("/store/updateSetting", JSON.stringify(noteModel.setting.value), (result) => {
         console.log("更新设置", result);

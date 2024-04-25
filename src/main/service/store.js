@@ -1,36 +1,43 @@
 import { ipcMain } from "electron";
 import fs from "fs";
 
-const rootPath = process.cwd();
+const rootPath = process.env.HOME || process.env.USERPROFILE;
 
 console.log("当前路径", rootPath);
+
+let setting;
 
 let noteMeta = {};
 
 const loadNoteMeta = () => {
-  if (fs.existsSync(`${rootPath}/noteMeta.json`)) {
-    noteMeta = JSON.parse(fs.readFileSync(`${rootPath}/noteMeta.json`, "utf-8"));
+  if (fs.existsSync(`${setting.noteDir}/noteMeta.json`)) {
+    noteMeta = JSON.parse(fs.readFileSync(`${setting.noteDir}/kfnote/noteMeta.json`, "utf-8"));
   }
 };
 
-loadNoteMeta();
-
 const saveNoteMeta = () => {
-  fs.writeFileSync(`${rootPath}/noteMeta.json`, JSON.stringify(noteMeta));
+  if (!fs.existsSync(`${setting.noteDir}`)) {
+    fs.mkdirSync(`${setting.noteDir}`);
+  }
+  fs.writeFileSync(`${setting.noteDir}/noteMeta.json`, JSON.stringify(noteMeta));
 };
 
-let setting;
-
-if (!fs.existsSync(`${rootPath}/setting.json`)) {
+//获取设置
+if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
   console.log("未找到设置文件");
   setting = {
-    noteDir: process.platform === 'win32' ? "note" : rootPath + "/note",
-    screenshotDir: process.platform === 'win32' ? "note" : rootPath + "/screenshot"
+    noteDir: rootPath.replaceAll("\\", "/") + "/kfnote/note",
+    screenshotDir: rootPath.replaceAll("\\", "/") + "/kfnote/screenshot"
   };
-  fs.writeFileSync(`${rootPath}/setting.json`, JSON.stringify(setting), "utf-8");
+  if (!fs.existsSync(rootPath + "/kfnote")) {
+    fs.mkdirSync(rootPath + "/kfnote");
+  }
+  fs.writeFileSync(`${rootPath}/kfnote/setting.json`, JSON.stringify(setting), "utf-8");
   console.log("设置文件已创建", setting);
+
+  loadNoteMeta();
 } else {
-  setting = JSON.parse(fs.readFileSync(`${rootPath}/setting.json`, "utf-8"));
+  setting = JSON.parse(fs.readFileSync(`${rootPath}/kfnote/setting.json`, "utf-8"));
   console.log("设置文件已加载", setting);
 }
 
@@ -139,6 +146,13 @@ const install = () => {
       name: path,
       tags: noteMeta[path] ? noteMeta[path].tags : [],
       data: fs.readFileSync(`${setting.noteDir}/${target}`, "utf-8")
+    };
+  });
+
+  ipcMain.handle("/store/getSetting", (event, params) => {
+    return {
+      code: 200,
+      setting: setting
     };
   });
 

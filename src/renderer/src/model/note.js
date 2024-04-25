@@ -11,24 +11,20 @@ const mainComp = ref("NoteMain");
 
 const lastScreenshot = ref();
 
-let settingContent = localStorage.getItem("SETTING");
+const setting = ref({
+  displayMode: "window",
+  pauseWhenWrite: true,
+  autoOpenVideo: true,
+  openLastNote: true
+});
 
-const setting = ref({});
-
-const info = ref({});
-
-service.invoke("/system/info", "", (result) => {
-  console.log("系统信息", result);
-  info.value = result;
-  setting.value = settingContent ? JSON.parse(settingContent) : {
-    displayMode: "window",
-    noteDir: result.info.platform === 'win32' ? "note" : result.info.cwd + "/note",
-    screenshotDir: result.info.platform === 'win32' ? "screenshot" : result.info.cwd + "/screenshot",
-    pauseWhenWrite: true,
-    autoOpenVideo: true,
-    openLastNote: true,
+service.invoke("/store/getSetting", "", (result) => {
+  if (result) {
+    Object.keys(result).map(key => {
+      setting.value[key] = result[key];
+    });
   }
-})
+});
 
 service.invoke("/store/updateSetting", JSON.stringify(setting.value), (result) => {
   console.log("更新设置", result);
@@ -36,21 +32,21 @@ service.invoke("/store/updateSetting", JSON.stringify(setting.value), (result) =
 
 const markChanged = () => {
   if (currNote.value.name) {
-    currNote.value.changed = true
+    currNote.value.changed = true;
   }
-}
+};
 
 const recentNotes = ref([]);
 
 const tags = ref([
-  { value: "文学", label: "文学", color:"#ee6a6a" },
+  { value: "文学", label: "文学", color: "#ee6a6a" },
   { value: "科技", label: "科技", color: "#7171ea" },
   { value: "宗教", label: "宗教", color: "#ec9d71" },
   { value: "艺术", label: "艺术", color: "#87e887" },
-  { value: "生活", label: "生活", color: "#e1e188" },
-])
+  { value: "生活", label: "生活", color: "#e1e188" }
+]);
 
-const versions = ref([])
+const versions = ref([]);
 
 export default {
   currNote, noteList, videoUrl, mainComp, setting, markChanged, recentNotes, lastScreenshot, tags, versions

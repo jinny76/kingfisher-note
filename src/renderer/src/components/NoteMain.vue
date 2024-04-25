@@ -145,6 +145,7 @@ export default {
         } else {
           let fileName = video.substring(video.lastIndexOf("\\") + 1);
           newContent = `\n\n[[视频文件 ${fileName}]](kingfisher://${encodeURIComponent(video + "/")})\n`;
+          lastVideo = video + "/";
         }
         if (editor.getValue().indexOf(newContent) === -1) {
           editor.insertValue(newContent, true);

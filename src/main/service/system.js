@@ -6,7 +6,7 @@ const install = () => {
       code: 200,
       info: {
         platform: process.platform,
-        cwd: process.cwd()
+        home: process.env.HOME || process.env.USERPROFILE
       }
     };
   });
