@@ -17,10 +17,20 @@ const saveNoteMeta = () => {
   fs.writeFileSync(`${rootPath}/noteMeta.json`, JSON.stringify(noteMeta));
 };
 
-let setting = {
-  noteDir: "note",
-  screenshotDir: "screenshot"
-};
+let setting;
+
+if (!fs.existsSync(`${rootPath}/setting.json`)) {
+  console.log("未找到设置文件");
+  setting = {
+    noteDir: process.platform === 'win32' ? "note" : rootPath + "/note",
+    screenshotDir: process.platform === 'win32' ? "note" : rootPath + "/screenshot"
+  };
+  fs.writeFileSync(`${rootPath}/setting.json`, JSON.stringify(setting), "utf-8");
+  console.log("设置文件已创建", setting);
+} else {
+  setting = JSON.parse(fs.readFileSync(`${rootPath}/setting.json`, "utf-8"));
+  console.log("设置文件已加载", setting);
+}
 
 const install = () => {
   ipcMain.handle("/store/saveNote", (event, params) => {
@@ -136,6 +146,8 @@ const install = () => {
       Object.keys(newSetting).forEach(key => {
         setting[key] = newSetting[key];
       });
+      console.log("更新设置", setting);
+      fs.writeFileSync(`${rootPath}/setting.json`, JSON.stringify(setting), "utf-8");
     }
     return {
       code: 200
@@ -168,7 +180,6 @@ const install = () => {
         message: "保存失败, 未设置笔记目录"
       };
     }
-    return setting;
   });
 
   console.log("注册存储服务");
