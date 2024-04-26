@@ -1,7 +1,7 @@
 <template>
   <el-container style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
     <el-aside :width="videoWidth" style="margin: 0px; padding: 0px;">
-      <video-window v-if="videoUrl != '' && videoWidth !== '0%'" :url-str="videoUrl" ref="video"></video-window>
+      <video-window v-if="videoUrl != '' && videoWidth !== '0%' && !drag" :url-str="videoUrl" ref="video"></video-window>
     </el-aside>
     <div id="dragBar-dept" class="vertical-dragbar" v-show="videoWidth !== '0%'"></div>
     <el-main style="margin: 0px; padding: 0px;" id="idMainContainer">
@@ -85,6 +85,7 @@ export default {
     const recentNotes = noteModel.recentNotes;
     let editor;
     let lastVideo;
+    const drag = ref(false);
 
     onMounted(() => {
       if (noteModel.setting.value.openLastNote) {
@@ -899,6 +900,7 @@ export default {
       let nextTag = nextElement.tagName;
 
       resize.onmousedown = e => {
+        drag.value = true;
         const startX = e.clientX;
         const startY = e.clientY;
         let type = "";
@@ -985,6 +987,7 @@ export default {
           }
         };
         document.onmouseup = evt => {
+          drag.value = false;
           document.onmousemove = null;
           document.onmouseup = null;
           resize.releaseCapture && resize.releaseCapture();
@@ -1114,7 +1117,8 @@ export default {
       fullTextSearch,
       doSave,
       showHelp,
-      tags: noteModel.tags
+      tags: noteModel.tags,
+      drag
     };
   }
 };
@@ -1125,7 +1129,7 @@ export default {
 .vertical-dragbar {
   width: 5px;
   height: 100%;
-  background: rgb(238, 238, 238);
+  background: rgb(84, 92, 100);
   cursor: e-resize;
 }
 
