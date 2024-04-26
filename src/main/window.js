@@ -189,7 +189,7 @@ export class Window {
     this.tray.on("right-click", () => {
       this.tray?.popUpContextMenu(contextMenu);
     });
-    this.tray.setToolTip("翠鸟笔记");
+    this.tray.setToolTip("灵翠笔记");
   }
 
 

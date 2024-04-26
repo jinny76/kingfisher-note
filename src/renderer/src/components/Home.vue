@@ -194,10 +194,13 @@
       <div>感谢大家使用翠鸟笔记</div>
     </el-tour-step>
   </el-tour>
+  <div class="cv" v-show="locking" @click="unlock">
+    <canvas id="_cv"></canvas>
+  </div>
 </template>
 
 <script lang="js">
-import { nextTick, ref } from "vue";
+import { nextTick, ref, onMounted, watch } from "vue";
 import NoteMain from "./NoteMain.vue";
 import NoteSetting from "./NoteSetting.vue";
 import noteModel from "../model/note";
@@ -209,6 +212,69 @@ export default {
   name: "Home",
   components: { NoteMain, NoteSetting },
   setup () {
+    let canvas;
+    let letters = Array(512).join(1).split('');
+    const locking = noteModel.locking;
+
+    const screen = ref({
+      width: 1920,
+      height: 1080
+    });
+
+    const initCanvas = () => {
+      canvas = document.getElementById('_cv');
+      canvas.getContext('2d');
+      const _w = screen.value.width = window.innerWidth;
+      const _h = screen.value.height = window.innerHeight;
+      canvas.width = _w - 10;
+      canvas.height = _h - 4;
+    };
+
+    const clock = () => {
+      const _d = new Date();
+      if (Math.floor(_d.getTime() / 100) % 2 === 0) {
+        let _y, _M, _D, _h, _m
+        _y = _d.getFullYear();
+        _M = _d.getMonth() + 1;
+        _D = _d.getDate();
+        _h = _d.getHours();
+        _m = _d.getMinutes();
+      }
+    };
+
+    let lockTimer;
+
+    onMounted(()=>{
+      initCanvas();
+      window.onresize = () => {
+        initCanvas();
+      };
+    })
+
+    const draw = () => {
+      canvas.getContext('2d').fillStyle = 'rgba(0,0,0,.1)';
+      canvas.getContext('2d').fillRect(0, 0, canvas.width, canvas.height);
+      canvas.getContext('2d').fillStyle = 'rgba(0, 255, 0, .5)';
+      letters.map(function (y_pos, index) {
+        const min = Math.ceil(33);
+        const max = Math.floor(125);
+        const text = String.fromCharCode(Math.floor(Math.random() * (max - min + 1)) + min);
+        const x_pos = index * 10;
+        canvas.getContext('2d').fillText(text, x_pos, y_pos);
+        letters[index] = (y_pos > (canvas.height - 200) + Math.random() * 1e4) ? 0 : y_pos + 10;
+      });
+
+      clock();
+    };
+
+    watch(locking, ()=>{
+      if (locking.value) {
+        lockTimer = setInterval(draw, 45);
+      } else {
+        clearInterval(lockTimer);
+      }
+    })
+
     const activeIndex = ref("1");
 
     keyManager.registerHotkeyProcessor("ctrl+alt+1", ()=>{
@@ -216,6 +282,10 @@ export default {
         console.log("打开开发者工具", result);
       });
     }, "打开开发者工具")
+
+    keyManager.registerHotkeyProcessor("ctrl+alt+l", ()=>{
+      locking.value = !locking.value;
+    }, "锁定")
 
     window.electron.ipcRenderer.on("/client/error", function(event, arg) {
       console.error("错误", JSON.parse(arg));
@@ -418,7 +488,33 @@ export default {
       }
     };
 
+    const unlock = () => {
+      ElMessageBox.prompt("请输入密码", "解锁", {
+        confirmButtonText: "解锁",
+        cancelButtonText: "取消",
+        inputType: "password",
+        inputPattern: /\S/,
+        inputErrorMessage: "密码不能为空",
+      }).then(({ value }) => {
+        if (value === noteModel.setting.value.password) {
+          locking.value = false;
+          noteModel.startColdDown();
+        } else {
+          ElMessage.error("密码错误");
+        }
+      }).catch(() => {
+        console.log("取消解锁");
+      });
+    };
+
+    watch(noteModel.settingReady, ()=>{
+      if (!noteModel.setting.value.onlyForUnlock) {
+        locking.value = true;
+      }
+    })
+
     return {
+      unlock,
       menu,
       startUpdate,
       updateProgress,
@@ -446,14 +542,15 @@ export default {
       showTour,
       startTour,
       step,
-      onChangeTour
+      onChangeTour,
+      locking
     };
   }
 };
 
 </script>
 
-<style>
+<style lang="scss">
 .el-header {
   height: 40px;
 }
@@ -470,5 +567,14 @@ export default {
   background-color: rgb(84, 92, 100);
   font-size:14px;
   min-width: 1520px;
+}
+
+.cv {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 2000;
 }
 </style>

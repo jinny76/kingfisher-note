@@ -39,6 +39,27 @@
         <el-switch v-model="setting.autoOpenVideo" active-text="是" inactive-text="否"></el-switch>
       </el-col>
     </el-row>
+    <el-row style="padding: 5px;">
+      <el-col :span="6">自动锁定：</el-col>
+      <el-col :span="18">
+        <el-input v-model="setting.lockTime" placeholder="请输入锁定时间" type="number">
+          <template #append>
+            分钟
+          </template>
+        </el-input>
+      </el-col>
+    </el-row>
+    <el-row style="padding: 5px;">
+      <el-col :span="6">访问密码：</el-col>
+      <el-col :span="18" style="display: flex">
+        <el-input v-model="setting.password" placeholder="请输入访问密码" type="password">
+          <template #append>
+            仅解锁：
+            <el-switch v-model="setting.onlyForUnlock" />
+          </template>
+        </el-input>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -50,12 +71,12 @@ export default {
   props: {},
   emits: [],
   components: {},
-  setup() {
+  setup () {
     const setting = ref({});
 
     const updateSetting = (_setting) => {
-      setting.value = {..._setting};
-    }
+      setting.value = { ..._setting };
+    };
 
     return {
       setting, updateSetting

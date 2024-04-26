@@ -15,8 +15,13 @@ const setting = ref({
   displayMode: "window",
   pauseWhenWrite: true,
   autoOpenVideo: true,
-  openLastNote: true
+  openLastNote: true,
+  lockTime: 15,
+  password: "kf123456",
+  onlyForUnlock: true
 });
+
+const settingReady = ref(false);
 
 service.invoke("/store/getSetting", "", (result) => {
   if (result?.setting) {
@@ -24,13 +29,34 @@ service.invoke("/store/getSetting", "", (result) => {
       setting.value[key] = result.setting[key];
     });
   }
+  settingReady.value = true;
 });
+
+let lockTimer = null;
+
+const startColdDown = () => {
+  setting.value.lockTime = setting.value.lockTime || 0;
+
+  if (setting.value.lockTime > 0) {
+    console.log("开始锁定计时", setting.value.lockTime, "分钟")
+    if (lockTimer) {
+      clearTimeout(lockTimer);
+    }
+
+    setTimeout(() => {
+      locking.value = true;
+    }, setting.value.lockTime * 60 * 1000);
+  }
+};
 
 const markChanged = () => {
   if (currNote.value.name) {
     currNote.value.changed = true;
   }
+  startColdDown();
 };
+
+const locking = ref(false);
 
 const recentNotes = ref([]);
 
@@ -44,8 +70,9 @@ const tags = ref([
 
 const versions = ref([]);
 
-const currVersion = ref(null)
+const currVersion = ref(null);
 
 export default {
-  currNote, noteList, videoUrl, mainComp, setting, markChanged, recentNotes, lastScreenshot, tags, versions, currVersion
+  currNote, noteList, videoUrl, mainComp, setting, markChanged, locking,
+  recentNotes, lastScreenshot, tags, versions, currVersion, settingReady, startColdDown
 };

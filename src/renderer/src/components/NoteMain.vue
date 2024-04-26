@@ -763,8 +763,8 @@ export default {
           nextTick(() => {
             setCursor();
             editor.focus();
-
             loadVersions();
+            noteModel.startColdDown();
           });
         } else if (result.code === 500 && result.message === "文件已加密") {
           ElMessageBox.prompt("请输入密码", "打开加密笔记-" + note.name.substring(0, note.name.indexOf(".")), {
