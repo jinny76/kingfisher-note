@@ -19,7 +19,9 @@
           <el-menu-item index="2-2">打开笔记</el-menu-item>
           <el-sub-menu index="2-3">
             <template #title>打开历史笔记</template>
-            <el-menu-item :index="note.name" v-for="note in recentNotes" :key="note.name">{{ note.name.substring(0, note.name.indexOf(".")) }}</el-menu-item>
+            <el-menu-item :index="note.name" v-for="note in recentNotes" :key="note.name">
+              {{ note.name.substring(0, note.name.indexOf(".")) }}
+            </el-menu-item>
           </el-sub-menu>
           <el-menu-item index="2-4">保存笔记</el-menu-item>
           <el-menu-item index="2-5">删除笔记</el-menu-item>
@@ -35,9 +37,13 @@
         </el-sub-menu>
       </el-menu>
       <div class="title-bar">
-        <div>正在编辑 &nbsp;<el-badge :is-dot="currNote.changed" style="color: chartreuse" :offset="[6,0]">{{ currNote.name ? currNote.name.substring(0, currNote.name.indexOf(".")) : "" }}</el-badge></div>
+        <div>正在编辑 &nbsp;<el-badge :is-dot="currNote.changed" style="color: chartreuse" :offset="[6,0]">
+          {{ currNote.name ? currNote.name.substring(0, currNote.name.indexOf(".")) : "" }}
+        </el-badge>
+        </div>
         <div style="padding-left: 40px">
-          标签: <el-select
+          标签:
+          <el-select
             v-model="currNote.tags"
             multiple
             filterable
@@ -59,33 +65,35 @@
           </el-select>
         </div>
         <div style="padding-left: 40px">
-          版本: <el-select
-          v-model="currVersion"
-          filterable
-          placeholder="加载历史版本"
-          style="width: 180px"
-          @change="loadVersion"
-          empty-text="没有历史版本"
-        >
-          <el-option
-            v-for="version in versions"
-            :key="version.label"
-            :label="version.label"
-            :value="version.time"
-          />
-        </el-select>
+          版本:
+          <el-select
+            v-model="currVersion"
+            filterable
+            placeholder="加载历史版本"
+            style="width: 180px"
+            @change="loadVersion"
+            empty-text="没有历史版本"
+          >
+            <el-option
+              v-for="version in versions"
+              :key="version.label"
+              :label="version.label"
+              :value="version.time"
+            />
+          </el-select>
         </div>
         <div style="padding-left: 40px; display: flex" v-if="startUpdate">
-          更新: <el-progress
-          :text-inside="true"
-          :percentage="updateProgress"
-          :stroke-width="15"
-          status="success"
-          striped
-          striped-flow
-          :duration="10"
-          style="width: 150px; padding-left: 5px;"
-        />
+          更新:
+          <el-progress
+            :text-inside="true"
+            :percentage="updateProgress"
+            :stroke-width="15"
+            status="success"
+            striped
+            striped-flow
+            :duration="10"
+            style="width: 150px; padding-left: 5px;"
+          />
         </div>
       </div>
     </el-header>
@@ -153,7 +161,12 @@
       </div>
     </template>
   </el-dialog>
-  <el-tour v-model="showTour" @change="onChangeTour" z-index="9999">
+  <el-tour v-model="showTour" @change="onChangeTour" z-index="9999" :mask="{
+      style: {
+        boxShadow: 'inset 0 0 15px #333',
+      },
+      color: 'rgba(255, 255, 255, .3)',
+    }">
     <el-tour-step :target="step[0]" title="新建笔记" placement="right">
       <div>点击菜单，创建一个新的笔记</div>
     </el-tour-step>
@@ -191,7 +204,7 @@
       <div>点击菜单可以进行设置</div>
     </el-tour-step>
     <el-tour-step title="欢迎使用">
-      <div>感谢大家使用翠鸟笔记</div>
+      <div>感谢大家使用灵翠笔记</div>
     </el-tour-step>
   </el-tour>
   <div class="cv" v-show="locking" @click="unlock">
@@ -206,14 +219,15 @@ import NoteSetting from "./NoteSetting.vue";
 import noteModel from "../model/note";
 import service from "../utils/service";
 import { ElMessage, ElMessageBox } from "element-plus";
-import keyManager from '../utils/keys'
+import keyManager from "../utils/keys";
+import md5 from "md5";
 
 export default {
   name: "Home",
   components: { NoteMain, NoteSetting },
   setup () {
     let canvas;
-    let letters = Array(512).join(1).split('');
+    let letters = Array(512).join(1).split("");
     const locking = noteModel.locking;
 
     const screen = ref({
@@ -222,8 +236,8 @@ export default {
     });
 
     const initCanvas = () => {
-      canvas = document.getElementById('_cv');
-      canvas.getContext('2d');
+      canvas = document.getElementById("_cv");
+      canvas.getContext("2d");
       const _w = screen.value.width = window.innerWidth;
       const _h = screen.value.height = window.innerHeight;
       canvas.width = _w - 10;
@@ -233,7 +247,7 @@ export default {
     const clock = () => {
       const _d = new Date();
       if (Math.floor(_d.getTime() / 100) % 2 === 0) {
-        let _y, _M, _D, _h, _m
+        let _y, _M, _D, _h, _m;
         _y = _d.getFullYear();
         _M = _d.getMonth() + 1;
         _D = _d.getDate();
@@ -244,48 +258,49 @@ export default {
 
     let lockTimer;
 
-    onMounted(()=>{
+    onMounted(() => {
       initCanvas();
       window.onresize = () => {
         initCanvas();
       };
-    })
+    });
 
     const draw = () => {
-      canvas.getContext('2d').fillStyle = 'rgba(0,0,0,.1)';
-      canvas.getContext('2d').fillRect(0, 0, canvas.width, canvas.height);
-      canvas.getContext('2d').fillStyle = 'rgba(0, 255, 0, .5)';
-      letters.map(function (y_pos, index) {
+      canvas.getContext("2d").fillStyle = "rgba(0,0,0,.1)";
+      canvas.getContext("2d").fillRect(0, 0, canvas.width, canvas.height);
+      canvas.getContext("2d").fillStyle = "rgba(0, 255, 0, .5)";
+      letters.map(function(y_pos, index) {
         const min = Math.ceil(33);
         const max = Math.floor(125);
         const text = String.fromCharCode(Math.floor(Math.random() * (max - min + 1)) + min);
         const x_pos = index * 10;
-        canvas.getContext('2d').fillText(text, x_pos, y_pos);
+        canvas.getContext("2d").fillText(text, x_pos, y_pos);
         letters[index] = (y_pos > (canvas.height - 200) + Math.random() * 1e4) ? 0 : y_pos + 10;
       });
 
       clock();
     };
 
-    watch(locking, ()=>{
+    watch(locking, () => {
       if (locking.value) {
         lockTimer = setInterval(draw, 45);
       } else {
         clearInterval(lockTimer);
       }
-    })
+    });
 
     const activeIndex = ref("1");
 
-    keyManager.registerHotkeyProcessor("ctrl+alt+1", ()=>{
+    keyManager.registerHotkeyProcessor("ctrl+alt+1", () => {
       service.invoke("/system/openDevTools", "", (result) => {
         console.log("打开开发者工具", result);
       });
-    }, "打开开发者工具")
+    }, "打开开发者工具");
 
-    keyManager.registerHotkeyProcessor("ctrl+alt+l", ()=>{
-      locking.value = !locking.value;
-    }, "锁定")
+    keyManager.registerHotkeyProcessor("ctrl+shift+l", () => {
+      locking.value = true;
+      noteModel.stopColdDown();
+    }, "锁定");
 
     window.electron.ipcRenderer.on("/client/error", function(event, arg) {
       console.error("错误", JSON.parse(arg));
@@ -308,7 +323,7 @@ export default {
       ElMessageBox.confirm("更新完成, 重启生效", "提示", {
         confirmButtonText: "重启",
         cancelButtonText: "取消",
-        type: "warning",
+        type: "warning"
       }).then(() => {
         if (mainComponent.value.doSave && noteModel.currNote.value.changed) {
           mainComponent.value.doSave();
@@ -396,7 +411,7 @@ export default {
 
     const showTour = ref(false);
     const step = ref([]);
-    const menu = ref()
+    const menu = ref();
     const startTour = () => {
       step.value = ["#idMenuFile", "#idNoteEditor"];
       let toolbar = document.querySelector(".vditor-toolbar");
@@ -420,7 +435,7 @@ export default {
       if (index === 1) {
         menu.value.close("1");
       }
-    }
+    };
 
     const mainComp = noteModel.mainComp;
 
@@ -434,22 +449,28 @@ export default {
     const settingDialog = ref();
 
     const saveSetting = () => {
-      noteModel.setting.value = settingDialog.value.setting;
+      let newSetting = settingDialog.value.setting;
+      if (newSetting.password === noteModel.constPassword) {
+        newSetting.password = noteModel.setting.value.password;
+      } else if (newSetting.password) {
+        newSetting.password = md5(newSetting.password + noteModel.constPassword);
+      }
+      noteModel.setting.value = newSetting;
 
       service.invoke("/store/updateSetting", JSON.stringify(noteModel.setting.value), (result) => {
         console.log("更新设置", result);
       });
 
+      noteModel.startColdDown();
       dialogSettingVisible.value = false;
     };
 
-    const videoList = ref([
-    ])
+    const videoList = ref([]);
 
-    const showProgress = ref(false)
+    const showProgress = ref(false);
 
     const convertOptions = ref({
-      h264:false, mp3:false
+      h264: false, mp3: false
     });
 
     const versions = noteModel.versions;
@@ -459,14 +480,14 @@ export default {
       showProgress.value = true;
       service.invoke("/note/convert", JSON.stringify({
         files: videoList.value.map((file) => {
-          let raw = file.raw
+          let raw = file.raw;
           return {
             name: raw.name,
             path: raw.path,
             size: raw.size,
             type: raw.type,
-            lastModified: raw.lastModified,
-          }
+            lastModified: raw.lastModified
+          };
         }),
         options: convertOptions.value
       }), (result) => {
@@ -474,7 +495,7 @@ export default {
         console.log("转换成功", result);
         ElMessage.success("转换成功");
         dialogConvertVisible.value = false;
-      }, (error)=>{
+      }, (error) => {
         console.error("转换失败", error);
         ElMessage.error("转换失败");
         showProgress.value = false;
@@ -489,29 +510,36 @@ export default {
     };
 
     const unlock = () => {
-      ElMessageBox.prompt("请输入密码", "解锁", {
-        confirmButtonText: "解锁",
-        cancelButtonText: "取消",
-        inputType: "password",
-        inputPattern: /\S/,
-        inputErrorMessage: "密码不能为空",
-      }).then(({ value }) => {
-        if (value === noteModel.setting.value.password) {
+      if (noteModel.setting.value.password !== "") {
+        ElMessageBox.prompt("请输入密码", "解锁", {
+          confirmButtonText: "解锁",
+          cancelButtonText: "取消",
+          inputType: "password"
+        }).then(({ value }) => {
+          if (!value) {
+            value = "";
+          }
+          if (md5(value + noteModel.constPassword) == noteModel.setting.value.password) {
+            locking.value = false;
+            noteModel.startColdDown();
+          } else {
+            ElMessage.error("密码错误");
+          }
           locking.value = false;
-          noteModel.startColdDown();
-        } else {
-          ElMessage.error("密码错误");
-        }
-      }).catch(() => {
-        console.log("取消解锁");
-      });
+        }).catch(() => {
+          console.log("取消解锁");
+        });
+      } else {
+        locking.value = false;
+        noteModel.startColdDown();
+      }
     };
 
-    watch(noteModel.settingReady, ()=>{
-      if (!noteModel.setting.value.onlyForUnlock) {
+    watch(noteModel.settingReady, () => {
+      if (!noteModel.setting.value.onlyForUnlock && noteModel.setting.value.password) {
         locking.value = true;
       }
-    })
+    });
 
     return {
       unlock,
@@ -565,7 +593,7 @@ export default {
   height: 100%;
   align-items: center;
   background-color: rgb(84, 92, 100);
-  font-size:14px;
+  font-size: 14px;
   min-width: 1520px;
 }
 

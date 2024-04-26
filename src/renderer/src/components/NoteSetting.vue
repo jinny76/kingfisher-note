@@ -52,7 +52,7 @@
     <el-row style="padding: 5px;">
       <el-col :span="6">访问密码：</el-col>
       <el-col :span="18" style="display: flex">
-        <el-input v-model="setting.password" placeholder="请输入访问密码" type="password">
+        <el-input v-model="setting.password" placeholder="请输入访问密码" type="password" clearable>
           <template #append>
             仅解锁：
             <el-switch v-model="setting.onlyForUnlock" />
@@ -65,6 +65,7 @@
 
 <script lang="js">
 import { ref } from "vue";
+import noteModel from "../model/note"
 
 export default {
   name: "NoteSetting",
@@ -76,6 +77,9 @@ export default {
 
     const updateSetting = (_setting) => {
       setting.value = { ..._setting };
+      if (setting.value.password) {
+        setting.value.password = noteModel.constPassword;
+      }
     };
 
     return {

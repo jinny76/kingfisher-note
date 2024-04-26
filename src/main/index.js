@@ -2,7 +2,7 @@ import { Window } from "./window";
 import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, shell } from "electron";
 import { join } from "path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
-import icon from "../../resources/icon.png?asset";
+import icon from "../../resources/icon.ico?asset";
 import StreamServer from "./video/server";
 import storeService from "./service/store";
 import noteService from "./service/note";

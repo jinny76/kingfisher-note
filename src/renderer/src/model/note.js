@@ -17,7 +17,7 @@ const setting = ref({
   autoOpenVideo: true,
   openLastNote: true,
   lockTime: 15,
-  password: "kf123456",
+  password: "",
   onlyForUnlock: true
 });
 
@@ -49,6 +49,12 @@ const startColdDown = () => {
   }
 };
 
+const stopColdDown = () => {
+  if (lockTimer) {
+    clearTimeout(lockTimer);
+  }
+};
+
 const markChanged = () => {
   if (currNote.value.name) {
     currNote.value.changed = true;
@@ -74,5 +80,6 @@ const currVersion = ref(null);
 
 export default {
   currNote, noteList, videoUrl, mainComp, setting, markChanged, locking,
-  recentNotes, lastScreenshot, tags, versions, currVersion, settingReady, startColdDown
+  recentNotes, lastScreenshot, tags, versions, currVersion, settingReady,
+  startColdDown, stopColdDown, constPassword : "kingfisher123456789!@#$%^&"
 };

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, Menu, Tray } from "electron";
 import path, { join } from "path";
-import icon from "../../resources/icon.png?asset";
+import icon from "../../resources/icon.ico?asset";
 
 // 新建窗口时可以传入的一些options配置项
 export const windowsCfg = {
