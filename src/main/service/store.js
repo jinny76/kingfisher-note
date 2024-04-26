@@ -14,7 +14,11 @@ const rootPath = process.env.HOME || process.env.USERPROFILE;
 
 console.log("当前路径", rootPath);
 
-let setting;
+let setting = {
+  noteDir: rootPath.replaceAll("\\", "/") + "/kfnote/note",
+  screenshotDir: rootPath.replaceAll("\\", "/") + "/kfnote/screenshot",
+  assetsDir: rootPath.replaceAll("\\", "/") + "/kfnote/assets"
+};
 
 let noteMeta = {};
 
@@ -55,10 +59,6 @@ const saveNoteMeta = () => {
 //获取设置
 if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
   console.log("未找到设置文件");
-  setting = {
-    noteDir: rootPath.replaceAll("\\", "/") + "/kfnote/note",
-    screenshotDir: rootPath.replaceAll("\\", "/") + "/kfnote/screenshot"
-  };
   if (!fs.existsSync(rootPath + "/kfnote")) {
     fs.mkdirSync(rootPath + "/kfnote");
   }
@@ -66,7 +66,10 @@ if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
   console.log("设置文件已创建", setting);
   loadNoteMeta();
 } else {
-  setting = JSON.parse(fs.readFileSync(`${rootPath}/kfnote/setting.json`, "utf-8"));
+  let localSetting = JSON.parse(fs.readFileSync(`${rootPath}/kfnote/setting.json`, "utf-8"));
+  Object.keys(localSetting).forEach(key => {
+    setting[key] = localSetting[key];
+  });
   console.log("设置文件已加载", setting);
   loadNoteMeta();
 }
@@ -298,6 +301,24 @@ const install = () => {
   console.log("注册存储服务");
 };
 
+const storeAssets = async (req, res) => {
+  if (!fs.existsSync(setting.assetsDir)) {
+    fs.mkdirSync(setting.assetsDir);
+  }
+
+  console.log(req.files);
+  let file = req.files["file[]"];
+  let target = setting.assetsDir + "/" + Date.now() + file.name.substring(file.name.lastIndexOf("."));
+  await file.mv(target);
+
+  res.send({
+    code: 200,
+    result: {
+      path: target
+    }
+  });
+};
+
 export default {
-  install, setting
+  install, setting, storeAssets
 };

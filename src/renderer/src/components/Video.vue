@@ -59,7 +59,7 @@ export default {
               || urlStr.endsWith(".mp3") || urlStr.endsWith(".wav")) {
               urlStr = "kingfisher://" + urlStr.replaceAll("\\", "/");
             } else {
-              urlStr = "http://localhost:9555?t=" + new Date().getTime() + "&v=" + encodeURIComponent(urlStr);
+              urlStr = "http://localhost:19555?t=" + new Date().getTime() + "&v=" + encodeURIComponent(urlStr);
               ElMessage.warning("视频格式限制，无法插入时间签和截图");
             }
           }

@@ -2,7 +2,7 @@ import http from "node:http";
 import Ffmpeg from "./ffmpeg";
 
 class StreamServer {
-  constructor(port = 9555) {
+  constructor(port = 19555) {
     this.port = port;
   }
 

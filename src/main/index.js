@@ -8,10 +8,12 @@ import storeService from "./service/store";
 import noteService from "./service/note";
 import systemService from "./service/system";
 import { checkUpdate } from "./update";
+import { initHttpServer } from "./http"
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const path = require('path')
 
+initHttpServer();
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 

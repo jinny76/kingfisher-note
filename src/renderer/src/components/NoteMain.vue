@@ -1,7 +1,8 @@
 <template>
   <el-container style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
     <el-aside :width="videoWidth" style="margin: 0px; padding: 0px;">
-      <video-window v-if="videoUrl != '' && videoWidth !== '0%' && !drag" :url-str="videoUrl" ref="video"></video-window>
+      <video-window v-if="videoUrl != '' && videoWidth !== '0%' && !drag" :url-str="videoUrl"
+                    ref="video"></video-window>
     </el-aside>
     <div id="dragBar-dept" class="vertical-dragbar" v-show="videoWidth !== '0%'"></div>
     <el-main style="margin: 0px; padding: 0px;" id="idMainContainer">
@@ -284,6 +285,20 @@ export default {
       return false;
     };
 
+    const handleUpload = (_, data)=>{
+      let res = JSON.parse(data);
+      if (res.code === 200) {
+        let path = res.result.path;
+        if (path.endsWith(".wav")) {
+          editor.insertValue(`\n\n[音频](kingfisher://${path})\n`)
+        } else if (path.endsWith(".png")) {
+          editor.insertValue(`\n\n![](kingfisher://${path})\n`)
+        }
+      } else {
+        ElMessage.error("上传失败");
+      }
+    }
+
     watch(() => noteEditor.value, () => {
       if (noteEditor.value) {
         editor = new Vditor("idNoteEditor", {
@@ -296,6 +311,10 @@ export default {
           icon: "material",
           cache: {
             enable: false
+          },
+          upload: {
+            url: "http://localhost:13999/upload/assets",
+            success : handleUpload
           },
           keydown: (event) => {
             if (!event.ctrlKey && event.code != "Enter") {
@@ -372,7 +391,7 @@ export default {
           toolbar: [
             "emoji", "headings", "bold", "italic", "strike", "|", "line", "quote",
             "list", "ordered-list", "check", "outdent", "indent", "code", "inline-code",
-            "insert-after", "insert-before", "undo", "redo", "link", "table", "help", "|",
+            "insert-after", "insert-before", "undo", "redo", "link", "table", "record", "help", "|",
             {
               hotkey: "⌘N",
               name: "load",
