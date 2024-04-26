@@ -1,9 +1,10 @@
 {
   "name": "KingfisherNote",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "灵翠笔记，一款音视频笔记软件",
   "main": "./out/main/index.js",
-  "author": "Jinni",
+  "author": "太白雪霁",
+  "publishDate": "2024-04-26",
   "homepage": "http://www.kingfishers.cn",
   "scripts": {
     "format": "prettier --write .",

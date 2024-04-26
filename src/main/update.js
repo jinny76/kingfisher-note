@@ -7,7 +7,16 @@ export const checkUpdate = (win, ipcMain) => {
   autoUpdater.autoInstallOnAppQuit = true;
   mainWin = win;
   // 检测是否有更新包并通知
-  autoUpdater.checkForUpdatesAndNotify().catch();
+  autoUpdater.checkForUpdatesAndNotify().then((res) => {
+    console.log('检测更新成功', res);
+    if (res) {
+      mainWin.webContents.send('/client/updateAvailable', res);
+    } else {
+      mainWin.webContents.send('/client/updateNotAvailable', res);
+    }
+  }).catch(e=>{
+    console.log('检测更新失败', e);
+  })
   // 监听渲染进程的 install 事件，触发退出应用并安装
   ipcMain.handle('/update/install', () => autoUpdater.quitAndInstall());
 
@@ -36,6 +45,7 @@ autoUpdater.on('update-available', (info) => {
   mainWin.webContents.send('/client/updateAvailable', info);
 });
 autoUpdater.on('update-not-available', (info) => {
+  mainWin.webContents.send('/client/updateNotAvailable', info);
   console.log('无需更新', info);
 });
 

@@ -110,9 +110,9 @@
     </template>
   </el-dialog>
   <el-dialog v-model="dialogAboutVisible" title="关于" width="400">
-    <p>作者：太白雪霁</p>
-    <p>版本：0.0.2</p>
-    <p>日期：2024-04-25</p>
+    <p>作者：{{ '太白雪霁' }}</p>
+    <p>版本：{{ version }}</p>
+    <p>日期：{{ '2024-04-26' }}</p>
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="dialogAboutVisible = false">关闭</el-button>
@@ -204,7 +204,7 @@
       <div>点击菜单可以进行设置</div>
     </el-tour-step>
     <el-tour-step title="欢迎使用">
-      <div>感谢大家使用灵翠笔记</div>
+      <div>感谢大家使用灵翠笔记，软件的成熟还靠大家支持。</div>
     </el-tour-step>
   </el-tour>
   <div class="cv" v-show="locking" @click="unlock">
@@ -306,14 +306,9 @@ export default {
       console.error("错误", JSON.parse(arg));
     });
 
-    let newVersionListener = function(event, arg) {
-      console.log("新版本", arg);
-      startUpdate.value = true;
-    };
-    window.electron.ipcRenderer.on("/client/updateAvailable", newVersionListener);
-
     let updateProgressListener = function(event, arg) {
       console.log("更新进度", arg);
+      startUpdate.value = true;
       updateProgress.value = arg.percent;
     };
     window.electron.ipcRenderer.on("/client/updateProgress", updateProgressListener);
@@ -423,8 +418,8 @@ export default {
         step.value.push(toolbar.children[27]);
         step.value.push(toolbar.children[28]);
         step.value.push(toolbar.children[29]);
-        step.value.push(toolbar.children[31]);
-        step.value.push(toolbar.children[34]);
+        step.value.push(toolbar.children[32]);
+        step.value.push(toolbar.children[35]);
         step.value.push("#idMenuSetting");
       }
 
@@ -571,7 +566,8 @@ export default {
       startTour,
       step,
       onChangeTour,
-      locking
+      locking,
+      version: __APP_VERSION__
     };
   }
 };

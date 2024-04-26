@@ -41,7 +41,7 @@ const decrypt = (data, key) => {
 
 const loadNoteMeta = () => {
   if (fs.existsSync(`${setting.noteDir}/noteMeta.json`)) {
-    noteMeta = JSON.parse(fs.readFileSync(`${setting.noteDir}/kfnote/noteMeta.json`, "utf-8"));
+    noteMeta = JSON.parse(fs.readFileSync(`${setting.noteDir}/noteMeta.json`, "utf-8"));
   }
 };
 
@@ -64,11 +64,11 @@ if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
   }
   fs.writeFileSync(`${rootPath}/kfnote/setting.json`, JSON.stringify(setting), "utf-8");
   console.log("设置文件已创建", setting);
-
   loadNoteMeta();
 } else {
   setting = JSON.parse(fs.readFileSync(`${rootPath}/kfnote/setting.json`, "utf-8"));
   console.log("设置文件已加载", setting);
+  loadNoteMeta();
 }
 
 const install = () => {
@@ -214,8 +214,8 @@ const install = () => {
       };
     } else {
       return {
-        code: 200,
-        name: path, tags: noteMeta[path] ? noteMeta[path].tags : [], data: ""
+        code: 404,
+        message: "笔记不存在"
       };
     }
   });
