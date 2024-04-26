@@ -78,8 +78,11 @@ const versions = ref([]);
 
 const currVersion = ref(null);
 
+const currPage = ref(1);
+
 export default {
   currNote, noteList, videoUrl, mainComp, setting, markChanged, locking,
   recentNotes, lastScreenshot, tags, versions, currVersion, settingReady,
-  startColdDown, stopColdDown, constPassword : "kingfisher123456789!@#$%^&"
+  startColdDown, stopColdDown, constPassword : "kingfisher123456789!@#$%^&",
+  currPage
 };

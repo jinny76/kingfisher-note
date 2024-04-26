@@ -146,6 +146,22 @@ const install = (_windowManager) => {
     }
   });
 
+  ipcMain.handle("/note/changePage", (event, params) => {
+    let videoWindow = windowManager.findWindowByRoute("/video/");
+    if (videoWindow) {
+      videoWindow.webContents.send("/client/changePage", params);
+      return {
+        code: 200,
+        params: params
+      };
+    } else {
+      return {
+        code: 500,
+        message: "未找到视频窗口"
+      };
+    }
+  });
+
   ipcMain.handle("/note/ocr", async (event, params) => {
     let screenshot = `${storeService.setting.screenshotDir}/${params}.png`;
 

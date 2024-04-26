@@ -1,18 +1,18 @@
 <template>
   <vue3-video-player v-bind="options" controls v-show="initFlag"
                      style="width: 100%; height: 100%;display: flex"
-                     ref="playerDom" @play="whenPlay" v-if="isVideo"></vue3-video-player>
+                     ref="playerDom" @play="whenPlay" v-if="contentType === 'video'"></vue3-video-player>
   <webview v-else :src="options.src" style="width: 100%; height: 100%;display: flex" ref="webview"></webview>
 </template>
 
 <script lang="js">
-import { computed, ref, watch, nextTick, onUnmounted } from "vue";
+import { nextTick, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import service from "../utils/service";
-import noteModel from "../model/note";
 import { ElMessage } from "element-plus";
 import utils from "../utils/utils";
 import website from "../utils/website";
+import noteModel from "../model/note"
 
 export default {
   name: "Home",
@@ -41,7 +41,7 @@ export default {
       //aspectRatio: "16:9",
     });
 
-    const isVideo = ref(true);
+    const contentType = ref("video");
 
     function handleSource() {
       let urlStr = props.urlStr || route.params.path;
@@ -49,18 +49,23 @@ export default {
         urlStr = urlStr.substring(0, urlStr.length - 1);
       }
       if (urlStr && urlStr.indexOf("://") === -1) {
-        isVideo.value = true;
-        if (!urlStr.startsWith("http://") && !urlStr.startsWith("https://")) {
-          if (urlStr.endsWith(".mp4") || urlStr.endsWith(".webm") || urlStr.endsWith(".ogg")
-             || urlStr.endsWith(".mp3") || urlStr.endsWith(".wav")){
-            urlStr = "kingfisher://" + urlStr.replaceAll("\\", "/");
-          } else {
-            urlStr = "http://localhost:9555?t=" + new Date().getTime() + "&v=" + encodeURIComponent(urlStr);
-            ElMessage.warning("视频格式限制，无法插入时间签和截图");
+        if (urlStr.endsWith(".html") || urlStr.endsWith(".htm") || urlStr.endsWith(".pdf")) {
+          contentType.value = "document";
+          urlStr = urlStr += "#view=FitH,top";
+        } else {
+          contentType.value = "video";
+          if (!urlStr.startsWith("http://") && !urlStr.startsWith("https://")) {
+            if (urlStr.endsWith(".mp4") || urlStr.endsWith(".webm") || urlStr.endsWith(".ogg")
+              || urlStr.endsWith(".mp3") || urlStr.endsWith(".wav")) {
+              urlStr = "kingfisher://" + urlStr.replaceAll("\\", "/");
+            } else {
+              urlStr = "http://localhost:9555?t=" + new Date().getTime() + "&v=" + encodeURIComponent(urlStr);
+              ElMessage.warning("视频格式限制，无法插入时间签和截图");
+            }
           }
         }
       } else {
-        isVideo.value = false;
+          contentType.value = "website";
       }
       return urlStr;
     }
@@ -69,6 +74,20 @@ export default {
       options.value.src = handleSource();
       afterSetUrl();
     });
+
+    watch(noteModel.currPage, ()=>{
+      if (noteModel.currPage.value != null && contentType.value === "document") {
+        let urlStr = options.value.src;
+        urlStr = urlStr.substring(0, urlStr.indexOf("#"));
+        if (urlStr.endsWith(".pdf")) {
+          urlStr = urlStr + "#page=" + noteModel.currPage.value + "&view=FitH,top";
+          options.value.src = "_blank";
+          setTimeout(() => {
+            options.value.src = urlStr;
+          }, 500);
+        }
+      }
+    })
 
     const afterSetUrl = () => {
       if (!options.value.src.startsWith("http://") && !options.value.src.startsWith("https://")) {
@@ -183,7 +202,7 @@ export default {
     };
 
     const insertContent = (type = "all") => {
-      if (isVideo.value) {
+      if (contentType.value === "video") {
         let video = playerDom.value.$el.childNodes[0];
         if (video) {
           let data = {};
@@ -200,7 +219,7 @@ export default {
         } else {
           ElMessage.error("视频未加载");
         }
-      } else {
+      } else if (contentType.value === "website"){
         service.invoke("/note/webInsertContent", type);
       }
     };
@@ -218,10 +237,10 @@ export default {
     let locateVideoListener = function(event, arg) {
       console.log("定位视频", arg);
       let argObj = JSON.parse(arg);
-      if (isVideo.value && playerDom.value?.$el?.childNodes[0]) {
+      if (contentType.value === "video" && playerDom.value?.$el?.childNodes[0]) {
         let video = playerDom.value.$el.childNodes[0];
         video.currentTime = new Number(argObj.location);
-      } else {
+      } else if (contentType.value === "website"){
         service.invoke("/note/webLocateVideo", arg);
       }
     };
@@ -253,8 +272,14 @@ export default {
     };
     window.electron.ipcRenderer.on("/client/backward", backwardListener);
 
+    let changePageListener = function(event, arg) {
+      let {page} = JSON.parse(arg);
+      noteModel.currPage.value = page;
+    };
+    window.electron.ipcRenderer.on("/client/changePage", changePageListener);
+
     const playVideo = () => {
-      if (isVideo.value) {
+      if (contentType.value === "video") {
         let video = playerDom.value.$el.childNodes[0];
         video.crossOrigin = "Anonymous";
         if (video.paused) {
@@ -262,34 +287,34 @@ export default {
         } else {
           video.pause();
         }
-      } else {
+      } else if (contentType.value === "website"){
         service.invoke("/note/webPlayVideo", "");
       }
     };
 
     const stopVideo = () => {
-      if (isVideo.value) {
+      if (contentType.value === "video") {
         let video = playerDom.value.$el.childNodes[0];
         video.pause();
-      } else {
+      } else if (contentType.value === "website"){
         service.invoke("/note/webStopVideo", "");
       }
     };
 
     const forward = () => {
-      if (isVideo.value) {
+      if (contentType.value === "video") {
         let video = playerDom.value.$el.childNodes[0];
         video.currentTime = video.currentTime + 5;
-      } else {
+      } else if (contentType.value === "website"){
         service.invoke("/note/webForward", "");
       }
     };
 
     const backward = () => {
-      if (isVideo.value) {
+      if (contentType.value === "video") {
         let video = playerDom.value.$el.childNodes[0];
         video.currentTime = video.currentTime >= 5 ? video.currentTime - 5 : 0;
-      } else {
+      } else if (contentType.value === "website"){
         service.invoke("/note/webBackward", "");
       }
     };
@@ -308,10 +333,11 @@ export default {
       window.electron.ipcRenderer.removeListener("/client/playVideo", playVideoListener);
       window.electron.ipcRenderer.removeListener("/client/forward", forwardListener);
       window.electron.ipcRenderer.removeListener("/client/backward", backwardListener);
+      window.electron.ipcRenderer.removeListener("/client/changePage", changePageListener);
     });
 
     return {
-      initFlag, options, whenPlay, playerDom, playVideo, stopVideo, insertContent, isVideo, webview,
+      initFlag, options, whenPlay, playerDom, playVideo, stopVideo, insertContent, contentType, webview,
       forward, backward
     };
   }

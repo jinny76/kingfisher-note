@@ -179,8 +179,8 @@
     <el-tour-step :target="step[3]" title="保存笔记">
       <div>编写过程中可以点击按钮，或者使用快捷键 Ctrl+S 来保存笔记</div>
     </el-tour-step>
-    <el-tour-step :target="step[4]" title="打开音视频文件">
-      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+V 来打开一个音视频文件</div>
+    <el-tour-step :target="step[4]" title="打开文件">
+      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+V 来打开一个文件</div>
     </el-tour-step>
     <el-tour-step :target="step[5]" title="打开音视频网址">
       <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+U 来打开一个音视频网址，目前B站和网易公开课支持较好</div>
@@ -522,10 +522,10 @@ export default {
           if (md5(value + noteModel.constPassword) == noteModel.setting.value.password) {
             locking.value = false;
             noteModel.startColdDown();
+            locking.value = false;
           } else {
             ElMessage.error("密码错误");
           }
-          locking.value = false;
         }).catch(() => {
           console.log("取消解锁");
         });
