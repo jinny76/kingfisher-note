@@ -119,11 +119,14 @@ export default {
       if (note.name) {
         note.data = editor.getValue();
         note.changed = false;
-        localStorage.setItem("NOTE", JSON.stringify(note));
+        localStorage.setItem("NOTE", JSON.stringify({
+          name: note.name,
+        }));
         service.invoke("/store/saveNote", JSON.stringify({
           path: note.name,
           data: note.data,
-          tags: note.tags
+          tags: note.tags,
+          key: note.key
         }), (result) => {
           console.log("保存笔记成功", result);
           ElMessage.success("保存笔记成功");
@@ -283,6 +286,9 @@ export default {
           mode: "sv",
           value: noteModel.currNote.value.data ? noteModel.currNote.value.data : "",
           icon: "material",
+          cache: {
+            enable: false
+          },
           keydown: (event) => {
             if (!event.ctrlKey && event.code != "Enter") {
               noteModel.markChanged();
@@ -730,31 +736,53 @@ export default {
 
       service.invoke("/store/getNote", JSON.stringify({
         path: note.name,
+        key: note.key,
         time: time
       }), (result) => {
-        closeVideo();
-        lastVideo = null;
-        noteModel.currNote.value = result;
+        if (result.code === 200) {
 
-        let existNote = recentNotes.value.find((n) => n.name === note.name);
-        if (existNote) {
-          recentNotes.value.splice(recentNotes.value.indexOf(existNote), 1);
+          closeVideo();
+          lastVideo = null;
+          noteModel.currNote.value = result;
+
+          let existNote = recentNotes.value.find((n) => n.name === note.name);
+          if (existNote) {
+            recentNotes.value.splice(recentNotes.value.indexOf(existNote), 1);
+          }
+          recentNotes.value.unshift({
+            name: note.name
+          });
+          if (recentNotes.value.length > 10) {
+            recentNotes.value.pop();
+          }
+          localStorage.setItem("RECENT_NOTES", JSON.stringify(recentNotes.value));
+
+          openFirstVideo();
+          noteModel.lastScreenshot.value = null;
+
+          nextTick(() => {
+            setCursor();
+            editor.focus();
+
+            loadVersions();
+          });
+        } else if (result.code === 500 && result.message === "文件已加密") {
+          ElMessageBox.prompt("请输入密码", "打开加密笔记-" + note.name.substring(0, note.name.indexOf(".")), {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            inputPattern: /\S/,
+            inputErrorMessage: "密码不能为空"
+          }).then(({ value }) => {
+            note.key = value;
+            callOpen(note, time)
+          }).catch(() => {
+            console.log("取消打开加密笔记");
+          });
+        } else {
+          ElMessage.error(result.message);
         }
-        recentNotes.value.unshift(note);
-        if (recentNotes.value.length > 10) {
-          recentNotes.value.pop();
-        }
-        localStorage.setItem("RECENT_NOTES", JSON.stringify(recentNotes.value));
-
-        openFirstVideo();
-        noteModel.lastScreenshot.value = null;
-
-        nextTick(() => {
-          setCursor();
-          editor.focus();
-
-          loadVersions();
-        });
+      }, (error) => {
+        ElMessage.error("打开笔记失败");
       });
     }
 
@@ -979,7 +1007,39 @@ export default {
       }
     };
 
+    const doCrypt = function() {
+      if (noteModel.currNote.value.name) {
+        if (!noteModel.currNote.value.key) {
+          ElMessageBox.prompt("请输入密码", "加密笔记", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            inputPattern: /\S/,
+            inputErrorMessage: "密码不能为空"
+          }).then(({ value }) => {
+            service.invoke("/store/encryptNote", JSON.stringify({
+              path: noteModel.currNote.value.name,
+              key: value
+            }), (result) => {
+              if (result.code === 200) {
+                ElMessage.success("加密成功");
+                noteModel.currNote.value.key = value;
+              } else {
+                ElMessage.warning(result.message);
+              }
+            });
+          }).catch(() => {
+            console.log("取消加密笔记");
+          });
+        } else {
+          ElMessage.warning("笔记已加密");
+        }
+      } else {
+        ElMessage.warning("请先打开笔记");
+      }
+    };
+
     return {
+      doCrypt,
       loadVersion,
       doDelete,
       noteEditor,

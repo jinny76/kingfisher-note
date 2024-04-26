@@ -11,10 +11,11 @@
         background-color="#545c64"
         text-color="#fff"
         popper-effect="dark"
+        ref="menu"
       >
         <el-sub-menu index="1">
           <template #title>文件</template>
-          <el-menu-item index="2-1">新建笔记</el-menu-item>
+          <el-menu-item index="2-1" id="idMenuFile">新建笔记</el-menu-item>
           <el-menu-item index="2-2">打开笔记</el-menu-item>
           <el-sub-menu index="2-3">
             <template #title>打开历史笔记</template>
@@ -22,13 +23,15 @@
           </el-sub-menu>
           <el-menu-item index="2-4">保存笔记</el-menu-item>
           <el-menu-item index="2-5">删除笔记</el-menu-item>
+          <el-menu-item index="2-6">加密笔记</el-menu-item>
           <el-menu-item index="2-10">转换视频</el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="4">设置</el-menu-item>
+        <el-menu-item index="4" id="idMenuSetting">设置</el-menu-item>
         <el-sub-menu index="6">
           <template #title>帮助</template>
           <el-menu-item index="6-1">使用说明</el-menu-item>
-          <el-menu-item index="6-2">关于</el-menu-item>
+          <el-menu-item index="6-2">快速上手</el-menu-item>
+          <el-menu-item index="6-10">关于</el-menu-item>
         </el-sub-menu>
       </el-menu>
       <div class="title-bar">
@@ -150,6 +153,47 @@
       </div>
     </template>
   </el-dialog>
+  <el-tour v-model="showTour" @change="onChangeTour" z-index="9999">
+    <el-tour-step :target="step[0]" title="新建笔记" placement="right">
+      <div>点击菜单，创建一个新的笔记</div>
+    </el-tour-step>
+    <el-tour-step :target="step[1]" title="编写笔记" placement="center">
+      <div>就可以编写笔记了</div>
+    </el-tour-step>
+    <el-tour-step :target="step[2]" title="获得帮助">
+      <div>笔记使用Markdown格式，可以从这里获得帮助</div>
+    </el-tour-step>
+    <el-tour-step :target="step[3]" title="保存笔记">
+      <div>编写过程中可以点击按钮，或者使用快捷键 Ctrl+S 来保存笔记</div>
+    </el-tour-step>
+    <el-tour-step :target="step[4]" title="打开音视频文件">
+      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+V 来打开一个音视频文件</div>
+    </el-tour-step>
+    <el-tour-step :target="step[5]" title="打开音视频网址">
+      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+U 来打开一个音视频网址，目前B站和网易公开课支持较好</div>
+    </el-tour-step>
+    <el-tour-step :target="step[6]" title="插入定位">
+      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+T 来插入一个时间定位，然后在笔记预览链接点击可以快速跳转</div>
+    </el-tour-step>
+    <el-tour-step :target="step[7]" title="插入截图">
+      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+P 来插入一个视频截图，然后在笔记预览可以点击看大图</div>
+    </el-tour-step>
+    <el-tour-step :target="step[8]" title="同时插入">
+      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+A 来同时插入时间定位和视频截图</div>
+    </el-tour-step>
+    <el-tour-step :target="step[9]" title="控制音视频播放">
+      <div>可以点击按钮，或者使用快捷键 Ctrl+P 控制音视频播放暂停，Ctrl+Shift+D 回退5秒，Ctrl+Shift+F 快进5秒</div>
+    </el-tour-step>
+    <el-tour-step :target="step[10]" title="导出笔记">
+      <div>可以点击按钮，导出笔记，支持MD，PDF和HTML格式</div>
+    </el-tour-step>
+    <el-tour-step :target="step[11]" title="设置">
+      <div>点击菜单可以进行设置</div>
+    </el-tour-step>
+    <el-tour-step title="欢迎使用">
+      <div>感谢大家使用翠鸟笔记</div>
+    </el-tour-step>
+  </el-tour>
 </template>
 
 <script lang="js">
@@ -239,6 +283,11 @@ export default {
             mainComponent.value.doDelete();
           }
           break;
+        case "2-6":
+          if (mainComponent.value.doCrypt) {
+            mainComponent.value.doCrypt();
+          }
+          break;
         case "2-10":
           videoList.value = [];
           dialogConvertVisible.value = true;
@@ -249,7 +298,7 @@ export default {
             settingDialog.value.updateSetting(noteModel.setting.value);
           });
           break;
-        case "6-2":
+        case "6-10":
           dialogAboutVisible.value = true;
           break;
         case "6-1":
@@ -257,6 +306,12 @@ export default {
           if (mainComponent.value.showHelp) {
             mainComponent.value.showHelp();
           }
+          break;
+        case "6-2":
+          menu.value.open("1");
+          nextTick(() => {
+            startTour();
+          });
           break;
         default:
           if (mainComponent.value.openNote) {
@@ -268,6 +323,34 @@ export default {
           break;
       }
     };
+
+    const showTour = ref(false);
+    const step = ref([]);
+    const menu = ref()
+    const startTour = () => {
+      step.value = ["#idMenuFile", "#idNoteEditor"];
+      let toolbar = document.querySelector(".vditor-toolbar");
+      if (toolbar) {
+        step.value.push(toolbar.children[21]);
+        step.value.push(toolbar.children[24]);
+        step.value.push(toolbar.children[25]);
+        step.value.push(toolbar.children[26]);
+        step.value.push(toolbar.children[27]);
+        step.value.push(toolbar.children[28]);
+        step.value.push(toolbar.children[29]);
+        step.value.push(toolbar.children[31]);
+        step.value.push(toolbar.children[34]);
+        step.value.push("#idMenuSetting");
+      }
+
+      showTour.value = true;
+    };
+
+    const onChangeTour = (index) => {
+      if (index === 1) {
+        menu.value.close("1");
+      }
+    }
 
     const mainComp = noteModel.mainComp;
 
@@ -336,6 +419,7 @@ export default {
     };
 
     return {
+      menu,
       startUpdate,
       updateProgress,
       loadVersion,
@@ -359,6 +443,10 @@ export default {
       tags: noteModel.tags,
       versions,
       currVersion: noteModel.currVersion,
+      showTour,
+      startTour,
+      step,
+      onChangeTour
     };
   }
 };
