@@ -285,19 +285,20 @@ export default {
       return false;
     };
 
-    const handleUpload = (_, data)=>{
+    const handleUpload = (_, data) => {
       let res = JSON.parse(data);
       if (res.code === 200) {
         let path = res.result.path;
-        if (path.endsWith(".wav")) {
-          editor.insertValue(`\n\n[音频](kingfisher://${path})\n`)
-        } else if (path.endsWith(".png")) {
-          editor.insertValue(`\n\n![](kingfisher://${path})\n`)
+        if (path.endsWith(".wav") || path.endsWith(".mp3")) {
+          editor.insertValue(`\n\n[音频](kingfisher://${path})\n`);
+        } else if (path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".gif")
+          || path.endsWith(".bmp") || path.endsWith(".webp")) {
+          editor.insertValue(`\n\n![](kingfisher://${path})\n`);
         }
       } else {
         ElMessage.error("上传失败");
       }
-    }
+    };
 
     watch(() => noteEditor.value, () => {
       if (noteEditor.value) {
@@ -314,7 +315,8 @@ export default {
           },
           upload: {
             url: "http://localhost:13999/upload/assets",
-            success : handleUpload
+            success: handleUpload,
+            max: 20 * 1024 * 1024 * 1024
           },
           keydown: (event) => {
             if (!event.ctrlKey && event.code != "Enter") {
@@ -391,7 +393,7 @@ export default {
           toolbar: [
             "emoji", "headings", "bold", "italic", "strike", "|", "line", "quote",
             "list", "ordered-list", "check", "outdent", "indent", "code", "inline-code",
-            "insert-after", "insert-before", "undo", "redo", "link", "table", "record", "help", "|",
+            "insert-after", "insert-before", "undo", "redo", "link", "table", "record", "upload", "help", "|",
             {
               hotkey: "⌘N",
               name: "load",
