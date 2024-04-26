@@ -411,15 +411,15 @@ export default {
       step.value = ["#idMenuFile", "#idNoteEditor"];
       let toolbar = document.querySelector(".vditor-toolbar");
       if (toolbar) {
-        step.value.push(toolbar.children[21]);
-        step.value.push(toolbar.children[24]);
-        step.value.push(toolbar.children[25]);
+        step.value.push(toolbar.children[23]);
         step.value.push(toolbar.children[26]);
         step.value.push(toolbar.children[27]);
         step.value.push(toolbar.children[28]);
         step.value.push(toolbar.children[29]);
-        step.value.push(toolbar.children[32]);
-        step.value.push(toolbar.children[35]);
+        step.value.push(toolbar.children[30]);
+        step.value.push(toolbar.children[31]);
+        step.value.push(toolbar.children[34]);
+        step.value.push(toolbar.children[37]);
         step.value.push("#idMenuSetting");
       }
 

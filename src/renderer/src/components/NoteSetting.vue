@@ -22,6 +22,12 @@
       </el-col>
     </el-row>
     <el-row style="padding: 5px;">
+      <el-col :span="6">附件目录：</el-col>
+      <el-col :span="18">
+        <el-input v-model="setting.assetsDir" placeholder="请输入附件目录"></el-input>
+      </el-col>
+    </el-row>
+    <el-row style="padding: 5px;">
       <el-col :span="6">编写时暂停：</el-col>
       <el-col :span="18">
         <el-switch v-model="setting.pauseWhenWrite" active-text="是" inactive-text="否"></el-switch>

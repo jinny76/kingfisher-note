@@ -191,7 +191,7 @@ export default {
           lastVideo = video + "/";
         }
         if (editor.getValue().indexOf(newContent) === -1) {
-          editor.insertValue(newContent, true);
+          insertText(newContent);
           noteModel.markChanged();
         }
       }
@@ -290,15 +290,19 @@ export default {
       if (res.code === 200) {
         let path = res.result.path;
         if (path.endsWith(".wav") || path.endsWith(".mp3")) {
-          editor.insertValue(`\n\n[音频](kingfisher://${path})\n`);
+          insertText(`\n\n[音频](kingfisher://${path})\n`);
         } else if (path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".gif")
           || path.endsWith(".bmp") || path.endsWith(".webp")) {
-          editor.insertValue(`\n\n![](kingfisher://${path})\n`);
+          insertText(`\n\n![](kingfisher://${path})\n`);
+        } else {
+          insertText(`\n\n[[附件 ${path.substring(path.lastIndexOf("/") + 1)}]](kingfisher://${path})\n`);
         }
       } else {
         ElMessage.error("上传失败");
       }
     };
+
+    let lastPosition = null;
 
     watch(() => noteEditor.value, () => {
       if (noteEditor.value) {
@@ -326,12 +330,19 @@ export default {
               noteModel.startColdDown();
             }
           },
+          blur: () => {
+            let selObj = window.getSelection();
+            lastPosition = selObj.getRangeAt(0);
+          },
           preview: {
             delay: 200,
             theme: {
               current: "dark"
             },
             actions: []
+          },
+          outline:{
+            enable: true
           },
           link: {
             click: (dom) => {
@@ -373,10 +384,14 @@ export default {
                   }));
                 }
               } else if (dom.href.startsWith("kingfisher://")) {
-                closeVideo();
-                nextTick(() => {
-                  openVideo(decodeURIComponent(dom.href.replace("kingfisher://", "")));
-                });
+                if (dom.href.indexOf(".mp4") !== -1) {
+                  closeVideo();
+                  nextTick(() => {
+                    openVideo(decodeURIComponent(dom.href.replace("kingfisher://", "")));
+                  });
+                } else {
+                  service.invoke("/note/openFile", JSON.stringify({ path: dom.href.replace("kingfisher://", "") }));
+                }
                 return false;
               } else if (dom.href.startsWith("http://") || dom.href.startsWith("https://") && dom.href !== "https://") {
                 closeVideo();
@@ -516,7 +531,7 @@ export default {
                     inputPattern: /\d+/,
                     inputErrorMessage: "页码必须填写"
                   }).then(({ value }) => {
-                    editor.insertValue(`\n\n[[页码${value}]](page://${value})\n`);
+                    insertText(`\n\n[[页码${value}]](page://${value})\n`);
                   });
                 } else {
                   ElMessage.warning("请先打开一个笔记");
@@ -539,7 +554,7 @@ export default {
                         let text = result.data;
                         // 只保留汉子、字母、数字、空格、换行符
                         text = text.replace(/[^\u4e00-\u9fa5a-zA-Z0-9\s\n]/g, "");
-                        editor.insertValue("\n" + text);
+                        insertText("\n" + text);
                       } else {
                         ElMessage.error("识别文字失败");
                       }
@@ -668,22 +683,39 @@ export default {
     };
 
     let insertAllListener = function(event, arg) {
-      editor.focus();
       let data = JSON.parse(arg);
       if (data) {
+        let content;
         if (data.time && data.screenshotId) {
-          editor.insertValue("\n\n" + formatTime(data.time) + "\n" + insertMdImg(data.screenshotId) + "\n");
+          content = "\n\n" + formatTime(data.time) + "\n" + insertMdImg(data.screenshotId) + "\n"
           noteModel.lastScreenshot.value = data.screenshotId;
         } else if (data.time) {
-          editor.insertValue("\n\n" + formatTime(data.time) + "\n");
+          content = "\n\n" + formatTime(data.time) + "\n";
         } else if (data.screenshotId) {
-          editor.insertValue("\n\n" + insertMdImg(data.screenshotId) + "\n");
+          content= "\n\n" + insertMdImg(data.screenshotId) + "\n";
           noteModel.lastScreenshot.value = data.screenshotId;
         }
-        noteModel.markChanged();
+        if (content) {
+          insertText(content);
+        }
       }
     };
     electron.ipcRenderer.on("/client/insertAll", insertAllListener);
+
+    const insertText = (text) => {
+      if (editor) {
+        editor.focus();
+        nextTick(() => {
+          if (lastPosition) {
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(lastPosition);
+          }
+          editor.insertValue(text, true);
+          noteModel.markChanged();
+        });
+      }
+    }
 
     let saveNoteListener = function(event, arg) {
       if (noteModel.currNote.value.changed) {

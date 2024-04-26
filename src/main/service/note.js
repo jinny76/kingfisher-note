@@ -181,6 +181,21 @@ const install = (_windowManager) => {
     }
   });
 
+  ipcMain.handle("/note/openFile", async (event, params) => {
+    let {path} = JSON.parse(params);
+    let parentDir = path.substring(0, path.lastIndexOf("/"));
+    //open the folder
+    let childProcess = require("child_process");
+    if (process.platform === "win32") {
+      parentDir = parentDir.replace(/\//g, "\\");
+      childProcess.exec(`start explorer "${parentDir}"`);
+    } else if (process.platform === "darwin") {
+      childProcess.exec(`open "${parentDir}"`);
+    } else {
+      childProcess.exec(`xdg-open "${parentDir}"`);
+    }
+  });
+
   const WebSocketServer = require("ws").Server;
   let wss = new WebSocketServer({ port: 18888 });
   let ws;
