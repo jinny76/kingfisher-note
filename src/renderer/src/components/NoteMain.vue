@@ -334,6 +334,14 @@ export default {
             let selObj = window.getSelection();
             lastPosition = selObj.getRangeAt(0);
           },
+          focus: () => {
+            if (lastPosition) {
+              let selObj = window.getSelection();
+              selObj.removeAllRanges();
+              selObj.addRange(lastPosition);
+              lastPosition = null;
+            }
+          },
           preview: {
             delay: 200,
             theme: {
@@ -361,7 +369,7 @@ export default {
                 let content = editor.getValue();
                 let index = content.indexOf(dom.href);
                 content = content.substring(0, index);
-                let videoIndex = content.lastIndexOf("[视频");
+                let videoIndex = content.lastIndexOf("[文件");
                 let videoUrl = "";
                 if (videoIndex !== -1) {
                   let startIndex = content.indexOf("(", videoIndex);
@@ -519,7 +527,6 @@ export default {
                 }
               }
             },
-            ,
             {
               hotkey: "⇧⌘G",
               name: "insert-page",
@@ -708,7 +715,6 @@ export default {
 
     const insertText = (text) => {
       if (editor) {
-        editor.focus();
         nextTick(() => {
           if (lastPosition) {
             const selection = window.getSelection();
@@ -717,6 +723,7 @@ export default {
           }
           editor.insertValue(text, true);
           noteModel.markChanged();
+          editor.focus();
         });
       }
     };
@@ -757,6 +764,7 @@ export default {
         inputPattern: /\S/,
         inputErrorMessage: "笔记名称不能为空"
       }).then(({ value }) => {
+        closeVideo();
         service.invoke("/store/newNote", value, (result) => {
           if (result.code === 200) {
             noteModel.currNote.value = {
