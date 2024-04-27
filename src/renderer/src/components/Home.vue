@@ -28,9 +28,18 @@
           <el-menu-item index="2-4">保存笔记</el-menu-item>
           <el-menu-item index="2-5">删除笔记</el-menu-item>
           <el-menu-item index="2-6">加密笔记</el-menu-item>
-          <el-menu-item index="2-10">转换视频</el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="4" id="idMenuSetting">设置</el-menu-item>
+        <el-sub-menu index="4">
+          <template #title>工具</template>
+          <el-menu-item index="4-1" id="idMenuSetting">设置</el-menu-item>
+          <el-menu-item index="4-2">转换视频</el-menu-item>
+          <el-menu-item index="4-3">专注模式</el-menu-item>
+          <el-menu-item index="4-4">调试工具</el-menu-item>
+          <el-sub-menu index="4-5">
+            <template #title>其他工具</template>
+            <el-menu-item index="4-5-1">截图</el-menu-item>
+          </el-sub-menu>
+        </el-sub-menu>
         <el-sub-menu index="6">
           <template #title>帮助</template>
           <el-menu-item index="6-1">使用说明</el-menu-item>
@@ -85,18 +94,14 @@
             />
           </el-select>
         </div>
-        <div style="padding-left: 40px; display: flex" v-if="startUpdate">
-          更新:
+        <div style="padding-left: 40px; width: 300px;">
           <el-progress
             :text-inside="true"
-            :percentage="updateProgress"
-            :stroke-width="15"
-            status="success"
-            striped
-            striped-flow
-            :duration="10"
-            style="width: 150px; padding-left: 5px;"
-          />
+            :stroke-width="20"
+            :percentage="restPercent"
+            status="success">
+            <span style="color:white">您已经沉浸学习了 {{ studyTime }} </span>
+          </el-progress>
         </div>
       </div>
     </el-header>
@@ -113,9 +118,9 @@
     </template>
   </el-dialog>
   <el-dialog v-model="dialogAboutVisible" title="关于" width="400" align-center>
-    <p>作者：{{ '太白雪霁' }}</p>
+    <p>作者：{{ "太白雪霁" }}</p>
     <p>版本：{{ version }}</p>
-    <p>日期：{{ '2024-04-26' }}</p>
+    <p>日期：{{ "2024-04-26" }}</p>
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="dialogAboutVisible = false">关闭</el-button>
@@ -164,7 +169,7 @@
       </div>
     </template>
   </el-dialog>
-  <el-tour v-model="showTour" @change="onChangeTour" z-index="9999" :mask="{
+  <el-tour v-model="showTour" @change="onChangeTour" :z-index="9999" :mask="{
       style: {
         boxShadow: 'inset 0 0 15px #333',
       },
@@ -203,9 +208,6 @@
     <el-tour-step :target="step[10]" title="导出笔记">
       <div>可以点击按钮，导出笔记，支持MD，PDF和HTML格式</div>
     </el-tour-step>
-    <el-tour-step :target="step[11]" title="设置">
-      <div>点击菜单可以进行设置</div>
-    </el-tour-step>
     <el-tour-step title="欢迎使用">
       <div>感谢大家使用灵翠笔记，软件的成熟还靠大家支持。</div>
     </el-tour-step>
@@ -228,7 +230,7 @@ import md5 from "md5";
 export default {
   name: "Home",
   components: { NoteMain, NoteSetting },
-  setup () {
+  setup() {
     let canvas;
     let letters = Array(512).join(1).split("");
     const locking = noteModel.locking;
@@ -305,19 +307,17 @@ export default {
       noteModel.stopColdDown();
     }, "锁定");
 
+    keyManager.registerHotkeyProcessor("f11", () => {
+      service.invoke("/system/fullscreen", "", (result) => {
+        console.log("切换全屏", result);
+      });
+    }, "全屏");
+
     window.electron.ipcRenderer.on("/client/error", function(event, arg) {
       console.error("错误", JSON.parse(arg));
     });
 
-    let updateProgressListener = function(event, arg) {
-      console.log("更新进度", arg);
-      startUpdate.value = true;
-      updateProgress.value = arg.percent;
-    };
-    window.electron.ipcRenderer.on("/client/updateProgress", updateProgressListener);
-
     let downloadedListener = function() {
-      startUpdate.value = false;
       ElMessageBox.confirm("更新完成, 重启生效", "提示", {
         confirmButtonText: "重启",
         cancelButtonText: "取消",
@@ -340,9 +340,6 @@ export default {
       });
     };
     window.electron.ipcRenderer.on("/client/downloaded", downloadedListener);
-
-    const startUpdate = ref(false);
-    const updateProgress = ref(0);
 
     const handleSelect = (index) => {
       switch (index) {
@@ -371,15 +368,28 @@ export default {
             mainComponent.value.doCrypt();
           }
           break;
-        case "2-10":
+        case "4-2":
           videoList.value = [];
           dialogConvertVisible.value = true;
           break;
-        case "4":
+        case "4-3":
+          service.invoke("/system/fullscreen", "", (result) => {
+            console.log("切换全屏", result);
+            ElMessage.success("已进入专注模式，其他程序将无法打扰您，ESC键退出专注模式");
+          });
+          break;
+        case "4-4":
+          service.invoke("/system/openDevTools", "", (result) => {
+          });
+          break;
+        case "4-1":
           dialogSettingVisible.value = true;
           nextTick(() => {
             settingDialog.value.updateSetting(noteModel.setting.value);
           });
+          break;
+        case "4-5-1":
+          window.open("https://zh.snipaste.com/", "_blank")
           break;
         case "6-10":
           dialogAboutVisible.value = true;
@@ -423,7 +433,6 @@ export default {
         step.value.push(toolbar.children[31]);
         step.value.push(toolbar.children[34]);
         step.value.push(toolbar.children[37]);
-        step.value.push("#idMenuSetting");
       }
 
       showTour.value = true;
@@ -539,11 +548,26 @@ export default {
       }
     });
 
+    const studyTime = ref("");
+    const restPercent = ref(0);
+    setInterval(() => {
+      let time = (Date.now() - noteModel.openTime) / 1000;
+      let h = Math.floor(time / 3600);
+      let m = Math.floor((time % 3600) / 60).toString().padStart(2, "0");
+      let s = Math.floor(time % 60).toString().padStart(2, "0");
+      studyTime.value = `${h}小时 ${m}分钟 ${s}秒`;
+      restPercent.value = Math.floor((time % 3600) / 3600 * 100);
+
+      if (Math.floor(time / 3600) > 0 && Math.floor((time % 3600) / 60) === 0 && Math.floor(time % 60) === 0) {
+        ElMessage.success("您已经沉浸学习了一个小时，站起来运动一下吧！");
+      }
+    }, 1000);
+
     return {
+      studyTime,
+      restPercent,
       unlock,
       menu,
-      startUpdate,
-      updateProgress,
       loadVersion,
       convertOptions,
       showProgress,

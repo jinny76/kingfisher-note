@@ -12,7 +12,7 @@
   <input type="file" @change="selectFileAndPlay" style="display: none" ref="fileInput"
          accept="video/*,audio/*,application/pdf,text/html" />
   <el-dialog v-model="dialogOpenVisible" title="打开笔记" width="800" align-center draggable>
-    <el-input v-model="noteSearch" placeholder="搜索笔记, 可以根据名字和标签搜索, 支持拼音搜索" :prefix-icon="searchIcon">
+    <el-input v-model="noteSearch" placeholder="搜索笔记, 可以根据名字和标签搜索, 支持拼音搜索">
       <template #append>
         全文：
         <el-switch v-model="fullTextSearch" />
@@ -1210,5 +1210,13 @@ export default {
   margin: 2px;
   padding: 2px 5px 2px 5px;
   font-size: 12px;
+}
+
+.vditor-reset a:hover {
+  color: #3e91d5 !important;
+}
+
+.vditor-reset a, .vditor-ir__link, .vditor-sv__marker--bracket, .vditor-sv__marker, .vditor-sv__marker--heading {
+  color: #eaeaea !important;
 }
 </style>

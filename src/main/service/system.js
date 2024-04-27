@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 
-const install = () => {
+const install = (mainWindow) => {
   ipcMain.handle("/system/info", (event, params) => {
     return {
       code: 200,
@@ -16,6 +16,15 @@ const install = () => {
     return {
       code: 200,
       message: "打开成功"
+    };
+  });
+
+  ipcMain.handle("/system/fullscreen", (event, params) => {
+    mainWindow.setFullScreen(true)
+    mainWindow.setAlwaysOnTop(true);
+    return {
+      code: 200,
+      message: "全屏成功"
     };
   });
 };

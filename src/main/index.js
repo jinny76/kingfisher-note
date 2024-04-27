@@ -1,5 +1,5 @@
 import { Window } from "./window";
-import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, shell, globalShortcut } from "electron";
 import { join } from "path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.ico?asset";
@@ -75,6 +75,12 @@ function createMainWindow() {
       }
     })
   });
+
+  globalShortcut.register('ESC', () => {
+    mainWindow.setFullScreen(false)
+    mainWindow.setAlwaysOnTop(false)
+    mainWindow.maximize()
+  })
 }
 
 process.on('uncaughtException', function (error) {
@@ -114,7 +120,7 @@ app.whenReady().then(() => {
 
   storeService.install()
   noteService.install(windowManager)
-  systemService.install()
+  systemService.install(mainWindow)
 
   checkUpdate(mainWindow, ipcMain);
 })
