@@ -184,6 +184,8 @@ const install = () => {
         tags: noteMeta[file] ? noteMeta[file].tags : [],
         time: fs.statSync(`${setting.noteDir}/${file}`).mtime
       };
+    }).sort((a, b) => {
+      return b.time - a.time;
     });
   });
 

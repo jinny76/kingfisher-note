@@ -11,21 +11,21 @@
   </el-container>
   <input type="file" @change="selectFileAndPlay" style="display: none" ref="fileInput"
          accept="video/*,audio/*,application/pdf,text/html" />
-  <el-dialog v-model="dialogOpenVisible" title="打开笔记" width="800">
-    <el-input v-model="noteSearch" placeholder="搜索笔记, 可以根据名字和标签搜索, 支持拼音搜索">
+  <el-dialog v-model="dialogOpenVisible" title="打开笔记" width="800" align-center draggable>
+    <el-input v-model="noteSearch" placeholder="搜索笔记, 可以根据名字和标签搜索, 支持拼音搜索" :prefix-icon="searchIcon">
       <template #append>
         全文：
         <el-switch v-model="fullTextSearch" />
       </template>
     </el-input>
     <el-table :data="noteList" style="width: 100%" @row-click="openNote" max-height="200px" empty-text="没有找到笔记"
-              v-if="!fullTextSearch">
-      <el-table-column prop="name" label="名称" width="280">
+              v-if="!fullTextSearch" stripe>
+      <el-table-column prop="name" label="名称" width="280" sortable>
         <template #default="scope">
           {{ scope.row.name.substring(0, scope.row.name.indexOf(".")) }}
         </template>
       </el-table-column>
-      <el-table-column prop="time" label="修改时间" width="180">
+      <el-table-column prop="time" label="修改时间" width="180" sortable>
         <template #default="scope">
           {{ scope.row.time.toLocaleString() }}
         </template>
@@ -895,6 +895,23 @@ export default {
           path: noteModel.currNote.value.name
         }), (result) => {
           noteModel.versions.value = result;
+          let index = 0;
+          noteModel.versions.value.map(version=>{
+            //根据version.time, 计算距离目前时间，例如一分钟前，一天前等, version.time是个时间签
+            let now = new Date().getTime();
+            let duration = now - version.time;
+            if (duration < 60000) {
+              version.duration = "刚刚";
+            } else if (duration < 3600000) {
+              version.duration = Math.floor(duration / 60000) + "分钟前";
+            } else if (duration < 86400000) {
+              version.duration = Math.floor(duration / 3600000) + "小时前";
+            } else {
+              version.duration = Math.floor(duration / 86400000) + "天前";
+            }
+            version.index = "版本" + (noteModel.versions.value.length - index).toString().padStart(3, "0");
+            index++;
+          })
         });
       }
     };

@@ -15,7 +15,9 @@
       >
         <el-sub-menu index="1">
           <template #title>文件</template>
-          <el-menu-item index="2-1" id="idMenuFile">新建笔记</el-menu-item>
+          <el-menu-item index="2-1" id="idMenuFile">
+            新建笔记
+          </el-menu-item>
           <el-menu-item index="2-2">打开笔记</el-menu-item>
           <el-sub-menu index="2-3">
             <template #title>打开历史笔记</template>
@@ -76,8 +78,9 @@
           >
             <el-option
               v-for="version in versions"
-              :key="version.label"
-              :label="version.label"
+              :key="version.time"
+              :label="version.index + ' ' + version.duration"
+              :title="version.label"
               :value="version.time"
             />
           </el-select>
@@ -101,7 +104,7 @@
       <component :is="mainComp" ref="mainComponent"></component>
     </el-main>
   </el-container>
-  <el-dialog v-model="dialogHelpVisible" title="使用帮助" width="1200">
+  <el-dialog v-model="dialogHelpVisible" title="使用帮助" width="1200" align-center draggable>
     <div id="idHelp" style="height: 600px; overflow-y: auto"></div>
     <template #footer>
       <div class="dialog-footer">
@@ -109,7 +112,7 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="dialogAboutVisible" title="关于" width="400">
+  <el-dialog v-model="dialogAboutVisible" title="关于" width="400" align-center>
     <p>作者：{{ '太白雪霁' }}</p>
     <p>版本：{{ version }}</p>
     <p>日期：{{ '2024-04-26' }}</p>
@@ -119,7 +122,7 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="dialogSettingVisible" title="笔记" width="800">
+  <el-dialog v-model="dialogSettingVisible" title="设置" width="800" align-center draggable>
     <NoteSetting ref="settingDialog"></NoteSetting>
     <template #footer>
       <div class="dialog-footer">
@@ -128,7 +131,7 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="dialogConvertVisible" title="视频转换" width="1200">
+  <el-dialog v-model="dialogConvertVisible" title="视频转换" width="1200" align-center draggable>
     <el-upload
       v-model:file-list="videoList"
       :auto-upload="false"
