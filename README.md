@@ -134,6 +134,8 @@ $ npm run build:linux
 
 ### 作者
 
+太白雪霁
+
 jinni@kingfishers.cn
 
 Wechat:jinny76  &ensp; qq:147279
