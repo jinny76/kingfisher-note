@@ -35,15 +35,10 @@
 
 </p>
 
-<video id="video" controls="" preload="none" style="width: 800px">
-  <source id="mp4" src="http://resource.kingfisher.live/note/%E6%95%99%E5%AD%A6%E8%A7%86%E9%A2%91.mp4" type="video/mp4">
-</video>
-
-
 灵翠笔记是一款基于 Electron + Vue3 + Vite 开发的跨平台桌面应用，支持 Windows、macOS 和 Linux。主要用于记录视频笔记，支持视频播放、笔记记录、笔记导出等功能。
 
 ## 目录
-
+- [用户教程](http://resource.kingfisher.live/note/%E6%95%99%E5%AD%A6%E8%A7%86%E9%A2%91.mp4)
 - [上手指南](#上手指南)
   - [开发前的配置要求](#开发前的配置要求)
   - [安装步骤](#安装步骤)
