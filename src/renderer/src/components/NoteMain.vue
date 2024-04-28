@@ -6,7 +6,13 @@
     </el-aside>
     <div id="dragBar-dept" class="vertical-dragbar" v-show="videoWidth !== '0%'"></div>
     <el-main style="margin: 0px; padding: 0px;" id="idMainContainer">
-      <div ref="noteEditor" id="idNoteEditor"></div>
+      <div class="search-panel" v-show="textSearch.show">
+        <el-input v-model="textSearch.text"></el-input>
+        <el-button @click="searchNext">下一个</el-button>
+        <el-button @click="searchPrev">上一个</el-button>
+      </div>
+      <div ref="noteEditor" id="idNoteEditor">
+      </div>
     </el-main>
   </el-container>
   <input type="file" @change="selectFileAndPlay" style="display: none" ref="fileInput"
@@ -347,9 +353,8 @@ export default {
             theme: {
               current: "dark"
             },
-            actions: [
-            ],
-            markdown:{
+            actions: [],
+            markdown: {
               toc: true
             }
           },
@@ -1177,7 +1182,64 @@ export default {
       }
     });
 
+    const textSearch = ref({
+      show: true,
+      text: ""
+    });
+
+    const searchNext = () => {
+      doSearch(null, textSearch.value.text, 0);
+    };
+
+    const searchPrev = () => {
+
+    };
+
+    const doSearch = (container, text, position) => {
+      editor.focus();
+      nextTick(()=>{
+        var sel = window.getSelection();
+        if (!sel.focusNode) {
+          return;
+        }
+
+        let container = sel.focusNode.parentNode;
+        while (container.tagName !== "DIV") {
+          container = container.parentNode;
+        }
+        for(let i=0; i < container.childNodes.length; i++){
+          let currNode = container.childNodes[i].childNodes[0];
+          if (currNode.nodeValue.indexOf(text) > -1) {
+            var startIndex = currNode.nodeValue.indexOf(text);
+            var endIndex = startIndex + text.length;
+            if (startIndex === -1) {
+              return;
+            }
+            console.log("first focus node: ", sel.focusNode.nodeValue);
+            var range = document.createRange();
+            //Set the range to contain search text
+            range.setStart(currNode, startIndex);
+            range.setEnd(currNode, endIndex);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            break;
+          }
+        }
+        /*//Delete search text
+        range.deleteContents();
+        console.log("focus node after delete: ", sel.focusNode.nodeValue);
+        //Insert replace text
+        range.insertNode(document.createTextNode(replace));
+        console.log("focus node after insert: ", sel.focusNode.nodeValue);
+        //Move the caret to end of replace text
+        sel.collapse(sel.focusNode, 0);*/
+      })
+    };
+
     return {
+      textSearch,
+      searchNext,
+      searchPrev,
       doCrypt,
       loadVersion,
       doDelete,
@@ -1230,5 +1292,14 @@ export default {
 
 .vditor-reset a, .vditor-ir__link, .vditor-sv__marker--bracket, .vditor-sv__marker, .vditor-sv__marker--heading {
   color: #eaeaea !important;
+}
+
+.search-panel {
+  position: absolute;
+  top: 350px;
+  left: 350px;
+  display: none;
+  border: 1px solid cornflowerblue;
+  width: 400px;
 }
 </style>

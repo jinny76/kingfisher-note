@@ -23,7 +23,7 @@ const setting = ref({
 
 const settingReady = ref(false);
 
-const openTime = new Date().getTime();
+const openTime = ref(0);
 
 service.invoke("/store/getSetting", "", (result) => {
   if (result?.setting) {

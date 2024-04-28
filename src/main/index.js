@@ -80,6 +80,7 @@ function createMainWindow() {
     mainWindow.setFullScreen(false)
     mainWindow.setAlwaysOnTop(false)
     mainWindow.maximize()
+    mainWindow.webContents.send("/client/exitFullscreen")
   })
 }
 

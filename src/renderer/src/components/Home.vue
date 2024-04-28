@@ -94,7 +94,7 @@
             />
           </el-select>
         </div>
-        <div style="padding-left: 40px; width: 300px;">
+        <div style="padding-left: 40px; width: 300px;" v-if="targetTime> 0">
           <el-progress
             :text-inside="true"
             :stroke-width="20"
@@ -317,6 +317,12 @@ export default {
       console.error("错误", JSON.parse(arg));
     });
 
+    window.electron.ipcRenderer.on("/client/exitFullscreen", function(event, arg) {
+      console.log("退出全屏", arg);
+      targetTime.value = 0;
+      clearInterval(studyTimer);
+    });
+
     let downloadedListener = function() {
       ElMessageBox.confirm("更新完成, 重启生效", "提示", {
         confirmButtonText: "重启",
@@ -373,13 +379,46 @@ export default {
           dialogConvertVisible.value = true;
           break;
         case "4-3":
-          service.invoke("/system/fullscreen", "", (result) => {
-            console.log("切换全屏", result);
-            ElMessage.success("已进入专注模式，其他程序将无法打扰您，ESC键退出专注模式");
-          });
+
+            ElMessageBox.prompt("预计学习时间", "专注模式", {
+              confirmButtonText: "开始",
+              cancelButtonText: "取消",
+              inputType: "number",
+              inputPattern: /^\d+$/,
+              inputErrorMessage: "请输入学习时间（分钟）",
+              inputValue: 60
+            }).then(({ value }) => {
+              if (!value) {
+                value = 60;
+              }
+
+              targetTime.value = value * 60;
+              if (targetTime.value < 0) {
+                targetTime.value = 0;
+              }
+              noteModel.openTime = Date.now();
+              ElMessage.success("已进入专注模式，其他程序将无法打扰您，ESC键退出专注模式")
+
+              studyTimer = setInterval(() => {
+                let time = (Date.now() - noteModel.openTime) / 1000;
+                let h = Math.floor(time / 3600);
+                let m = Math.floor((time % 3600) / 60).toString().padStart(2, "0");
+                let s = Math.floor(time % 60).toString().padStart(2, "0");
+                studyTime.value = `${h}小时 ${m}分钟 ${s}秒`;
+                restPercent.value = Math.floor((time % targetTime.value) / targetTime.value * 100);
+
+                if (Math.floor(time / 3600) > 0 && Math.floor((time % 3600) / 60) === 0 && Math.floor(time % 60) === 0) {
+                  ElMessage.success("您已经沉浸学习了一个小时，站起来运动一下吧！");
+                }
+              }, 1000);
+
+              service.invoke("/system/fullscreen", "", () => {
+              });
+            }).catch(() => {
+            });
           break;
         case "4-4":
-          service.invoke("/system/openDevTools", "", (result) => {
+          service.invoke("/system/openDevTools", "", () => {
           });
           break;
         case "4-1":
@@ -389,7 +428,7 @@ export default {
           });
           break;
         case "4-5-1":
-          window.open("https://zh.snipaste.com/", "_blank")
+          window.open("https://zh.snipaste.com/", "_blank");
           break;
         case "6-10":
           dialogAboutVisible.value = true;
@@ -550,22 +589,13 @@ export default {
 
     const studyTime = ref("");
     const restPercent = ref(0);
-    setInterval(() => {
-      let time = (Date.now() - noteModel.openTime) / 1000;
-      let h = Math.floor(time / 3600);
-      let m = Math.floor((time % 3600) / 60).toString().padStart(2, "0");
-      let s = Math.floor(time % 60).toString().padStart(2, "0");
-      studyTime.value = `${h}小时 ${m}分钟 ${s}秒`;
-      restPercent.value = Math.floor((time % 3600) / 3600 * 100);
-
-      if (Math.floor(time / 3600) > 0 && Math.floor((time % 3600) / 60) === 0 && Math.floor(time % 60) === 0) {
-        ElMessage.success("您已经沉浸学习了一个小时，站起来运动一下吧！");
-      }
-    }, 1000);
+    let targetTime = ref(0);
+    let studyTimer = 0;
 
     return {
       studyTime,
       restPercent,
+      targetTime,
       unlock,
       menu,
       loadVersion,
