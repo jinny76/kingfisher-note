@@ -1,13 +1,13 @@
-import { ref, watch } from "vue";
-import hotkeys from "hotkeys-js";
+import {ref, watch} from 'vue';
+import hotkeys from 'hotkeys-js';
 
-function registerKeys (key, handler, option) {
+function registerKeys(key, handler, option) {
   hotkeys(key, option, handler);
 }
 
-const lastKeys = ref("");
+const lastKeys = ref('');
 
-const lastShortcut = ref("");
+const lastShortcut = ref('');
 
 let keysProcessors = {};
 
@@ -18,11 +18,11 @@ let keysDescription = {};
 let hotkeyDescription = {};
 
 const cleanKeys = function() {
-  lastKeys.value = "";
+  lastKeys.value = '';
 };
 
 const cleanShortcut = function() {
-  lastShortcut.value = "";
+  lastShortcut.value = '';
 };
 
 let cleanKeyTimer = null;
@@ -50,12 +50,12 @@ const registerKeysProcessor = function(key, handler, description) {
 
 const registerHotkeyProcessor = function(key, processor, description, option) {
   //check system is mac, replace the key, ctrl as command, and alt as option
-  if (navigator.userAgent.indexOf("Mac OS X") !== -1) {
-    key = key.replace("ctrl", "command").replace("alt", "option");
+  if (navigator.userAgent.indexOf('Mac OS X') !== -1) {
+    key = key.replace('ctrl', 'command').replace('alt', 'option');
   }
 
   if (hotkeyProcessors[key] == null || option) {
-    hotkeyProcessors[key] = "true";
+    hotkeyProcessors[key] = 'true';
     hotkeyDescription[key] = description;
     registerKeys(key, (event, handler) => {
       lastShortcut.value = key;
@@ -63,7 +63,9 @@ const registerHotkeyProcessor = function(key, processor, description, option) {
         clearTimeout(cleanShortcutTimer);
       }
       cleanShortcutTimer = setTimeout(cleanShortcut, 500);
-      if (processor) processor(event, handler);
+      if (processor) {
+        processor(event, handler);
+      }
     }, option);
   } else {
     console.error(`按键系列'${key}'已经被注册了.`);
@@ -75,27 +77,25 @@ const init = function() {
     let tag = event.target || event.srcElement;
     let tagName = tag.tagName;
     return !((tag.isContentEditable ||
-      tagName === "INPUT" ||
-      tagName === "SELECT" ||
-      tagName === "TEXTAREA") && (tag.className.indexOf("monaco-mouse-cursor-text") === -1 || !event.ctrlKey));
+            tagName === 'INPUT' ||
+            tagName === 'SELECT' ||
+            tagName === 'TEXTAREA') &&
+        (tag.className.indexOf('monaco-mouse-cursor-text') === -1 ||
+            !event.ctrlKey));
   };
 
   if (!initFlag) {
     initFlag = true;
-    let chars = [...Array.apply(null, { length: 26 })
-      .map(function(x, i) {
+    let chars = [
+      ...Array.apply(null, {length: 26}).map(function(x, i) {
         return String.fromCharCode(97 + i);
-      }), "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+      }), '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-    chars.forEach((c) => {
-      registerKeys(c, (event, handler) => {
-        storeKey(c);
-      });
-    });
+    chars.forEach(c => registerKeys(c, (event, handler) => storeKey(c)));
   } else {
     keysProcessors = {};
     hotkeyProcessors = {};
-    lastKeys.value = "";
+    lastKeys.value = '';
   }
 
   watch(lastKeys, (newValue, oldValue) => {
@@ -114,6 +114,6 @@ export default {
   registerHotkeyProcessor,
   keysDescription: {
     keys: keysDescription,
-    hotkeys: hotkeyDescription
-  }
+    hotkeys: hotkeyDescription,
+  },
 };

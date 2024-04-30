@@ -1,19 +1,19 @@
 const websites = {
-  "www.bilibili.com": {
-    replace: "www.b.com",
+  'www.bilibili.com': {
+    replace: 'www.b.com',
     loadScript: `let timer = setInterval(() => {
               let button = document.querySelector(".bpx-player-ctrl-web");
               if (button) {
                 clearInterval(timer);
                 button.click();
               }
-            }, 1000);`
+            }, 1000);`,
   },
-  "www.youtube.com": {
-    replace: "www.y.com"
+  'www.youtube.com': {
+    replace: 'www.y.com',
   },
-  "open.163.com": {
-    videoId: "#open-video_html5_api",
+  'open.163.com': {
+    videoId: '#open-video_html5_api',
     loadScript: `let timer = setInterval(() => {
               let button = document.querySelector(".vjs-grow-button");
               if (button) {
@@ -26,14 +26,12 @@ const websites = {
                   document.body.removeChild(document.body.children[0]);
                 }
               }
-            }, 1000);`
-  }
+            }, 1000);`,
+  },
 };
 
-const findWebsite = (url) => {
-  let webKey = Object.keys(websites).find(website => {
-    return url.includes(website);
-  });
+const findWebsite = url => {
+  let webKey = Object.keys(websites).find(website => url.includes(website));
   if (webKey) {
     return websites[webKey];
   } else {
@@ -41,10 +39,8 @@ const findWebsite = (url) => {
   }
 };
 
-const replaceWebsite = (url) => {
-  let result = Object.keys(websites).find(website => {
-    return url.includes(website);
-  });
+const replaceWebsite = url => {
+  let result = Object.keys(websites).find(website => url.includes(website));
 
   if (result && websites[result].replace) {
     return url.replaceAll(result, websites[result].replace);
@@ -52,18 +48,17 @@ const replaceWebsite = (url) => {
   return url;
 };
 
-
-const handleReplacedWebsite = (url) => {
-  let website = Object.values(websites).find(website => {
-    return url.includes(website.replace);
-  });
+const handleReplacedWebsite = url => {
+  let website = Object.values(websites).find(website => url.includes(
+      website.replace));
 
   if (website) {
-    url = url.replace(website.replace, Object.keys(websites).find(key => websites[key] === website));
+    url = url.replace(website.replace,
+        Object.keys(websites).find(key => websites[key] === website));
   }
   return url;
 };
 
 export default {
-  handleReplacedWebsite, replaceWebsite, findWebsite, websites
+  handleReplacedWebsite, replaceWebsite, findWebsite, websites,
 };

@@ -1,8 +1,10 @@
-import PinyinMatch from 'pinyin-match'
-const pinyinMatch = function (content, search) {
-  let match = PinyinMatch.match(content ? content.toLowerCase() : "", search ? search.toLowerCase() : "");
-  return !search || (match != null && match.length > 0)
-}
+import PinyinMatch from 'pinyin-match';
+
+const pinyinMatch = function(content, search) {
+  let match = PinyinMatch.match(content ? content.toLowerCase() : '',
+      search ? search.toLowerCase() : '');
+  return !search || match != null && match.length > 0;
+};
 
 const runUntil = function(condition, callback, timeout = 30 * 1000) {
   let existTime = new Date().getTime() + timeout;
@@ -14,7 +16,7 @@ const runUntil = function(condition, callback, timeout = 30 * 1000) {
       clearInterval(timer);
     }
   }, 50);
-}
+};
 export default {
-  pinyinMatch, runUntil
-}
+  pinyinMatch, runUntil,
+};

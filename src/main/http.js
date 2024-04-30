@@ -9,7 +9,7 @@ export const initHttpServer = () => {
   server.use(cors());
 
   server.use(bodyParser.json());
-  server.use(bodyParser.urlencoded({ extended: true }));
+  server.use(bodyParser.urlencoded({extended: true}));
 
   let router = express.Router();
   router.use(fileUpload());
@@ -18,7 +18,6 @@ export const initHttpServer = () => {
 
   server.use('/upload', router);
 
-  server.listen(13999, () => {
-    console.log('HTTP server started on http://localhost:13999');
-  });
-}
+  server.listen(13999, () => console.log(
+      'HTTP server started on http://localhost:13999'));
+};
