@@ -103,6 +103,9 @@
             <span style="color:white">您已经沉浸学习了 {{ studyTime }} </span>
           </el-progress>
         </div>
+        <div v-if="developEnv" style="padding: 5px;">
+          <el-button type="text" @click="reload">重新加载</el-button>
+        </div>
       </div>
     </el-header>
     <el-main style="padding: 0px;">
@@ -569,7 +572,14 @@ export default {
     let targetTime = ref(0);
     let studyTimer = 0;
 
+    const developEnv = import.meta.env.DEV;
+    const reload = () => {
+      window.location.reload()
+    };
+
     return {
+      developEnv,
+      reload,
       studyTime,
       restPercent,
       targetTime,

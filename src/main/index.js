@@ -112,6 +112,16 @@ app.whenReady().then(() => {
     callback(decodeURI(path.normalize(url)));
   });
 
+  protocol.registerFileProtocol('vhttp', (request, callback) => {
+    const url = request.url.replace('vhttp://', 'http://');
+    callback(url);
+  });
+
+  protocol.registerFileProtocol('vhttps', (request, callback) => {
+    const url = request.url.replace('vhttps://', 'https://');
+    callback(url);
+  });
+
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils

@@ -49,24 +49,25 @@ export default {
       if (urlStr.endsWith('/')) {
         urlStr = urlStr.substring(0, urlStr.length - 1);
       }
-      if (urlStr && urlStr.indexOf('://') === -1) {
+      if (urlStr && urlStr.indexOf('://') === -1) { // 本地文件
         if (urlStr.endsWith('.html') || urlStr.endsWith('.htm') || urlStr.endsWith('.pdf')) {
           contentType.value = 'document';
           urlStr = urlStr += '#view=FitH,top';
         } else {
           contentType.value = 'video';
-          if (!urlStr.startsWith('http://') && !urlStr.startsWith('https://')) {
-            if (urlStr.endsWith('.mp4') || urlStr.endsWith('.webm') || urlStr.endsWith('.ogg')
-                || urlStr.endsWith('.mp3') || urlStr.endsWith('.wav')) {
-              urlStr = 'kingfisher://' + urlStr.replaceAll('\\', '/');
-            } else {
-              urlStr = 'http://localhost:19555?t=' + new Date().getTime() + '&v=' + encodeURIComponent(urlStr);
-              ElMessage.warning('视频格式限制，无法插入时间签和截图');
-            }
+          if (urlStr.endsWith('.mp4') || urlStr.endsWith('.webm') || urlStr.endsWith('.ogg')
+              || urlStr.endsWith('.mp3') || urlStr.endsWith('.wav')) {
+            urlStr = 'kingfisher://' + urlStr.replaceAll('\\', '/');
+          } else {
+            urlStr = 'http://localhost:19555?t=' + new Date().getTime() + '&v=' + encodeURIComponent(urlStr);
+            ElMessage.warning('视频格式限制，无法插入时间签和截图');
           }
         }
-      } else {
+      } else { // 网络文件
         contentType.value = 'website';
+        if (urlStr.startsWith('vhttp')) {
+          urlStr = urlStr.substring(1);
+        }
       }
       return urlStr;
     }

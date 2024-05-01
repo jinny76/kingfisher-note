@@ -7,21 +7,25 @@
     <div v-show="videoWidth !== '0%'" id="dragBar-dept" class="vertical-dragbar"></div>
     <el-main id="idMainContainer" style="margin: 0px; padding: 0px;">
       <div v-show="textSearch.show" class="search-panel">
-        <el-input v-model="textSearch.text"></el-input>
+        <el-input ref="searchBox" v-model="textSearch.text" @keydown.enter="search"></el-input>
+        <el-button @click="search">搜索</el-button>
+        <el-input v-model="textSearch.replace"></el-input>
+        <el-button @click="replace">替换</el-button>
         <el-button @click="searchNext">下一个</el-button>
         <el-button @click="searchPrev">上一个</el-button>
+        <el-button @click="closeSearch">X</el-button>
       </div>
       <div id="idNoteEditor" ref="noteEditor">
       </div>
     </el-main>
   </el-container>
   <input ref="fileInput" accept="video/*,audio/*,application/pdf,text/html" style="display: none" type="file"
-         @change="selectFileAndPlay"/>
+         @change="selectFileAndPlay" />
   <el-dialog v-model="dialogOpenVisible" align-center draggable title="打开笔记" width="800">
     <el-input v-model="noteSearch" placeholder="搜索笔记, 可以根据名字和标签搜索, 支持拼音搜索">
       <template #append>
         全文：
-        <el-switch v-model="fullTextSearch"/>
+        <el-switch v-model="fullTextSearch" />
       </template>
     </el-input>
     <el-table v-if="!fullTextSearch" :data="noteList" empty-text="没有找到笔记" max-height="200px" stripe
@@ -179,12 +183,12 @@ export default {
 
       if (insertNote) {
         let newContent;
-        if (video.startsWith('https://') || video.startsWith('http://')) {
+        if (video.startsWith('vhttps://') || video.startsWith('vhttp://')) {
           video = website.replaceWebsite(video);
-          newContent = `\n\n[[视频网址 ${video}]](${video})\n`;
+          newContent = `\n\n[[在线资料 ${video}]](${video})\n`;
         } else {
           let fileName = video.substring(video.lastIndexOf('\\') + 1);
-          newContent = `\n\n[[文件 ${fileName}]](kingfisher://${encodeURIComponent(video + '/')})\n`;
+          newContent = `\n\n[[本地资料 ${fileName}]](kingfisher://${encodeURIComponent(video + '/')})\n`;
           lastVideo = video + '/';
         }
         if (editor.getValue().indexOf(newContent) === -1) {
@@ -194,7 +198,9 @@ export default {
       }
     };
 
-    watch(noteModel.currNote, () => editor.setValue(noteModel.currNote.value.data));
+    watch(noteModel.currNote, () => {
+      editor.setValue(noteModel.currNote.value.data);
+    });
 
     const bibleIndex = {
       'B01C001.htm': '创世记',
@@ -287,7 +293,7 @@ export default {
         if (path.endsWith('.wav') || path.endsWith('.mp3')) {
           insertText(`\n\n[音频](kingfisher://${path})\n`);
         } else if (path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.gif')
-            || path.endsWith('.bmp') || path.endsWith('.webp')) {
+          || path.endsWith('.bmp') || path.endsWith('.webp')) {
           insertText(`\n\n![](kingfisher://${path})\n`);
         } else {
           insertText(`\n\n[[附件 ${path.substring(path.lastIndexOf('/') + 1)}]](kingfisher://${path})\n`);
@@ -361,25 +367,26 @@ export default {
                 let content = editor.getValue();
                 let index = content.indexOf(dom.href);
                 content = content.substring(0, index);
-                let videoIndex = content.lastIndexOf('[文件');
+                let videoIndex = Math.max(content.lastIndexOf('[在线资料'), content.lastIndexOf('[本地资料'));
                 let videoUrl = '';
                 if (videoIndex !== -1) {
                   let startIndex = content.indexOf('(', videoIndex);
                   let endIndex = content.indexOf(')', videoIndex);
                   videoUrl = decodeURIComponent(
-                      content.substring(startIndex + 1, endIndex).replace('kingfisher://', ''));
-                  if (videoUrl.startsWith('https://') || videoUrl.startsWith('http://')) {
+                    content.substring(startIndex + 1, endIndex).replace('kingfisher://', ''));
+                  if (videoUrl.startsWith('vhttps://') || videoUrl.startsWith('vhttp://')) {
                     videoUrl = website.handleReplacedWebsite(videoUrl);
                   }
                 }
                 if (lastVideo != videoUrl) {
                   closeVideo();
                   nextTick(() =>
-                      openVideo(videoUrl, false, () =>
-                          service.invoke('/note/locateVideo', JSON.stringify({
-                            videoUrl,
-                            location: dom.href.replace('timestamp://', ''),
-                          }))));
+                    openVideo(videoUrl, false, () => {
+                      service.invoke('/note/locateVideo', JSON.stringify({
+                        videoUrl,
+                        location: dom.href.replace('timestamp://', ''),
+                      }));
+                    }));
                 } else {
                   service.invoke('/note/locateVideo', JSON.stringify({
                     videoUrl,
@@ -409,7 +416,21 @@ export default {
           toolbar: [
             'emoji', 'headings', 'bold', 'italic', 'strike', '|', 'line', 'quote',
             'list', 'ordered-list', 'check', 'outdent', 'indent', 'code', 'inline-code',
-            'insert-after', 'insert-before', 'undo', 'redo', 'link', 'table', 'record', 'upload', 'help', '|',
+            'insert-after', 'insert-before', 'undo', 'redo', 'link', 'table', '|',
+            {
+              hotkey: '⌘F',
+              name: 'find',
+              tipPosition: 's',
+              tip: '搜索替换',
+              className: 'right',
+              icon: '<svg t="1714514005198" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="8146" width="200" height="200"><path d="M352 761.6L89.6 1024s-25.6 0-57.6-32-32-57.6-32-57.6l262.4-262.4 89.6 89.6z" fill="#FFFFFF" p-id="8147"></path><path d="M128 448c0-249.6 198.4-448 448-448s448 198.4 448 448-198.4 448-448 448-448-198.4-448-448z m64 0c0 211.2 172.8 384 384 384s384-172.8 384-384-172.8-384-384-384-384 172.8-384 384z" fill="#FFFFFF" p-id="8148"></path><path d="M576 185.6C428.8 185.6 313.6 300.8 313.6 448s115.2 262.4 262.4 262.4 262.4-115.2 262.4-262.4S723.2 185.6 576 185.6z" fill="#FFFFFF" opacity=".5" p-id="8149"></path></svg>',
+              click() {
+                textSearch.value.show = !textSearch.value.show;
+                searchBox.value.focus();
+                lastSearchPosition = null;
+              },
+            },
+            , 'record', 'upload', 'help', '|',
             {
               hotkey: '⌘N',
               name: 'load',
@@ -461,7 +482,7 @@ export default {
                     cancelButtonText: '取消',
                     inputPattern: /\S/,
                     inputErrorMessage: '网址不能为空',
-                  }).then(({value}) => openVideo(value, true)).catch(() => console.log('取消打开网址'));
+                  }).then(({value}) => openVideo(value.replace('http', 'vhttp'), true)).catch(() => console.log('取消打开网址'));
                 } else {
                   ElMessage.warning('请先打开一个笔记');
                 }
@@ -738,25 +759,26 @@ export default {
       window.electron.ipcRenderer.removeListener('/client/saveNote', saveNoteListener);
     });
 
-    const createNewNote = () =>
-        ElMessageBox.prompt('请输入笔记名称', '新建笔记', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          inputPattern: /\S/,
-          inputErrorMessage: '笔记名称不能为空',
-        }).then(({value}) => {
-          closeVideo();
-          service.invoke('/store/newNote', value, result => {
-            if (result.code === 200) {
-              noteModel.currNote.value = {
-                name: value + '.kfnote',
-                data: '',
-              };
-            } else {
-              ElMessage.warning(result.message);
-            }
-          });
-        }).catch(() => console.log('取消新建笔记'));
+    const createNewNote = () => {
+      ElMessageBox.prompt('请输入笔记名称', '新建笔记', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /\S/,
+        inputErrorMessage: '笔记名称不能为空',
+      }).then(({value}) => {
+        closeVideo();
+        service.invoke('/store/newNote', value, result => {
+          if (result.code === 200) {
+            noteModel.currNote.value = {
+              name: value + '.kfnote',
+              data: '',
+            };
+          } else {
+            ElMessage.warning(result.message);
+          }
+        });
+      }).catch(() => console.log('取消新建笔记'));
+    };
 
     const listNote = () => {
       dialogOpenVisible.value = true;
@@ -778,26 +800,24 @@ export default {
     function openFirstVideo() {
       if (noteModel.setting.value.autoOpenVideo) {
         nextTick(() => {
-          let indexIf = noteModel.currNote.value.data.indexOf('[文件');
-          if (indexIf !== -1) {
+          let indexLocal = noteModel.currNote.value.data.indexOf('[本地资料');
+          let indexOnline = noteModel.currNote.value.data.indexOf('[在线资料');
+          if (indexLocal !== -1 && indexLocal > indexOnline) {
             //fetch content in () from indexIf
-            let startIndex = noteModel.currNote.value.data.indexOf('(', indexIf);
-            let endIndex = noteModel.currNote.value.data.indexOf(')', indexIf);
+            let startIndex = noteModel.currNote.value.data.indexOf('(', indexLocal);
+            let endIndex = noteModel.currNote.value.data.indexOf(')', indexLocal);
             if (startIndex > -1 && endIndex > -1) {
               let videoPath = noteModel.currNote.value.data.substring(startIndex + 1, endIndex);
               openVideo(decodeURIComponent(videoPath.replace('kingfisher://', '')), false);
             }
-          } else {
-            indexIf = noteModel.currNote.value.data.indexOf('视频网址');
-            if (indexIf !== -1) {
-              //fetch content in () from indexIf
-              let startIndex = noteModel.currNote.value.data.indexOf('(', indexIf);
-              let endIndex = noteModel.currNote.value.data.indexOf(')', indexIf);
-              if (startIndex > -1 && endIndex > -1) {
-                let videoPath = noteModel.currNote.value.data.substring(startIndex + 1, endIndex);
-                videoPath = website.handleReplacedWebsite(videoPath);
-                openVideo(videoPath);
-              }
+          } else if (indexOnline !== -1) {
+            //fetch content in () from indexIf
+            let startIndex = noteModel.currNote.value.data.indexOf('(', indexOnline);
+            let endIndex = noteModel.currNote.value.data.indexOf(')', indexOnline);
+            if (startIndex > -1 && endIndex > -1) {
+              let videoPath = noteModel.currNote.value.data.substring(startIndex + 1, endIndex);
+              videoPath = website.handleReplacedWebsite(videoPath);
+              openVideo(videoPath);
             }
           }
         });
@@ -961,10 +981,10 @@ export default {
         } else if (previousTag === 'MAIN' && nextTag === 'ASIDE') {
           type = 'MAIN-ASIDE';
         } else if (previousTag === 'HEADER' && nextTag === 'MAIN' ||
-            previousTag === 'FOOTER' && nextTag === 'MAIN') {
+          previousTag === 'FOOTER' && nextTag === 'MAIN') {
           type = 'HEADER-MAIN';
         } else if (previousTag === 'MAIN' && nextTag === 'HEADER' ||
-            previousTag === 'MAIN' && nextTag === 'FOOTER') {
+          previousTag === 'MAIN' && nextTag === 'FOOTER') {
           type = 'MAIN-HEADER';
         }
 
@@ -1052,15 +1072,15 @@ export default {
     }
 
     const showHelp = () =>
-        nextTick(() =>
-            Vditor.preview(document.getElementById('idHelp'), helpContent, {
-              cdn: 'https://dev.kingfisher.live/resource',
-              theme: 'dark',
-              width: '100%',
-              height: '100%',
-              mode: 'sv',
-              icon: 'material',
-            }));
+      nextTick(() =>
+        Vditor.preview(document.getElementById('idHelp'), helpContent, {
+          cdn: 'https://dev.kingfisher.live/resource',
+          theme: 'dark',
+          width: '100%',
+          height: '100%',
+          mode: 'sv',
+          icon: 'material',
+        }));
 
     const loadVersion = time => {
       let note = {
@@ -1087,17 +1107,17 @@ export default {
           cancelButtonText: '取消',
           type: 'warning',
         }).then(() =>
-            service.invoke('/store/deleteNote', JSON.stringify({path: noteModel.currNote.value.name}), result => {
-              if (result.code === 200) {
-                ElMessage.success('删除成功');
-                noteModel.currNote.value = {
-                  name: '',
-                  data: '',
-                };
-              } else {
-                ElMessage.warning(result.message);
-              }
-            })).catch(() => console.log('取消删除笔记'));
+          service.invoke('/store/deleteNote', JSON.stringify({path: noteModel.currNote.value.name}), result => {
+            if (result.code === 200) {
+              ElMessage.success('删除成功');
+              noteModel.currNote.value = {
+                name: '',
+                data: '',
+              };
+            } else {
+              ElMessage.warning(result.message);
+            }
+          })).catch(() => console.log('取消删除笔记'));
       } else {
         ElMessage.warning('请先打开笔记');
       }
@@ -1112,17 +1132,17 @@ export default {
             inputPattern: /\S/,
             inputErrorMessage: '密码不能为空',
           }).then(({value}) =>
-              service.invoke('/store/encryptNote', JSON.stringify({
-                path: noteModel.currNote.value.name,
-                key: value,
-              }), result => {
-                if (result.code === 200) {
-                  ElMessage.success('加密成功');
-                  noteModel.currNote.value.key = value;
-                } else {
-                  ElMessage.warning(result.message);
-                }
-              })).catch(() => console.log('取消加密笔记'));
+            service.invoke('/store/encryptNote', JSON.stringify({
+              path: noteModel.currNote.value.name,
+              key: value,
+            }), result => {
+              if (result.code === 200) {
+                ElMessage.success('加密成功');
+                noteModel.currNote.value.key = value;
+              } else {
+                ElMessage.warning(result.message);
+              }
+            })).catch(() => console.log('取消加密笔记'));
         } else {
           ElMessage.warning('笔记已加密');
         }
@@ -1137,60 +1157,230 @@ export default {
       }
     });
 
+    let lastSearchPosition = null;
+
     const textSearch = ref({
-      show: true,
+      show: false,
       text: '',
+      replace: '',
     });
 
-    const searchNext = () => doSearch(null, textSearch.value.text, 0);
+    const searchBox = ref(null);
 
-    const searchPrev = () => {
+    const closeSearch = () => {
+      textSearch.value.show = false;
+      lastSearchPosition = null;
+    };
+
+    const search = () => {
+      lastSearchPosition = {
+        block: 0,
+        line: null,
+        text: null,
+        position: -1,
+      };
+      doSearch(textSearch.value.text, true);
+    };
+
+    const replace = () => {
+      editor.focus();
+      nextTick(() => {
+        let sel = window.getSelection();
+        let range = sel.getRangeAt(0);
+        if (range.getBoundingClientRect().width > 0) {
+          range.deleteContents();
+          range.insertNode(document.createTextNode(textSearch.value.replace));
+          sel.collapse(sel.focusNode, 0);
+          searchNext();
+        } else {
+          search();
+        }
+      });
 
     };
 
-    const doSearch = (container, text, position) => {
+    const searchNext = () => {
+      if (!lastSearchPosition) {
+        lastSearchPosition = {
+          block: 0,
+          line: null,
+          text: null,
+          position: -1,
+        };
+      }
+      doSearch(textSearch.value.text, true);
+    };
+
+    const searchPrev = () => {
+      doSearch(textSearch.value.text, false);
+    };
+
+    const doSearch = (text, direction) => {
       editor.focus();
       nextTick(() => {
-        var sel = window.getSelection();
+        let sel = window.getSelection();
         if (!sel.focusNode) {
           return;
         }
 
         let container = sel.focusNode.parentNode;
-        while (container.tagName !== 'DIV') {
+        while (container.tagName !== 'PRE') {
           container = container.parentNode;
         }
-        for (let i = 0; i < container.childNodes.length; i++) {
-          let currNode = container.childNodes[i].childNodes[0];
-          if (currNode.nodeValue.indexOf(text) > -1) {
-            var startIndex = currNode.nodeValue.indexOf(text);
-            var endIndex = startIndex + text.length;
-            if (startIndex === -1) {
-              return;
+
+        function searchLine(blockIndex, currNode, text, direction) {
+          let indexText = -1;
+          let fromIndex;
+
+          if (lastSearchPosition.line) {
+            let exist = false;
+            for (let i = 0; i < currNode.parentNode.childNodes.length; i++) {
+              if (currNode.parentNode.childNodes[i] === lastSearchPosition.line) {
+                exist = true;
+                break;
+              }
             }
-            console.log('first focus node: ', sel.focusNode.nodeValue);
-            var range = document.createRange();
-            //Set the range to contain search text
-            range.setStart(currNode, startIndex);
-            range.setEnd(currNode, endIndex);
+            if (exist) {
+              currNode = lastSearchPosition.line;
+            }
+          }
+
+          let currText;
+          let textCount = 0;
+          let textIndex = 0;
+          if (currNode != null && currNode.childNodes[0].nodeType === 3) {
+            textCount = currNode.childNodes.length;
+            if (lastSearchPosition.text) {
+              let exist = false;
+              for (let i = 0; i < currNode.childNodes.length; i++) {
+                if (currNode.childNodes[i] === lastSearchPosition.text) {
+                  exist = true;
+                  textIndex = i;
+                  break;
+                }
+              }
+              if (exist) {
+                currText = lastSearchPosition.text;
+              } else {
+                currText = currNode.childNodes[0];
+              }
+            } else {
+              currText = currNode.childNodes[0];
+            }
+            if (direction) {
+              if (lastSearchPosition.block === blockIndex) {
+                if (lastSearchPosition.position !== -1) {
+                  fromIndex = lastSearchPosition.position + 1;
+                } else {
+                  fromIndex = 0;
+                }
+              } else {
+                fromIndex = 0;
+              }
+              indexText = currText.nodeValue.indexOf(text, fromIndex);
+            } else {
+              if (lastSearchPosition.block === blockIndex) {
+                if (lastSearchPosition.position !== -1) {
+                  fromIndex = lastSearchPosition.position - 1;
+                } else {
+                  fromIndex = currText.nodeValue.length;
+                }
+              } else {
+                fromIndex = currText.nodeValue.length;
+              }
+              if (fromIndex >= 0) {
+                indexText = currText.nodeValue.lastIndexOf(text, fromIndex);
+              } else {
+                indexText = -1;
+              }
+            }
+          }
+
+          if (indexText > -1) {
+            let endIndex = indexText + text.length;
+            let range = document.createRange();
+            range.setStart(currText, indexText);
+            range.setEnd(currText, endIndex);
             sel.removeAllRanges();
             sel.addRange(range);
-            break;
+          } else {
+            if (direction) {
+              if (textIndex < textCount - 1) {
+                lastSearchPosition = {
+                  block: blockIndex,
+                  text: currNode.childNodes[textIndex + 1],
+                  line: currNode,
+                  position: -1,
+                };
+                return searchLine(blockIndex, currNode.nextSibling, text, direction);
+              } else if (currNode?.nextSibling) {
+                lastSearchPosition = {
+                  block: blockIndex,
+                  line: currNode.nextSibling,
+                  text: null,
+                  position: -1,
+                };
+                return searchLine(blockIndex, currNode.nextSibling, text, direction);
+              }
+            } else {
+              if (textIndex > 0) {
+                lastSearchPosition = {
+                  block: blockIndex,
+                  text: currNode.childNodes[textIndex - 1],
+                  line: currNode,
+                  position: -1,
+                };
+                return searchLine(blockIndex, currNode.previousSibling, text, direction);
+              } else if (currNode?.previousSibling) {
+                lastSearchPosition = {
+                  block: blockIndex,
+                  line: currNode.previousSibling,
+                  text: null,
+                  position: -1,
+                };
+                return searchLine(blockIndex, currNode.previousSibling, text, direction);
+              }
+            }
+          }
+
+          return {
+            block: blockIndex,
+            line: currNode,
+            text: currText,
+            position: indexText,
+          };
+        }
+
+        if (direction) {
+          for (let i = lastSearchPosition.block; i < container.childNodes.length; i++) {
+            let currNode = container.childNodes[i].childNodes[0];
+
+            let result = searchLine(i, currNode, text, direction);
+            if (result.position !== -1) {
+              lastSearchPosition = result;
+              return;
+            }
+          }
+        } else {
+          for (let i = lastSearchPosition.block; i >= 0; i--) {
+            let currNode = container.childNodes[i].childNodes[0];
+
+            let result = searchLine(i, currNode, text, direction);
+            if (result.position !== -1) {
+              lastSearchPosition = result;
+              return;
+            }
           }
         }
-        /*//Delete search text
-        range.deleteContents();
-        console.log("focus node after delete: ", sel.focusNode.nodeValue);
-        //Insert replace text
-        range.insertNode(document.createTextNode(replace));
-        console.log("focus node after insert: ", sel.focusNode.nodeValue);
-        //Move the caret to end of replace text
-        sel.collapse(sel.focusNode, 0);*/
       });
     };
 
     return {
+      searchBox,
       textSearch,
+      closeSearch,
+      search,
+      replace,
       searchNext,
       searchPrev,
       doCrypt,
@@ -1248,11 +1438,20 @@ export default {
 }
 
 .search-panel {
-  position: absolute;
-  top: 350px;
-  left: 350px;
-  display: none;
+  position: fixed;
+  top: 41px;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 2;
+  display: flex;
   border: 1px solid cornflowerblue;
-  width: 400px;
+  width: 600px;
+
+  .el-input__wrapper {
+    border-width: 0px;
+  }
+
+  .el-button {
+    border-width: 0px;
+  }
 }
 </style>
