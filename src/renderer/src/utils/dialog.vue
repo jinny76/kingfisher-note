@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import {computed, defineEmits, defineProps, ref} from 'vue';
+import {computed, ref} from 'vue';
 import {ElButton, ElDialog} from 'element-plus';
 
 const props = defineProps({

@@ -17,6 +17,7 @@ import storeService from './service/store';
 import noteService from './service/note';
 import systemService from './service/system';
 import aiService from './service/ai';
+import recordService from './service/record';
 import {checkUpdate} from './update';
 import {initHttpServer} from './http';
 
@@ -140,8 +141,9 @@ app.whenReady().then(() => {
 
   storeService.install();
   noteService.install(windowManager);
-  systemService.install(mainWindow);
+  systemService.install(mainWindow, windowManager);
   aiService.install();
+  recordService.install(mainWindow, windowManager);
 
   checkUpdate(mainWindow, ipcMain);
 });

@@ -64,6 +64,28 @@ class Ffmepg {
     });
   }
 
+  webmFix(input) {
+    return new Promise((resolve, reject) => {
+      this.instance = ffmpeg().
+          input(input).
+          videoCodec('copy').
+          audioCodec('copy').
+          format('webm').
+          on('progress', function(progress) {
+            console.log('Timemark: ' + progress.timemark);
+          }).
+          on('error', function(err) {
+            console.log('An error occurred: ' + err.message);
+            reject(err);
+          }).
+          on('end', function() {
+            console.log('Processing finished!');
+            resolve();
+          }).
+          save(`${input.replace('.webm', '.fixed.webm')}`);
+    });
+  }
+
   kill() {
     this.instance?.kill('');
   }

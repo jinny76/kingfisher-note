@@ -46,4 +46,13 @@ export const convert = async (videoList, vcodec, acodec) => {
   };
 };
 
+export const webmFix = async (file) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  await ffmpeg.webmFix(file);
+  return {
+    code: 200,
+  };
+};
+
 export default StreamServer;

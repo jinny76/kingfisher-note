@@ -34,7 +34,8 @@
           <el-menu-item id="idMenuSetting" index="4-1">设置</el-menu-item>
           <el-menu-item index="4-2">转换视频</el-menu-item>
           <el-menu-item index="4-3">专注模式</el-menu-item>
-          <el-menu-item index="4-4">调试工具</el-menu-item>
+          <el-menu-item index="4-4">调试工具-主窗口</el-menu-item>
+          <el-menu-item index="4-5">调试工具-弹出窗口</el-menu-item>
           <el-sub-menu index="4-5">
             <template #title>其他工具</template>
             <el-menu-item index="4-5-1">截图</el-menu-item>
@@ -105,6 +106,7 @@
         </div>
         <div v-if="developEnv" style="padding: 5px;">
           <el-button type="text" @click="reload">重新加载</el-button>
+          <el-button type="text" @click="test">测试</el-button>
         </div>
       </div>
     </el-header>
@@ -394,6 +396,10 @@ export default {
           service.invoke('/system/openDevTools', '', () => {
           });
           break;
+        case '4-5':
+          service.invoke('/system/openPopDevTools', '', () => {
+          });
+          break;
         case '4-1':
           dialogSettingVisible.value = true;
           nextTick(() => settingDialog.value.updateSetting(noteModel.setting.value));
@@ -563,7 +569,19 @@ export default {
       window.location.reload()
     };
 
+    let record = false;
+
+    const test = () => {
+      record = !record;
+      if (record) {
+        service.invoke('/record/start', '', result => console.log('测试', result));
+      } else {
+        service.invoke('/record/stop', '', result => console.log('测试', result));
+      }
+    };
+
     return {
+      test,
       developEnv,
       reload,
       studyTime,
