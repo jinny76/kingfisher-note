@@ -82,12 +82,14 @@ const install = () => {
   ipcMain.handle('/store/saveNote', (event, params) => {
     console.log('开始保存文件');
     // save file to "note" folder
-    const {path, data, tags, key} = JSON.parse(params);
+    const {path, data, tags, key, like} = JSON.parse(params);
 
     if (tags) {
       noteMeta[path] = noteMeta[path] || {};
       noteMeta[path].tags = tags;
     }
+    noteMeta[path].like = like;
+    noteMeta[path].count = data.length;
     saveNoteMeta();
 
     if (setting.noteDir) {
@@ -190,8 +192,13 @@ const install = () => {
     return files.map(file => ({
       name: file,
       tags: noteMeta[file] ? noteMeta[file].tags : [],
+      like: noteMeta[file]?.like === true,
+      count: noteMeta[file]?.count,
       time: fs.statSync(`${setting.noteDir}/${file}`).mtime,
-    })).sort((a, b) => b.time - a.time);
+    })).sort((a, b) => {
+      //sort by like and time
+      return (b.like ? 1 : 0) - (a.like ? 1 : 0) || b.time - a.time;
+    });
   });
 
   ipcMain.handle('/store/getNote', (event, params) => {
@@ -219,6 +226,7 @@ const install = () => {
         code: 200,
         name: path,
         tags: noteMeta[path] ? noteMeta[path].tags : [],
+        like: noteMeta[path]?.like === true,
         data: content,
         key,
       };

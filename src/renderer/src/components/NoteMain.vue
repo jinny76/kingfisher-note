@@ -21,7 +21,7 @@
   </el-container>
   <input ref="fileInput" accept="video/*,audio/*,application/pdf,text/html" style="display: none" type="file"
          @change="selectFileAndPlay" />
-  <el-dialog v-model="dialogOpenVisible" align-center draggable title="打开笔记" width="800">
+  <el-dialog v-model="dialogOpenVisible" align-center draggable title="打开笔记" width="900">
     <el-input v-model="noteSearch" placeholder="搜索笔记, 可以根据名字和标签搜索, 支持拼音搜索">
       <template #append>
         全文：
@@ -40,7 +40,7 @@
           {{ scope.row.time.toLocaleString() }}
         </template>
       </el-table-column>
-      <el-table-column label="标签" prop="time" width="300">
+      <el-table-column label="标签" prop="time" width="200">
         <template #default="scope">
           <div style="display: flex; overflow: hidden">
             <div v-for="tag in scope.row.tags" :key="tag"
@@ -48,6 +48,16 @@
                  class="tag">{{ tag }}
             </div>
           </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="大小" prop="count" width="100">
+        <template #default="scope">
+          {{ scope.row.count ? (scope.row.count / 1024).toFixed(2) + 'KB' : '1KB' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="收藏" prop="time" width="100">
+        <template #default="scope">
+          {{ scope.row.like ? '★' : '' }}
         </template>
       </el-table-column>
     </el-table>
@@ -141,6 +151,7 @@ export default {
           data: note.data,
           tags: note.tags,
           key: note.key,
+          like: note.like,
         }), result => {
           console.log('保存笔记成功', result);
           ElMessage.success('保存笔记成功');
@@ -602,6 +613,22 @@ export default {
               click() {
                 noteModel.locking.value = true;
                 noteModel.stopColdDown();
+              },
+            },
+            {
+              hotkey: '⇧⌘M',
+              name: 'like',
+              tipPosition: 's',
+              tip: '收藏',
+              className: 'right',
+              icon: '<svg t="1714610072869" class="icon" viewBox="0 0 1194 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3252" width="200" height="200"><path d="M1059.669333 83.911111c82.318222 59.278222 134.826667 153.372444 134.826667 261.859556 0 49.493333-9.500444 94.094222-27.761778 135.224889A343.210667 343.210667 0 0 0 1091.128889 420.408889c6.997333-22.983111 10.922667-47.388444 10.922667-74.638222 0-134.428444-109.681778-237.909333-251.619556-237.909334-75.662222 0-147.512889 34.133333-195.754667 92.899556a47.047111 47.047111 0 0 1-72.419555-0.227556 252.359111 252.359111 0 0 0-195.584-92.728889c-37.888 0-73.159111 8.192-105.016889 22.186667-87.267556 38.513778-146.602667 123.790222-146.602667 227.157333 0 58.140444 31.971556 125.269333 82.147556 173.226667a42031.900444 42031.900444 0 0 1 147.797333 142.108445c178.176 171.633778 238.819556 229.603556 242.232889 231.708444a18.033778 18.033778 0 0 0 11.377778 3.868444c2.787556 0 4.835556-1.308444 7.111111-2.275555 16.896 25.998222 37.319111 49.379556 60.472889 69.859555l-2.389334 2.048a111.672889 111.672889 0 0 1-65.422222 20.707556 111.502222 111.502222 0 0 1-65.422222-20.650667c-10.524444-7.566222-26.339556-22.528-252.586667-240.412444l-18.773333-18.033778c-50.062222-48.184889-86.926222-83.569778-129.422222-124.302222C84.593778 529.692444 42.666667 440.035556 42.666667 357.262222 42.666667 166.229333 193.991111 17.635556 386.730667 17.635556c73.159111 0 143.36 24.348444 201.728 66.275555 10.24 7.395556 21.048889 14.165333 30.435555 22.641778 9.443556-8.533333 20.024889-15.303111 30.321778-22.641778C707.640889 41.927111 777.443556 17.635556 850.488889 17.635556c79.36 0 151.495111 24.689778 209.180444 66.275555zM866.304 668.444444V507.221333a48.924444 48.924444 0 1 1 97.905778 0v161.28h161.28a48.924444 48.924444 0 1 1 0 97.848889h-161.28v161.28a48.981333 48.981333 0 0 1-97.905778 0v-161.223111h-161.28a48.924444 48.924444 0 1 1 0-97.905778h161.28z" fill="#FFFFFF" p-id="3253"></path></svg>',
+              click() {
+                noteModel.currNote.value.like = !noteModel.currNote.value.like;
+                if (noteModel.currNote.value.like) {
+                  ElMessage({type: "success", message:"已收藏"})
+                } else {
+                  ElMessage({type: "success", message:"已取消收藏"})
+                }
               },
             },
           ],

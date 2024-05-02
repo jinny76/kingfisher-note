@@ -353,7 +353,7 @@ export default {
           break;
         case '4-3':
 
-          ElMessageBox.prompt('预计学习时间', '专注模式', {
+          ElMessageBox.prompt('预计学习时间(分钟)', '专注模式', {
             confirmButtonText: '开始',
             cancelButtonText: '取消',
             inputType: 'number',

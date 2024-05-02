@@ -113,7 +113,7 @@ const handleEvent = (event, cb) => {
       width: '300px',
       onConfirm: () => {
         if (result.value) {
-          cb(`\n\n[[${result.value}]](http://)\n`);
+          cb(`\n\n[[${result.value}1:1]](http://)\n`);
         }
       },
     });
