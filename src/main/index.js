@@ -16,6 +16,7 @@ import StreamServer from './video/server';
 import storeService from './service/store';
 import noteService from './service/note';
 import systemService from './service/system';
+import aiService from './service/ai';
 import {checkUpdate} from './update';
 import {initHttpServer} from './http';
 
@@ -34,8 +35,7 @@ function createMainWindow() {
     fullscreenable: true,
     simpleFullscreen: true,
     show: false,
-    autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? {icon} : {icon}),
+    autoHideMenuBar: true, ...(process.platform === 'linux' ? {icon} : {icon}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -126,8 +126,7 @@ app.whenReady().then(() => {
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created',
-      (_, window) => optimizer.watchWindowShortcuts(
-          window));
+    (_, window) => optimizer.watchWindowShortcuts(window));
 
   createMainWindow();
 
@@ -142,6 +141,7 @@ app.whenReady().then(() => {
   storeService.install();
   noteService.install(windowManager);
   systemService.install(mainWindow);
+  aiService.install();
 
   checkUpdate(mainWindow, ipcMain);
 });

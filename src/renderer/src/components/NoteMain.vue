@@ -86,8 +86,10 @@ import service from '../utils/service';
 import noteModel from '../model/note';
 import utils from '../utils/utils';
 import website from '../utils/website';
+import aiService from '../service/ai';
 import helpContent from '../help.md?raw';
 import {ElMessage, ElMessageBox} from 'element-plus';
+import {handleEvent, initPlugins, plugins} from '../plugin';
 
 export default {
   name: 'NoteMain',
@@ -98,6 +100,8 @@ export default {
     let editor;
     let lastVideo;
     const drag = ref(false);
+
+    initPlugins();
 
     onMounted(() => {
       if (noteModel.setting.value.openLastNote) {
@@ -199,99 +203,18 @@ export default {
     };
 
     watch(noteModel.currNote, () => {
-      editor.setValue(noteModel.currNote.value.data);
-    });
-
-    const bibleIndex = {
-      'B01C001.htm': '创世记',
-      'B02C001.htm': '出埃及记',
-      'B03C001.htm': '利未记',
-      'B04C001.htm': '民数记',
-      'B05C001.htm': '申命记',
-      'B06C001.htm': '约书亚记',
-      'B07C001.htm': '士师记',
-      'B08C001.htm': '路得记',
-      'B09C001.htm': '撒母耳记上',
-      'B10C001.htm': '撒母耳记下',
-      'B11C001.htm': '列王纪上',
-      'B12C001.htm': '列王纪下',
-      'B13C001.htm': '历代志上',
-      'B14C001.htm': '历代志下',
-      'B15C001.htm': '以斯拉记',
-      'B16C001.htm': '尼希米记',
-      'B17C001.htm': '以斯帖记',
-      'B18C001.htm': '约伯记',
-      'B19C001.htm': '诗篇',
-      'B20C001.htm': '箴言',
-      'B21C001.htm': '传道书',
-      'B22C001.htm': '雅歌',
-      'B23C001.htm': '以赛亚书',
-      'B24C001.htm': '耶利米书',
-      'B25C001.htm': '耶利米哀歌',
-      'B26C001.htm': '以西结书',
-      'B27C001.htm': '但以理书',
-      'B28C001.htm': '何西阿书',
-      'B29C001.htm': '约珥书',
-      'B30C001.htm': '阿摩司书',
-      'B31C001.htm': '俄巴底亚书',
-      'B32C001.htm': '约拿书',
-      'B33C001.htm': '弥迦书',
-      'B34C001.htm': '那鸿书',
-      'B35C001.htm': '哈巴谷书',
-      'B36C001.htm': '西番雅书',
-      'B37C001.htm': '哈该书',
-      'B38C001.htm': '撒迦利亚书',
-      'B39C001.htm': '玛拉基书',
-      'B40C001.htm': '马太福音',
-      'B41C001.htm': '马可福音',
-      'B42C001.htm': '路加福音',
-      'B43C001.htm': '约翰福音',
-      'B44C001.htm': '使徒行传',
-      'B45C001.htm': '罗马书',
-      'B46C001.htm': '哥林多前书',
-      'B47C001.htm': '哥林多后书',
-      'B48C001.htm': '加拉太书',
-      'B49C001.htm': '以弗所书',
-      'B50C001.htm': '腓立比书',
-      'B51C001.htm': '歌罗西书',
-      'B52C001.htm': '帖撒罗尼迦前书',
-      'B53C001.htm': '帖撒罗尼迦后书',
-      'B54C001.htm': '提摩太前书',
-      'B55C001.htm': '提摩太后书',
-      'B56C001.htm': '提多书',
-      'B57C001.htm': '腓利门书',
-      'B58C001.htm': '希伯来书',
-      'B59C001.htm': '雅各书',
-      'B60C001.htm': '彼得前书',
-      'B61C001.htm': '彼得后书',
-      'B62C001.htm': '约翰一书',
-      'B63C001.htm': '约翰二书',
-      'B64C001.htm': '约翰三书',
-      'B65C001.htm': '犹大书',
-      'B66C001.htm': '启示录',
-    };
-
-    const openBible = title => {
-      let key = Object.keys(bibleIndex).find(key => title.indexOf(bibleIndex[key]) !== -1);
-      if (key) {
-        let name = bibleIndex[key];
-        let chapter = title.replace(name, '').trim();
-        let chapterIndex = parseInt(chapter.split(':')[0]);
-        if (chapterIndex > 0) {
-          let url = key.replace('001', chapterIndex.toString().padStart(3, '0'));
-          window.open('http://www.godcom.net/hhb/' + url, '_blank');
-          return true;
-        }
+      if (editor && noteModel.currNote.value.data) {
+        editor.setValue(noteModel.currNote.value.data);
       }
-      return false;
-    };
+    });
 
     const handleUpload = (_, data) => {
       let res = JSON.parse(data);
       if (res.code === 200) {
         let path = res.result.path;
         if (path.endsWith('.wav') || path.endsWith('.mp3')) {
-          insertText(`\n\n[音频](kingfisher://${path})\n`);
+          insertText(
+            `\n\n[音频](kingfisher://${path}) [[转文字](tts://${path.substring(path.lastIndexOf('/') + 1) + '/'})]\n`);
         } else if (path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.gif')
           || path.endsWith('.bmp') || path.endsWith('.webp')) {
           insertText(`\n\n![](kingfisher://${path})\n`);
@@ -308,7 +231,7 @@ export default {
     watch(() => noteEditor.value, () => {
       if (noteEditor.value) {
         editor = new Vditor('idNoteEditor', {
-          cdn: 'https://dev.kingfisher.live/resource',
+          cdn: 'http://localhost:13999/vditor',
           theme: 'dark',
           width: '100%',
           height: '100%',
@@ -358,65 +281,118 @@ export default {
           },
           link: {
             click: dom => {
-              if (dom.href.startsWith('page://')) {
-                nextTick(() => gotoPage(dom.href.replace('page://', '')));
-                return false;
-              } else if (dom.href === 'https://' && openBible(dom.innerText)) {
-                return false;
-              } else if (dom.href.startsWith('timestamp://')) {
-                let content = editor.getValue();
-                let index = content.indexOf(dom.href);
-                content = content.substring(0, index);
-                let videoIndex = Math.max(content.lastIndexOf('[在线资料'), content.lastIndexOf('[本地资料'));
-                let videoUrl = '';
-                if (videoIndex !== -1) {
-                  let startIndex = content.indexOf('(', videoIndex);
-                  let endIndex = content.indexOf(')', videoIndex);
-                  videoUrl = decodeURIComponent(
-                    content.substring(startIndex + 1, endIndex).replace('kingfisher://', ''));
-                  if (videoUrl.startsWith('vhttps://') || videoUrl.startsWith('vhttp://')) {
-                    videoUrl = website.handleReplacedWebsite(videoUrl);
+              let result = false;
+
+              plugins.every(plugin => {
+                if (plugin.onClickLink) {
+                  result = plugin.onClickLink(dom.innerText, dom.href);
+                }
+                return !result;
+              });
+
+              if (!result) { // 如果没有插件处理
+                if (dom.href.startsWith('tts://')) {
+                  let path = dom.href.replace('tts://', '');
+                  path = path.substring(0, path.length - 1);
+                  service.invoke('/store/downloadAsset', path, result => {
+                    if (result.code === 200) {
+                      let file = new File([result.data], 'audio.wav', {type: 'audio/wav'});
+                      aiService.stt(file, result => {
+                        insertText(`\n> ${result.message}\n`);
+                      });
+                    } else {
+                      ElMessage.error('下载失败');
+                    }
+                  });
+                  return false;
+                }
+                if (dom.href.startsWith('page://')) {
+                  nextTick(() => gotoPage(dom.href.replace('page://', '')));
+                  return false;
+                } else if (dom.href === 'https://' && openBible(dom.innerText)) {
+                  return false;
+                } else if (dom.href.startsWith('timestamp://')) {
+                  let content = editor.getValue();
+                  let index = content.indexOf(dom.href);
+                  content = content.substring(0, index);
+                  let videoIndex = Math.max(content.lastIndexOf('[在线资料'), content.lastIndexOf('[本地资料'));
+                  let videoUrl = '';
+                  if (videoIndex !== -1) {
+                    let startIndex = content.indexOf('(', videoIndex);
+                    let endIndex = content.indexOf(')', videoIndex);
+                    videoUrl = decodeURIComponent(
+                      content.substring(startIndex + 1, endIndex).replace('kingfisher://', ''));
+                    if (videoUrl.startsWith('vhttps://') || videoUrl.startsWith('vhttp://')) {
+                      videoUrl = website.handleReplacedWebsite(videoUrl);
+                    }
                   }
-                }
-                if (lastVideo != videoUrl) {
-                  closeVideo();
-                  nextTick(() =>
-                    openVideo(videoUrl, false, () => {
-                      service.invoke('/note/locateVideo', JSON.stringify({
-                        videoUrl,
-                        location: dom.href.replace('timestamp://', ''),
+                  if (lastVideo != videoUrl) {
+                    closeVideo();
+                    nextTick(() =>
+                      openVideo(videoUrl, false, () => {
+                        service.invoke('/note/locateVideo', JSON.stringify({
+                          videoUrl,
+                          location: dom.href.replace('timestamp://', ''),
+                        }));
                       }));
+                  } else {
+                    service.invoke('/note/locateVideo', JSON.stringify({
+                      videoUrl,
+                      location: dom.href.replace('timestamp://', ''),
                     }));
-                } else {
-                  service.invoke('/note/locateVideo', JSON.stringify({
-                    videoUrl,
-                    location: dom.href.replace('timestamp://', ''),
-                  }));
-                }
-              } else if (dom.href.startsWith('kingfisher://')) {
-                if (dom.href.indexOf('.mp4') !== -1) {
+                  }
+                } else if (dom.href.startsWith('kingfisher://')) {
+                  if (dom.href.indexOf('.mp4') !== -1) {
+                    closeVideo();
+                    nextTick(() => openVideo(decodeURIComponent(dom.href.replace('kingfisher://', ''))));
+                  } else {
+                    service.invoke('/note/openFile', JSON.stringify({path: dom.href.replace('kingfisher://', '')}));
+                  }
+                  return false;
+                } else if (dom.href.startsWith('http://') || dom.href.startsWith('https://') && dom.href !==
+                  'https://') {
                   closeVideo();
-                  nextTick(() => openVideo(decodeURIComponent(dom.href.replace('kingfisher://', ''))));
-                } else {
-                  service.invoke('/note/openFile', JSON.stringify({path: dom.href.replace('kingfisher://', '')}));
+                  nextTick(() => {
+                    let url = website.handleReplacedWebsite(dom.href);
+                    openVideo(decodeURIComponent(url));
+                  });
+                  return false;
+                } else if (dom.href === 'https://') {
+                  return false;
                 }
-                return false;
-              } else if (dom.href.startsWith('http://') || dom.href.startsWith('https://') && dom.href !== 'https://') {
-                closeVideo();
-                nextTick(() => {
-                  let url = website.handleReplacedWebsite(dom.href);
-                  openVideo(decodeURIComponent(url));
-                });
-                return false;
-              } else if (dom.href === 'https://') {
-                return false;
               }
             },
           },
           toolbar: [
             'emoji', 'headings', 'bold', 'italic', 'strike', '|', 'line', 'quote',
             'list', 'ordered-list', 'check', 'outdent', 'indent', 'code', 'inline-code',
-            'insert-after', 'insert-before', 'undo', 'redo', 'link', 'table', '|',
+            'insert-after', 'insert-before', 'undo', 'redo',
+            {
+              hotkey: '⌘L',
+              name: 'insert-link',
+              tipPosition: 's',
+              tip: '插入链接',
+              className: 'right',
+              icon: '<svg t="1714563898775" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4246" width="200" height="200"><path d="M341.205333 682.666667H170.922667A85.12 85.12 0 0 1 85.333333 597.418667V426.581333C85.333333 379.178667 123.648 341.333333 170.922667 341.333333h170.282666A85.333333 85.333333 0 0 1 426.666667 426.666667H170.922667C170.538667 426.666667 170.666667 597.418667 170.666667 597.418667c0 0.128 256-0.085333 256-0.085334 0 47.146667-38.101333 85.333333-85.461334 85.333334z m511.872-85.333334c0.426667 0 0.256-170.752 0.256-170.752L597.333333 426.666667c0-47.146667 38.101333-85.333333 85.461334-85.333334h170.282666C900.352 341.333333 938.666667 379.178667 938.666667 426.581333v170.837334A85.12 85.12 0 0 1 853.077333 682.666667h-170.282666A85.333333 85.333333 0 0 1 597.333333 597.333333h255.744z m-213.205333-128A42.410667 42.410667 0 0 1 682.666667 512c0 23.722667-19.157333 42.666667-42.794667 42.666667H384.128A42.410667 42.410667 0 0 1 341.333333 512c0-23.722667 19.157333-42.666667 42.794667-42.666667h255.744z" fill="#FFFFFF" p-id="4247"></path></svg>',
+              click() {
+                if (window.event.ctrlKey) {
+                  handleEvent({name: 'insertLink'}, (result) => {
+                    if (result) {
+                      editor.focus();
+                      nextTick(() => {
+                        editor.insertValue(result);
+                      });
+                    }
+                  });
+                } else {
+                  editor.focus();
+                  nextTick(() => {
+                    editor.insertValue('\n[]()\n');
+                  });
+                }
+              },
+            },
+            'table', '|',
             {
               hotkey: '⌘F',
               name: 'find',
@@ -482,7 +458,9 @@ export default {
                     cancelButtonText: '取消',
                     inputPattern: /\S/,
                     inputErrorMessage: '网址不能为空',
-                  }).then(({value}) => openVideo(value.replace('http', 'vhttp'), true)).catch(() => console.log('取消打开网址'));
+                  }).
+                    then(({value}) => openVideo(value.replace('http', 'vhttp'), true)).
+                    catch(() => console.log('取消打开网址'));
                 } else {
                   ElMessage.warning('请先打开一个笔记');
                 }

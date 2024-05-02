@@ -108,7 +108,7 @@
         </div>
       </div>
     </el-header>
-    <el-main style="padding: 0px;">
+    <el-main style="padding: 0">
       <component :is="mainComp" ref="mainComponent"></component>
     </el-main>
   </el-container>
@@ -252,18 +252,6 @@ export default {
       canvas.height = _h - 4;
     };
 
-    const clock = () => {
-      const _d = new Date();
-      if (Math.floor(_d.getTime() / 100) % 2 === 0) {
-        let _y, _M, _D, _h, _m;
-        _y = _d.getFullYear();
-        _M = _d.getMonth() + 1;
-        _D = _d.getDate();
-        _h = _d.getHours();
-        _m = _d.getMinutes();
-      }
-    };
-
     let lockTimer;
 
     onMounted(() => {
@@ -283,8 +271,6 @@ export default {
         canvas.getContext('2d').fillText(text, x_pos, y_pos);
         letters[index] = y_pos > (canvas.height - 200) + Math.random() * 1e4 ? 0 : y_pos + 10;
       });
-
-      clock();
     };
 
     watch(locking, () => {
@@ -547,7 +533,7 @@ export default {
           if (!value) {
             value = '';
           }
-          if (md5(value + noteModel.constPassword) == noteModel.setting.value.password) {
+          if (md5(value + noteModel.constPassword) === noteModel.setting.value.password) {
             locking.value = false;
             noteModel.startColdDown();
             locking.value = false;

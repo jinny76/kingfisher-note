@@ -18,6 +18,8 @@ export const initHttpServer = () => {
 
   server.use('/upload', router);
 
+  server.use('/vditor', express.static('./resources/vditor'));
+
   server.listen(13999, () => console.log(
       'HTTP server started on http://localhost:13999'));
 };

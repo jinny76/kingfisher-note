@@ -85,6 +85,8 @@ const currVersion = ref(null);
 
 const currPage = ref(1);
 
+const aiServer = "https://ai.kingfisher.live/aiapi/";
+
 export default {
   currNote,
   noteList,
@@ -104,4 +106,5 @@ export default {
   constPassword: 'kingfisher123456789!@#$%^&',
   currPage,
   openTime,
+  aiServer
 };

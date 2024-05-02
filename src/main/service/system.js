@@ -25,6 +25,8 @@ const install = mainWindow => {
       message: '全屏成功',
     };
   });
+
+  console.log('注册系统服务');
 };
 
 export default {

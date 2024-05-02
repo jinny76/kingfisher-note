@@ -249,6 +249,26 @@ const install = () => {
     };
   });
 
+  ipcMain.handle('/store/downloadAsset', (event, params) => {
+    if (params) {
+      if (!fs.existsSync(setting.assetsDir + '/' + params)) {
+        return {
+          code: 404,
+          message: '文件不存在',
+        };
+      }
+
+      return {
+        code: 200,
+        data: fs.readFileSync(setting.assetsDir + '/' + params),
+      };
+    }
+    return {
+      code: 500,
+      message: '参数错误',
+    }
+  });
+
   ipcMain.handle('/store/newNote', (event, params) => {
     console.log('开始新建文件');
     if (setting.noteDir) {
