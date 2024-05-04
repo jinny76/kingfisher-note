@@ -63,6 +63,11 @@
             fill="#FFFFFF" p-id="35630"></path>
         </svg>
       </el-button>
+      <el-input v-model="content" style="margin-left: 20px; width: 400px;" @keydown="enterNote" @keydown.enter="send">
+        <template #prefix>
+          笔记>&nbsp;
+        </template>
+      </el-input>
     </div>
   </div>
   <div v-if="recording" class="record blink">
@@ -191,7 +196,7 @@ export default {
               if (eventData.args === 'timestamp') {
                 let video = document.querySelector("${videoQuery}");
                 if (video) {
-                  window.kfsocket.send(JSON.stringify({action: 'insertContent', time: video.currentTime}));
+                  window.kfsocket.send(JSON.stringify({action: 'insertContent', time: video.currentTime - ${noteModel.setting.value.timestampOffset}}));
                 }
               } else if (eventData.args === 'screenshot') {
                 let video = document.querySelector("${videoQuery}");
@@ -213,7 +218,7 @@ export default {
                   canvas.height = video.videoHeight;
 
                   canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-                  window.kfsocket.send(JSON.stringify({action: 'insertContent', time: video.currentTime, screenshot: canvas.toDataURL()}));
+                  window.kfsocket.send(JSON.stringify({action: 'insertContent', time: video.currentTime - ${noteModel.setting.value.timestampOffset}, screenshot: canvas.toDataURL()}));
                 }
               }
             } else if (eventData.action === "locateVideo") {
@@ -222,7 +227,13 @@ export default {
                 let argObj = JSON.parse(eventData.args);
                 video.currentTime = new Number(argObj.location);
               }
-            } else if (eventData.action === "stopVideo") {
+            } else if (eventData.action === 'getTimestamp') {
+              let video = document.querySelector("${videoQuery}");
+              if (video) {
+                video.crossOrigin = "anonymous";
+                window.kfsocket.send(JSON.stringify({action: 'getTimestamp', time: video.currentTime - ${noteModel.setting.value.timestampOffset}}));
+              }
+            }else if (eventData.action === "stopVideo") {
               let video = document.querySelector("${videoQuery}");
               if (video) {
                 video.pause();
@@ -239,12 +250,12 @@ export default {
             } else if (eventData.action === "forward") {
               let video = document.querySelector("${videoQuery}");
               if (video) {
-                video.currentTime = video.currentTime + 5;
+                video.currentTime = video.currentTime + ${noteModel.setting.value.forwardStep};
               }
             } else if (eventData.action === "backward") {
               let video = document.querySelector("${videoQuery}");
               if (video) {
-                video.currentTime = video.currentTime >= 5 ? video.currentTime - 5 : 0;
+                video.currentTime = video.currentTime >= ${noteModel.setting.value.forwardStep} ? video.currentTime - ${noteModel.setting.value.forwardStep} : 0;
               }
             }
           });
@@ -283,7 +294,7 @@ export default {
           let data = {};
 
           if (type === 'timestamp' || type === 'all') {
-            data.time = video.currentTime;
+            data.time = video.currentTime - noteModel.setting.value.timestampOffset;
           }
 
           if (type === 'screenshot' || type === 'all') {
@@ -353,6 +364,14 @@ export default {
     };
     window.electron.ipcRenderer.on('/client/changePage', changePageListener);
 
+    let getTimestampListene = function(event, arg) {
+      let argObj = JSON.parse(arg);
+      service.invoke('/note/send', `${content.value} ${formatTime(argObj.time)}\n`);
+      content.value = '';
+      playVideo();
+    };
+    window.electron.ipcRenderer.on('/client/getTimestamp', getTimestampListene);
+
     const playVideo = () => {
       if (contentType.value === 'video') {
         let video = playerDom.value.$el.childNodes[0];
@@ -379,7 +398,7 @@ export default {
     const forward = () => {
       if (contentType.value === 'video') {
         let video = playerDom.value.$el.childNodes[0];
-        video.currentTime = video.currentTime + 5;
+        video.currentTime = video.currentTime + parseFloat(noteModel.setting.value.forwardStep);
       } else if (contentType.value === 'website') {
         service.invoke('/note/webForward', '');
       }
@@ -388,7 +407,8 @@ export default {
     const backward = () => {
       if (contentType.value === 'video') {
         let video = playerDom.value.$el.childNodes[0];
-        video.currentTime = video.currentTime >= 5 ? video.currentTime - 5 : 0;
+        let forwardStep = parseFloat(noteModel.setting.value.forwardStep);
+        video.currentTime = video.currentTime >= forwardStep ? video.currentTime - forwardStep : 0;
       } else if (contentType.value === 'website') {
         service.invoke('/note/webBackward', '');
       }
@@ -422,9 +442,52 @@ export default {
       }
     };
 
+    const content = ref('');
+
+    const send = () => {
+      if (content.value) {
+        if ((noteModel.setting.value.autoTimestamp === 'chapter' && content.value.startsWith('#')) ||
+          noteModel.setting.value.autoTimestamp === 'any') {
+          if (contentType.value === 'video') {
+            let video = playerDom.value.$el.childNodes[0];
+            let currentTime = video.currentTime - noteModel.setting.value.timestampOffset;
+            service.invoke('/note/send', `${content.value} ${formatTime(currentTime)}\n`);
+            content.value = '';
+            playVideo();
+          } else if (contentType.value === 'website') {
+            service.invoke('/note/getTimestamp', '');
+          }
+        } else {
+          service.invoke('/note/send', content.value + '\n');
+          content.value = '';
+          playVideo();
+        }
+      }
+    };
+
+    const enterNote = () => {
+      if (noteModel.setting.value.pauseWhenWrite) {
+        if (contentType.value === 'video') {
+          stopVideo();
+        } else {
+          service.invoke('/note/stopVideo', '');
+        }
+      }
+    };
+
+    function formatTime(second) {
+      if (second < 0) {
+        second = 0;
+      }
+      let h = Math.floor(second / 3600);
+      let m = Math.floor((second % 3600) / 60);
+      let s = Math.floor(second % 60);
+      return `[[位置 ${h + ':' + m + ':' + s}]](timestamp://${second.toFixed(1)})`;
+    }
+
     return {
       initFlag, options, whenPlay, playerDom, playVideo, stopVideo, insertContent, contentType, webview,
-      forward, backward, recording, record,
+      forward, backward, recording, record, content, send, enterNote,
     };
   },
 };
@@ -480,32 +543,55 @@ export default {
 }
 
 
-@keyframes blink{
-  0%{opacity: 1;}
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
 
-  100%{opacity: 0;}
+  100% {
+    opacity: 0;
+  }
 }
 
 @-webkit-keyframes blink {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
-}
-@-moz-keyframes blink {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
-}
-@-ms-keyframes blink {
-  0% {opacity: 1; }
-  100% { opacity: 0;}
-}
-@-o-keyframes blink {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
-.blink{
+@-moz-keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@-ms-keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@-o-keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.blink {
   color: red;
-  font-size:46px;
+  font-size: 46px;
   animation: blink 2s linear infinite;
   -webkit-animation: blink 2s linear infinite;
   -moz-animation: blink 2s linear infinite;

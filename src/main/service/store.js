@@ -82,7 +82,7 @@ const install = () => {
   ipcMain.handle('/store/saveNote', (event, params) => {
     console.log('开始保存文件');
     // save file to "note" folder
-    const {path, data, tags, key, like} = JSON.parse(params);
+    const {path, data, tags, key, like, auto} = JSON.parse(params);
 
     if (tags) {
       noteMeta[path] = noteMeta[path] || {};
@@ -97,16 +97,25 @@ const install = () => {
         fs.mkdirSync(setting.noteDir);
       }
 
-      if (key) {
-        fs.writeFileSync(`${setting.noteDir}/${path}`,
-            encryptPrefix + encrypt(data, key));
-        fs.writeFileSync(
-            `${setting.noteDir}/${path}.${new Date().getTime()}.bak`,
-            encryptPrefix + encrypt(data, key));
+      if (!auto) {
+        if (key) {
+          fs.writeFileSync(`${setting.noteDir}/${path}`,
+              encryptPrefix + encrypt(data, key));
+          fs.writeFileSync(
+              `${setting.noteDir}/${path}.${new Date().getTime()}.bak`,
+              encryptPrefix + encrypt(data, key));
+        } else {
+          fs.writeFileSync(`${setting.noteDir}/${path}`, data);
+          fs.writeFileSync(
+              `${setting.noteDir}/${path}.${new Date().getTime()}.bak`, data);
+        }
       } else {
-        fs.writeFileSync(`${setting.noteDir}/${path}`, data);
-        fs.writeFileSync(
-            `${setting.noteDir}/${path}.${new Date().getTime()}.bak`, data);
+        if (key) {
+          fs.writeFileSync(`${setting.noteDir}/${path}.auto`,
+              encryptPrefix + encrypt(data, key));
+        } else {
+          fs.writeFileSync(`${setting.noteDir}/${path}.auto`, data);
+        }
       }
       return {
         code: 200, message: '保存成功',
@@ -129,7 +138,7 @@ const install = () => {
       //find all versions
       const files = fs.readdirSync(setting.noteDir);
       files.forEach(file => {
-        if (file.startsWith(path) && file.endsWith('.bak')) {
+        if (file.startsWith(path) && (file.endsWith('.bak') || file.endsWith('.auto'))) {
           data = fs.readFileSync(`${setting.noteDir}/${file}`, 'utf-8');
           fs.writeFileSync(`${setting.noteDir}/${file}`,
               encryptPrefix + encrypt(data, key));
@@ -176,6 +185,14 @@ const install = () => {
           }));
       //sort by time desc
       versions.sort((a, b) => b.time - a.time);
+      if (fs.existsSync(`${setting.noteDir}/${path}.auto`)) {
+        versions.unshift({
+          name: `${path}.auto`,
+          time: fs.statSync(
+              `${setting.noteDir}/${path}.auto`).mtime.getTime(),
+          label: '自动保存',
+        });
+      }
     }
     return versions;
   });

@@ -2,7 +2,7 @@
   <el-container style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
     <el-aside :width="videoWidth" style="margin: 0px; padding: 0px;">
       <video-window v-if="videoUrl != '' && videoWidth !== '0%' && !drag" ref="video"
-                    :url-str="videoUrl" :embed="true"></video-window>
+                    :embed="true" :url-str="videoUrl"></video-window>
     </el-aside>
     <div v-show="videoWidth !== '0%'" id="dragBar-dept" class="vertical-dragbar"></div>
     <el-main id="idMainContainer" style="margin: 0px; padding: 0px;">
@@ -135,14 +135,21 @@ export default {
 
     const showVideo = computed(() => 'same' === noteModel.setting.value.displayMode);
 
-    const doSave = cb => {
+    let lastSaveTime = 0;
+    const doSave = (cb, auto = false) => {
+      if (new Date().getTime() - lastSaveTime < 1000) {
+        return;
+      }
+      lastSaveTime = new Date().getTime();
       if (event) {
         event.preventDefault();
       }
       let note = noteModel.currNote.value;
       if (note.name) {
         note.data = editor.getValue();
-        note.changed = false;
+        if (!auto) {
+          note.changed = false;
+        }
         localStorage.setItem('NOTE', JSON.stringify({
           name: note.name,
         }));
@@ -152,15 +159,20 @@ export default {
           tags: note.tags,
           key: note.key,
           like: note.like,
+          auto: auto,
         }), result => {
           console.log('保存笔记成功', result);
-          ElMessage.success('保存笔记成功');
+          if (!auto) {
+            ElMessage.success('保存笔记成功');
+          }
           if (cb) {
             cb();
           }
         });
       } else {
-        ElMessage.warning('请先打开一个笔记');
+        if (!auto) {
+          ElMessage.warning('请先打开一个笔记');
+        }
       }
     };
 
@@ -215,7 +227,11 @@ export default {
 
     watch(noteModel.currNote, () => {
       if (editor && noteModel.currNote.value.data) {
-        editor.setValue(noteModel.currNote.value.data);
+        utils.runUntil(() => {
+          return editor.vditor.lute != null;
+        }, () => {
+          editor.setValue(noteModel.currNote.value.data);
+        });
       }
     });
 
@@ -261,9 +277,42 @@ export default {
             if (!event.ctrlKey && event.code != 'Enter') {
               noteModel.markChanged();
               stopVideo();
-            } else {
-              noteModel.startColdDown();
+            } else if (event.code === 'Enter') {
+              if (noteModel.setting.value.autoTimestamp) {
+                let selObj = window.getSelection();
+                let range = selObj.getRangeAt(0);
+                let content = range.startContainer.textContent;
+                let currNode = selObj.anchorNode;
+                let parentNode = currNode.parentNode;
+                while (parentNode.tagName !== 'DIV') {
+                  parentNode = parentNode.parentNode;
+                }
+                if ((noteModel.setting.value.autoTimestamp === 'chapter' &&
+                    currNode.parentNode.innerText.indexOf('[[位置')
+                    === -1 && currNode.parentNode.previousSibling?.innerText?.startsWith('#'))
+                  || (noteModel.setting.value.autoTimestamp === 'any' && content.length > 0
+                    && content.replaceAll('\n', '') !== '' && content.indexOf('[[位置') === -1
+                    && content !== ')')) {
+                  handleInsert = (data) => {
+                    let text = formatTime(data.time);
+                    selObj = window.getSelection();
+                    range = selObj.getRangeAt(0);
+                    range.deleteContents();
+                    let node = document.createTextNode(text + '\n');
+                    range.insertNode(node);
+                    let container = range.startContainer;
+                    while (container.nextSibling) {
+                      container = container.nextSibling;
+                    }
+                    range.setStart(container, 0);
+                    range.setEnd(container, 0);
+                    handleInsert = null;
+                  };
+                  insertContent('timestamp');
+                }
+              }
             }
+            noteModel.startColdDown();
           },
           blur: () => {
             let selObj = window.getSelection();
@@ -603,7 +652,7 @@ export default {
             },
             'export',
             {
-              hotkey: '⇧⌘L',
+              hotkey: '⇧⌘⌥+L',
               name: 'lock',
               tipPosition: 's',
               tip: '锁定',
@@ -624,13 +673,21 @@ export default {
               click() {
                 noteModel.currNote.value.like = !noteModel.currNote.value.like;
                 if (noteModel.currNote.value.like) {
-                  ElMessage({type: "success", message:"已收藏"})
+                  ElMessage({type: 'success', message: '已收藏'});
                 } else {
-                  ElMessage({type: "success", message:"已取消收藏"})
+                  ElMessage({type: 'success', message: '已取消收藏'});
                 }
               },
             },
           ],
+        });
+
+        utils.runUntil(() => {
+          return document.querySelector('.vditor-sv');
+        }, () => {
+          keyManager.registerHotkeyProcessor('ctrl+alt+v', () => {
+            ElMessage.success('视频快捷键已启用');
+          });
         });
       }
     });
@@ -701,25 +758,39 @@ export default {
       }
     };
 
+    let handleInsert;
+
     let insertAllListener = function(event, arg) {
       let data = JSON.parse(arg);
       if (data) {
-        let content;
-        if (data.time && data.screenshotId) {
-          content = '\n\n' + formatTime(data.time) + '\n' + insertMdImg(data.screenshotId) + '\n';
-          noteModel.lastScreenshot.value = data.screenshotId;
-        } else if (data.time) {
-          content = '\n\n' + formatTime(data.time) + '\n';
-        } else if (data.screenshotId) {
-          content = '\n\n' + insertMdImg(data.screenshotId) + '\n';
-          noteModel.lastScreenshot.value = data.screenshotId;
-        }
-        if (content) {
-          insertText(content);
+        if (!handleInsert) {
+          let content;
+          if (data.time && data.screenshotId) {
+            content = '\n\n' + formatTime(data.time) + '\n' + insertMdImg(data.screenshotId) + '\n';
+            noteModel.lastScreenshot.value = data.screenshotId;
+          } else if (data.time) {
+            content = '\n\n' + formatTime(data.time) + '\n';
+          } else if (data.screenshotId) {
+            content = '\n\n' + insertMdImg(data.screenshotId) + '\n';
+            noteModel.lastScreenshot.value = data.screenshotId;
+          }
+          if (content) {
+            insertText(content);
+          }
+        } else {
+          handleInsert(data);
         }
       }
     };
     electron.ipcRenderer.on('/client/insertAll', insertAllListener);
+
+    let sendListener = function(event, arg) {
+      if (noteModel.currNote.value.name) {
+        let content = arg;
+        insertText(content);
+      }
+    };
+    electron.ipcRenderer.on('/client/send', sendListener);
 
     const insertText = text => {
       if (editor) {
@@ -730,11 +801,12 @@ export default {
             selection.addRange(lastPosition);
           }
           editor.insertValue(text, true);
+          lastPosition = null;
           noteModel.markChanged();
           editor.focus();
 
           let previewContainer = document.querySelector('.vditor-preview');
-          previewContainer.scrollTop = previewContainer.scrollHeight;
+          previewContainer.scrollTop = previewContainer.scrollHeight + 100;
         });
       }
     };
@@ -754,7 +826,8 @@ export default {
           let content = `\n\n[[本地资料 ${fileName}]](kingfisher://${encodeURIComponent(video + '/')})\n`;
           insertText(content);
         } else if (arg.type === 'audio') {
-          let content = `\n\n[音频](kingfisher://${arg.fileName}) [[转文字](tts://${arg.fileName.substring(arg.fileName.lastIndexOf('/') + 1) + '/'})]\n`
+          let content = `\n\n[音频](kingfisher://${arg.fileName}) [[转文字](tts://${arg.fileName.substring(
+            arg.fileName.lastIndexOf('/') + 1) + '/'})]\n`;
           insertText(content);
         }
       }
@@ -763,10 +836,13 @@ export default {
 
     // format 1.2222 to 0:0:1
     function formatTime(second) {
+      if (second < 0) {
+        second = 0;
+      }
       let h = Math.floor(second / 3600);
       let m = Math.floor((second % 3600) / 60);
       let s = Math.floor(second % 60);
-      return `[[位置 ${h + ':' + m + ':' + s}]](timestamp://${second})`;
+      return `[[位置 ${h + ':' + m + ':' + s}]](timestamp://${second.toFixed(1)})`;
     }
 
     // format 1 to file://./screenshot/1.png to md file
@@ -861,6 +937,8 @@ export default {
       }
     };
 
+    let autoSaveTimer = null;
+
     function callOpen(note, time) {
       dialogOpenVisible.value = false;
       noteModel.currVersion.value = null;
@@ -871,7 +949,6 @@ export default {
         time,
       }), result => {
         if (result.code === 200) {
-
           closeVideo();
           lastVideo = null;
           noteModel.currNote.value = result;
@@ -896,6 +973,15 @@ export default {
             editor.focus();
             loadVersions();
             noteModel.startColdDown();
+
+            if (autoSaveTimer) {
+              clearInterval(autoSaveTimer);
+            }
+            autoSaveTimer = setInterval(() => {
+              if (noteModel.currNote.value.changed) {
+                doSave(null, true);
+              }
+            }, 60000);
           });
         } else if (result.code === 500 && result.message === '文件已加密') {
           ElMessageBox.prompt('请输入密码', '打开加密笔记-' + note.name.substring(0, note.name.indexOf('.')), {
@@ -921,19 +1007,23 @@ export default {
           noteModel.versions.value = result;
           let index = 0;
           noteModel.versions.value.map(version => {
-            //根据version.time, 计算距离目前时间，例如一分钟前，一天前等, version.time是个时间签
-            let now = new Date().getTime();
-            let duration = now - version.time;
-            if (duration < 60000) {
-              version.duration = '刚刚';
-            } else if (duration < 3600000) {
-              version.duration = Math.floor(duration / 60000) + '分钟前';
-            } else if (duration < 86400000) {
-              version.duration = Math.floor(duration / 3600000) + '小时前';
+            if (!version.name.endsWith('.auto')) { //根据version.time, 计算距离目前时间，例如一分钟前，一天前等, version.time是个时间签
+              let now = new Date().getTime();
+              let duration = now - version.time;
+              if (duration < 60000) {
+                version.duration = '刚刚';
+              } else if (duration < 3600000) {
+                version.duration = Math.floor(duration / 60000) + '分钟前';
+              } else if (duration < 86400000) {
+                version.duration = Math.floor(duration / 3600000) + '小时前';
+              } else {
+                version.duration = Math.floor(duration / 86400000) + '天前';
+              }
+              version.index = '版本' + (noteModel.versions.value.length - index).toString().padStart(3, '0');
             } else {
-              version.duration = Math.floor(duration / 86400000) + '天前';
+              version.index = '自动保存';
+              version.duration = '1分钟前';
             }
-            version.index = '版本' + (noteModel.versions.value.length - index).toString().padStart(3, '0');
             index++;
           });
         });

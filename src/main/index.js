@@ -140,7 +140,7 @@ app.whenReady().then(() => {
   });
 
   storeService.install();
-  noteService.install(windowManager);
+  noteService.install(mainWindow, windowManager);
   systemService.install(mainWindow, windowManager);
   aiService.install();
   recordService.install(mainWindow, windowManager);

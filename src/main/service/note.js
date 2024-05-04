@@ -6,11 +6,7 @@ import {convert} from '../video/server';
 
 const rootPath = process.cwd();
 
-let windowManager = null;
-
-const install = _windowManager => {
-  windowManager = _windowManager;
-
+const install = (mainWindow, windowManager) => {
   ipcMain.handle('/note/insertAll', (event, params) => {
     console.log('开始插入内容');
     // save file to "note" folder
@@ -149,20 +145,28 @@ const install = _windowManager => {
     }
   });
 
+  ipcMain.handle('/note/send', (event, params) => {
+    mainWindow.webContents.send('/client/send', params);
+  });
+
   ipcMain.handle('/note/changePage', (event, params) => {
     let videoWindow = windowManager.findWindowByRoute('/video/');
     if (videoWindow) {
       videoWindow.webContents.send('/client/changePage', params);
       return {
-        code: 200,
-        params,
+        code: 200, params,
       };
     } else {
       return {
-        code: 500,
-        message: '未找到视频窗口',
+        code: 500, message: '未找到视频窗口',
       };
     }
+  });
+
+  ipcMain.handle('/note/getTimestamp', (event, params) => {
+    ws.send(JSON.stringify({
+      action: 'getTimestamp',
+    }));
   });
 
   ipcMain.handle('/note/ocr', async (event, params) => {
@@ -172,14 +176,11 @@ const install = _windowManager => {
       const {data: {text}} = await worker.recognize(screenshot);
       console.log(text);
       return {
-        code: 200,
-        message: '识别成功',
-        data: text,
+        code: 200, message: '识别成功', data: text,
       };
     } else {
       return {
-        code: 500,
-        message: '识别失败',
+        code: 500, message: '识别失败',
       };
     }
   });
@@ -210,6 +211,12 @@ const install = _windowManager => {
       let data = JSON.parse(message);
       if (data.action === 'insertContent') {
         insertAll(data.time, data.screenshot);
+      } else if (data.action === 'getTimestamp') {
+        let videoWindow = windowManager.findWindowByRoute('/video/');
+        if (videoWindow) {
+          videoWindow.webContents.send('/client/getTimestamp',
+              JSON.stringify({time: data.time}));
+        }
       }
     });
   });

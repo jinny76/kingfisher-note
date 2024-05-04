@@ -16,10 +16,19 @@ const setting = ref({
   pauseWhenWrite: true,
   autoOpenVideo: true,
   openLastNote: true,
+  autoTimestamp: 'none',
   lockTime: 15,
   password: '',
   onlyForUnlock: true,
+  timestampOffset: 1,
+  forwardStep: 5,
 });
+
+const insertFor = [
+  {value: 'none', label: '不插入'},
+  {value: 'chapter', label: '章节'},
+  {value: 'any', label: '所有'},
+];
 
 const settingReady = ref(false);
 
@@ -85,7 +94,7 @@ const currVersion = ref(null);
 
 const currPage = ref(1);
 
-const aiServer = "https://ai.kingfisher.live/aiapi/";
+const aiServer = 'https://ai.kingfisher.live/aiapi/';
 
 export default {
   currNote,
@@ -106,5 +115,6 @@ export default {
   constPassword: 'kingfisher123456789!@#$%^&',
   currPage,
   openTime,
-  aiServer
+  aiServer,
+  insertFor,
 };

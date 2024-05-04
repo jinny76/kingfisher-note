@@ -2,16 +2,16 @@
   <el-container style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
     <el-header style="padding: 0px; display: flex; justify-content: space-between">
       <el-menu
-          ref="menu"
-          :default-active="activeIndex"
-          active-text-color="#ffd04b"
-          background-color="#545c64"
-          class="el-menu-demo"
-          mode="horizontal"
-          popper-effect="dark"
-          style="width: 400px;"
-          text-color="#fff"
-          @select="handleSelect"
+        ref="menu"
+        :default-active="activeIndex"
+        active-text-color="#ffd04b"
+        background-color="#545c64"
+        class="el-menu-demo"
+        mode="horizontal"
+        popper-effect="dark"
+        style="width: 400px;"
+        text-color="#fff"
+        @select="handleSelect"
       >
         <el-sub-menu index="1">
           <template #title>文件</template>
@@ -56,51 +56,51 @@
         <div style="padding-left: 40px">
           标签:
           <el-select
-              v-model="currNote.tags"
-              :max-collapse-tags="3"
-              :reserve-keyword="false"
-              allow-create
-              collapse-tags
-              collapse-tags-tooltip
-              default-first-option
-              filterable
-              multiple
-              placeholder="选择标签"
-              style="width: 300px"
+            v-model="currNote.tags"
+            :max-collapse-tags="3"
+            :reserve-keyword="false"
+            allow-create
+            collapse-tags
+            collapse-tags-tooltip
+            default-first-option
+            filterable
+            multiple
+            placeholder="选择标签"
+            style="width: 300px"
           >
             <el-option
-                v-for="item in tags"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+              v-for="item in tags"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
             />
           </el-select>
         </div>
         <div style="padding-left: 40px">
           版本:
           <el-select
-              v-model="currVersion"
-              empty-text="没有历史版本"
-              filterable
-              placeholder="加载历史版本"
-              style="width: 180px"
-              @change="loadVersion"
+            v-model="currVersion"
+            empty-text="没有历史版本"
+            filterable
+            placeholder="加载历史版本"
+            style="width: 180px"
+            @change="loadVersion"
           >
             <el-option
-                v-for="version in versions"
-                :key="version.time"
-                :label="version.index + ' ' + version.duration"
-                :title="version.label"
-                :value="version.time"
+              v-for="version in versions"
+              :key="version.time"
+              :label="version.index + ' ' + version.duration"
+              :title="version.label"
+              :value="version.time"
             />
           </el-select>
         </div>
         <div v-if="targetTime> 0" style="padding-left: 40px; width: 300px;">
           <el-progress
-              :percentage="restPercent"
-              :stroke-width="20"
-              :text-inside="true"
-              status="success">
+            :percentage="restPercent"
+            :stroke-width="20"
+            :text-inside="true"
+            status="success">
             <span style="color:white">您已经沉浸学习了 {{ studyTime }} </span>
           </el-progress>
         </div>
@@ -143,9 +143,9 @@
   </el-dialog>
   <el-dialog v-model="dialogConvertVisible" align-center draggable title="视频转换" width="1200">
     <el-upload
-        v-model:file-list="videoList"
-        :auto-upload="false"
-        :multiple="false"
+      v-model:file-list="videoList"
+      :auto-upload="false"
+      :multiple="false"
     >
       <el-button type="primary">选择视频</el-button>
       <template #tip>
@@ -159,13 +159,13 @@
       <el-checkbox v-model="convertOptions.mp3">MP3</el-checkbox>
     </div>
     <el-progress
-        v-show="showProgress"
-        :duration="10"
-        :percentage="100"
-        :stroke-width="15"
-        status="success"
-        striped
-        striped-flow
+      v-show="showProgress"
+      :duration="10"
+      :percentage="100"
+      :stroke-width="15"
+      status="success"
+      striped
+      striped-flow
     />
     <template #footer>
       <div class="dialog-footer">
@@ -285,16 +285,20 @@ export default {
 
     const activeIndex = ref('1');
 
-    keyManager.registerHotkeyProcessor('ctrl+alt+1', () => service.invoke('/system/openDevTools', '',
-        result => console.log('打开开发者工具', result)), '打开开发者工具');
+    keyManager.init();
 
-    keyManager.registerHotkeyProcessor('ctrl+shift+l', () => {
-      locking.value = true;
+    keyManager.registerHotkeyProcessor('ctrl+alt+1', () => service.invoke('/system/openDevTools', '',
+      result => console.log('打开开发者工具', result)), '打开开发者工具');
+
+    keyManager.registerHotkeyProcessor('f11', () => {
+      focusMode(60);
+    }, '全屏');
+
+    keyManager.registerHotkeyProcessor('ctrl+shift+alt+l', () => {
+      window.event.preventDefault();
+      noteModel.locking.value = true;
       noteModel.stopColdDown();
     }, '锁定');
-
-    keyManager.registerHotkeyProcessor('f11', () => service.invoke('/system/fullscreen', '',
-        result => console.log('切换全屏', result)), '全屏');
 
     window.electron.ipcRenderer.on('/client/error', function(event, arg) {
       console.error('错误', JSON.parse(arg));
@@ -321,6 +325,35 @@ export default {
       }).catch(() => console.log('取消重启'));
     };
     window.electron.ipcRenderer.on('/client/downloaded', downloadedListener);
+
+    function focusMode(value) {
+      if (!value) {
+        value = 60;
+      }
+
+      targetTime.value = value * 60;
+      if (targetTime.value < 0) {
+        targetTime.value = 0;
+      }
+      noteModel.openTime = Date.now();
+      ElMessage.success('已进入专注模式，其他程序将无法打扰您，ESC键退出专注模式');
+
+      studyTimer = setInterval(() => {
+        let time = (Date.now() - noteModel.openTime) / 1000;
+        let h = Math.floor(time / 3600);
+        let m = Math.floor((time % 3600) / 60).toString().padStart(2, '0');
+        let s = Math.floor(time % 60).toString().padStart(2, '0');
+        studyTime.value = `${h}小时 ${m}分钟 ${s}秒`;
+        restPercent.value = Math.floor((time % targetTime.value) / targetTime.value * 100);
+
+        if (Math.floor(time / 3600) > 0 && Math.floor((time % 3600) / 60) === 0 && Math.floor(time % 60) === 0) {
+          ElMessage.success('您已经沉浸学习了一个小时，站起来运动一下吧！');
+        }
+      }, 1000);
+
+      service.invoke('/system/fullscreen', '', () => {
+      });
+    }
 
     const handleSelect = index => {
       switch (index) {
@@ -363,32 +396,7 @@ export default {
             inputErrorMessage: '请输入学习时间（分钟）',
             inputValue: 60,
           }).then(({value}) => {
-            if (!value) {
-              value = 60;
-            }
-
-            targetTime.value = value * 60;
-            if (targetTime.value < 0) {
-              targetTime.value = 0;
-            }
-            noteModel.openTime = Date.now();
-            ElMessage.success('已进入专注模式，其他程序将无法打扰您，ESC键退出专注模式');
-
-            studyTimer = setInterval(() => {
-              let time = (Date.now() - noteModel.openTime) / 1000;
-              let h = Math.floor(time / 3600);
-              let m = Math.floor((time % 3600) / 60).toString().padStart(2, '0');
-              let s = Math.floor(time % 60).toString().padStart(2, '0');
-              studyTime.value = `${h}小时 ${m}分钟 ${s}秒`;
-              restPercent.value = Math.floor((time % targetTime.value) / targetTime.value * 100);
-
-              if (Math.floor(time / 3600) > 0 && Math.floor((time % 3600) / 60) === 0 && Math.floor(time % 60) === 0) {
-                ElMessage.success('您已经沉浸学习了一个小时，站起来运动一下吧！');
-              }
-            }, 1000);
-
-            service.invoke('/system/fullscreen', '', () => {
-            });
+            focusMode(value);
           }).catch(() => {
           });
           break;
@@ -479,7 +487,7 @@ export default {
       noteModel.setting.value = newSetting;
 
       service.invoke('/store/updateSetting', JSON.stringify(noteModel.setting.value), result => console.log(
-          '更新设置', result));
+        '更新设置', result));
 
       noteModel.startColdDown();
       dialogSettingVisible.value = false;
@@ -566,7 +574,7 @@ export default {
 
     const developEnv = import.meta.env.DEV;
     const reload = () => {
-      window.location.reload()
+      window.location.reload();
     };
 
     let record = false;
