@@ -141,7 +141,7 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="dialogConvertVisible" align-center draggable title="视频转换" width="1200">
+  <el-dialog v-model="dialogConvertVisible" align-center draggable title="视频处理" width="1200">
     <el-upload
       v-model:file-list="videoList"
       :auto-upload="false"
@@ -150,11 +150,12 @@
       <el-button type="primary">选择视频</el-button>
       <template #tip>
         <div class="el-upload__tip">
-          由于播放器不支持除了MP4格式以外的视频抓图和定位, 我们可以把其他类型的视频文件转换为MP4
+          由于播放器不支持除了MP4格式以外的视频抓图和定位, 我们可以把其他类型的视频文件转换为MP4，也可以抓取音轨用于分析
         </div>
       </template>
     </el-upload>
-    <div style="width: 100%">
+    <div style="width: 100%; display: flex; align-items: center; align-content: center">
+      <div style="padding-right: 20px">转换编码</div>
       <el-checkbox v-model="convertOptions.h264">H264</el-checkbox>
       <el-checkbox v-model="convertOptions.mp3">MP3</el-checkbox>
     </div>
@@ -169,7 +170,8 @@
     />
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="doConvert">转换</el-button>
+        <el-button @click="doConvert">转换视频</el-button>
+        <el-button @click="doCaptureAudio">抓取音轨</el-button>
         <el-button @click="dialogConvertVisible = false">关闭</el-button>
       </div>
     </template>
@@ -530,6 +532,32 @@ export default {
       });
     };
 
+    const doCaptureAudio = () => {
+      console.log('抓取音轨', videoList.value);
+      showProgress.value = true;
+      service.invoke('/note/captureAudio', JSON.stringify({
+        files: videoList.value.map(file => {
+          let raw = file.raw;
+          return {
+            name: raw.name,
+            path: raw.path,
+            size: raw.size,
+            type: raw.type,
+            lastModified: raw.lastModified,
+          };
+        }),
+      }), result => {
+        showProgress.value = false;
+        console.log('抓取成功', result);
+        ElMessage.success('抓取成功');
+        dialogConvertVisible.value = false;
+      }, error => {
+        console.error('抓取失败', error);
+        ElMessage.error('抓取失败');
+        showProgress.value = false;
+      });
+    };
+
     const loadVersion = time => {
       console.log('加载历史版本', time);
       if (mainComponent.value.loadVersion) {
@@ -607,6 +635,7 @@ export default {
       videoList,
       activeIndex,
       doConvert,
+      doCaptureAudio,
       handleSelect,
       mainComp,
       mainComponent,

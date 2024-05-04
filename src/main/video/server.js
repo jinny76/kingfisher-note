@@ -46,6 +46,17 @@ export const convert = async (videoList, vcodec, acodec) => {
   };
 };
 
+export const captureAudio = async (videoList, acodec) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  console.log(videoList);
+  for (let i = 0; i < videoList.length; i++) {
+    await ffmpeg.captureAudio(videoList[i].path, acodec);
+  }
+  return {
+    code: 200,
+  };
+};
 export const webmFix = async (file) => {
   const ffmpeg = new Ffmpeg();
   ffmpeg.init();

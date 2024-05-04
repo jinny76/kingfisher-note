@@ -323,6 +323,7 @@ export default {
               let selObj = window.getSelection();
               selObj.removeAllRanges();
               selObj.addRange(lastPosition);
+              console.log(lastPosition);
               lastPosition = null;
             }
           },
@@ -968,7 +969,8 @@ export default {
           openFirstVideo();
           noteModel.lastScreenshot.value = null;
 
-          nextTick(() => {
+          setTimeout(() => {
+            lastPosition = null;
             setCursor();
             editor.focus();
             loadVersions();
@@ -982,7 +984,7 @@ export default {
                 doSave(null, true);
               }
             }, 60000);
-          });
+          }, 500);
         } else if (result.code === 500 && result.message === '文件已加密') {
           ElMessageBox.prompt('请输入密码', '打开加密笔记-' + note.name.substring(0, note.name.indexOf('.')), {
             confirmButtonText: '确定',

@@ -1,4 +1,5 @@
 import ffmpeg from 'fluent-ffmpeg';
+import {captureAudio} from './server';
 
 class Ffmepg {
 
@@ -28,6 +29,32 @@ class Ffmepg {
           console.log('Processing finished!');
         });
     return this.instance;
+  }
+
+  captureAudio(input, audioc = 'copy') {
+    return new Promise((resolve, reject) => {
+      if (audioc === 'mp3') {
+        audioc = 'libmp3lame';
+      }
+      if (audioc == null) {
+        audioc = 'copy';
+      }
+      this.instance = ffmpeg().
+          input(input).
+          audioCodec(audioc).
+          on('progress', function(progress) {
+            console.log('Timemark: ' + progress.timemark);
+          }).
+          on('error', function(err) {
+            console.log('An error occurred: ' + err.message);
+            reject(err);
+          }).
+          on('end', function() {
+            console.log('Processing finished!');
+            resolve();
+          }).
+          save(`${input}.mp3`);
+    });
   }
 
   convert(input, videoc = 'copy', audioc = 'copy') {

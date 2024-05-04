@@ -2,7 +2,7 @@ import {ipcMain} from 'electron';
 import fs from 'fs';
 import storeService from './store';
 import {createWorker} from 'tesseract.js';
-import {convert} from '../video/server';
+import {convert, captureAudio} from '../video/server';
 
 const rootPath = process.cwd();
 
@@ -91,6 +91,14 @@ const install = (mainWindow, windowManager) => {
     let request = JSON.parse(params);
     await convert(request.files, request.options.h264 ? 'h264' : null,
         request.options.mp3 ? 'mp3' : null);
+    return {
+      code: 200,
+    };
+  });
+
+  ipcMain.handle('/note/captureAudio', async (event, params) => {
+    let request = JSON.parse(params);
+    await captureAudio(request.files, 'mp3');
     return {
       code: 200,
     };
