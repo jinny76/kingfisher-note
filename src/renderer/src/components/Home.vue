@@ -233,6 +233,7 @@ import service from '../utils/service';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import keyManager from '../utils/keys';
 import md5 from 'md5';
+import aiService from '../service/ai';
 
 export default {
   name: 'Home',
@@ -608,12 +609,44 @@ export default {
     let record = false;
 
     const test = () => {
-      record = !record;
-      if (record) {
-        service.invoke('/record/start', '', result => console.log('测试', result));
-      } else {
-        service.invoke('/record/stop', '', result => console.log('测试', result));
-      }
+      /*service.invoke('/record/split', {fileName: "D:\\Movie\\1.mp3"}, result => {
+        console.log('测试', result)
+        if (result.files) {
+          let text = [];
+          let index = 0;
+          stt(result.files[index], index);
+
+          function stt(file, i){
+            service.invoke('/store/downloadFile', file, r => {
+              if (r.code === 200) {
+                let file = new File([r.data], Date.now() + ".mp3", {type: 'audio/mp3'});
+                aiService.stt(file, r => {
+                  console.log('识别结果', r);
+                  text.push(r.message);
+                  i++
+                  if (i < 10) {
+                    stt(result.files[i], i);
+                  } else {
+                    console.log('识别完成', text.join('\n'));
+                  }
+                });
+              } else {
+                ElMessage.error('下载失败');
+              }
+            });
+          }
+        }
+      });*/
+      service.invoke('/ai/analysisSubtitle', {
+        fileName: "BV1X7411F744-1.bilibili.json"
+      }, result => {
+        if (result.code === 200) {
+          console.log('分析结果', result.data);
+        } else {
+          ElMessage.warning(result.message);
+        }
+      });
+
     };
 
     return {

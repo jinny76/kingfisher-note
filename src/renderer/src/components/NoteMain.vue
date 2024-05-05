@@ -793,6 +793,23 @@ export default {
     };
     electron.ipcRenderer.on('/client/send', sendListener);
 
+    let captureSubtitleListener = function(event, arg) {
+      ElMessageBox.confirm('字幕已经生成，要不要进行分析', '字幕分析', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(() => {
+        service.invoke('/ai/analysisSubtitle', arg, result => {
+          if (result.code === 200) {
+            let content = '\n\n' + result.data.replace('```markdown', '').replace('```', '') + '\n';
+            insertText(content);
+          } else {
+            ElMessage.warning(result.message);
+          }
+        });
+      }).catch(() => console.log('取消分析字幕'));
+    };
+    electron.ipcRenderer.on('/client/captureSubtitle', captureSubtitleListener);
+
     const insertText = text => {
       if (editor) {
         nextTick(() => {
@@ -856,6 +873,9 @@ export default {
     onUnmounted(() => {
       window.electron.ipcRenderer.removeListener('/client/insertAll', insertAllListener);
       window.electron.ipcRenderer.removeListener('/client/saveNote', saveNoteListener);
+      window.electron.ipcRenderer.removeListener('/client/send', sendListener);
+      window.electron.ipcRenderer.removeListener('/client/record-save', recordSaveListener);
+      window.electron.ipcRenderer.removeListener('/client/captureSubtitle', captureSubtitleListener);
     });
 
     const createNewNote = () => {

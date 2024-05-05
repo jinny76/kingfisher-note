@@ -36,6 +36,7 @@
     "hls.js": "^1.5.8",
     "hotkeys-js": "^3.13.7",
     "md5": "^2.3.0",
+    "openai": "^4.40.2",
     "pinyin-match": "^1.2.5",
     "tesseract.js": "^5.0.5",
     "vditor": "^3.10.4",

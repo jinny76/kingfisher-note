@@ -66,4 +66,13 @@ export const webmFix = async (file) => {
   };
 };
 
+export const splitAudio = async (file) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  await ffmpeg.splitAudio(file);
+  return {
+    code: 200,
+  };
+};
+
 export default StreamServer;

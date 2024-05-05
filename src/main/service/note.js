@@ -2,7 +2,7 @@ import {ipcMain} from 'electron';
 import fs from 'fs';
 import storeService from './store';
 import {createWorker} from 'tesseract.js';
-import {convert, captureAudio} from '../video/server';
+import {captureAudio, convert} from '../video/server';
 
 const rootPath = process.cwd();
 
@@ -139,6 +139,12 @@ const install = (mainWindow, windowManager) => {
     console.log('快进', params);
   });
 
+  ipcMain.handle('/note/captureSubtitle', (event, params) => {
+    ws.send(JSON.stringify({
+      action: 'captureSubtitle',
+    }));
+  });
+
   ipcMain.handle('/note/webBackward', (event, params) => {
     ws.send(JSON.stringify({
       action: 'backward', args: params,
@@ -224,6 +230,28 @@ const install = (mainWindow, windowManager) => {
         if (videoWindow) {
           videoWindow.webContents.send('/client/getTimestamp',
               JSON.stringify({time: data.time}));
+        }
+      } else if (data.action === 'captureSubtitle') {
+        let args = data.args;
+        //fetch the movie id and page from "https://www.bilibili.com/video/BV1X7411F744?p=4&vd_source=e377439980a0887e8d521fa76a9a9e5c", return "BV1X7411F744-4"
+        if (args.type === 'bilibili') {
+          let url = args.url.replace('/?', '?');
+          let movieId = url.substring(url.lastIndexOf('/') + 1,
+              url.lastIndexOf('?'));
+          let page = 1;
+          let firstParam = url.substring(url.lastIndexOf('?') + 1,
+              url.indexOf('&')).
+              split('=');
+          if (firstParam[0] === 'p') {
+            page = firstParam[1];
+          }
+
+          fs.writeFileSync(
+              `${storeService.setting.assetsDir}/${movieId}-${page}.bilibili.json`,
+              JSON.stringify(args.subtitle),
+              {encoding: 'utf-8', overwrite: true});
+          mainWindow.webContents.send('/client/captureSubtitle',
+              JSON.stringify({fileName: `${movieId}-${page}.bilibili.json`}));
         }
       }
     });

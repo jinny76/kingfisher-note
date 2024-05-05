@@ -63,6 +63,14 @@
             fill="#FFFFFF" p-id="35630"></path>
         </svg>
       </el-button>
+      <el-button v-if="extendButtons.captureSubtitle" title="抓取字幕" @click="captureSubtitle">
+        <svg class="icon" height="20" p-id="5662" t="1714908048845" version="1.1"
+             viewBox="0 0 1105 1024" width="20" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M154.74688 883.69152C91.99616 883.69152 40.96 832 40.96 768.43008V115.26144C40.96 51.69152 91.99616 0 154.74688 0h796.42624C1013.92384 0 1064.96 51.69152 1064.96 115.26144v286.88384c0 21.21728-16.9984 38.44096-37.92896 38.44096-20.95104 0-62.8736-17.22368-62.8736-38.44096V140.63616c0-21.17632-13.76256-38.99392-34.67264-38.99392H173.6704c-20.8896 0-31.82592 17.8176-31.82592 38.99392v609.30048c0 21.1968 10.91584 30.59712 31.82592 30.59712H651.0592c20.93056 0 37.92896 43.52 37.92896 64.7168 0 21.23776-16.9984 38.44096-37.92896 38.44096H154.74688zM951.33696 576.512h-34.97984v303.77984c0 6.71744 0.57344 11.9808 1.80224 15.74912 1.20832 3.76832 3.21536 6.71744 6.02112 8.82688 2.80576 2.08896 7.04512 4.1984 12.67712 6.28736 5.632 2.10944 12.0832 3.15392 19.29216 3.15392h19.31264v16.32256c0 6.32832-5.05856 11.44832-11.30496 11.44832H788.8896a11.3664 11.3664 0 0 1-11.264-11.4688v-16.30208h22.89664c7.22944 0 13.27104-0.63488 18.08384-1.88416 4.83328-1.26976 8.84736-3.56352 12.0832-6.92224 3.21536-3.35872 5.40672-6.9632 6.61504-10.71104 1.20832-3.80928 1.8432-9.03168 1.8432-15.7696V576.512H811.4176c-8.86784 0-15.89248 0.8192-21.13536 2.4576-5.2224 1.59744-17.408 3.19488-24.33024 11.18208 0 0-11.55072 7.72096-16.0768 14.336-4.52608 6.63552-6.84032 19.7632-8.45824 28.71296l-4.8128 25.68192-2.41664 8.56064h-16.87552v-121.77408c0-7.65952 6.144-13.88544 13.70112-13.88544h288.52224c7.65952 0 13.824 6.2464 13.824 13.98784v121.67168h-18.10432l-2.39616-14.68416c-1.6384-8.94976-5.67296-45.60896-14.49984-54.35392-14.76608-14.7456-28.32384-17.6128-28.32384-17.6128a38.58432 38.58432 0 0 0-18.69824-4.3008z"
+            fill="#EEEEEE" p-id="5663"></path>
+        </svg>
+      </el-button>
       <el-input v-model="content" style="margin-left: 20px; width: 400px;" @keydown="enterNote" @keydown.enter="send">
         <template #prefix>
           笔记>&nbsp;
@@ -127,6 +135,9 @@ export default {
     });
 
     const contentType = ref('video');
+    const extendButtons = ref({
+      captureSubtitle: false,
+    });
 
     function handleSource() {
       let urlStr = props.urlStr || route.params.path;
@@ -192,7 +203,9 @@ export default {
           window.kfsocket.addEventListener("message", function (event) {
             console.log("Message from server ", event.data);
             let eventData = JSON.parse(event.data);
-            if (eventData.action === "insertContent") {
+            if (window.kfEventHandler && window.kfEventHandler[eventData.action]){
+              window.kfEventHandler[eventData.action](eventData.args);
+            } else if (eventData.action === "insertContent") {
               if (eventData.args === 'timestamp') {
                 let video = document.querySelector("${videoQuery}");
                 if (video) {
@@ -265,6 +278,12 @@ export default {
           }
           if (targetWebsite?.loadScript) {
             webview.value.executeJavaScript(targetWebsite.loadScript);
+          }
+
+          if (targetWebsite?.captureSubtitle) {
+            extendButtons.value.captureSubtitle = true;
+          } else {
+            extendButtons.value.captureSubtitle = false;
           }
         });
       }
@@ -485,9 +504,15 @@ export default {
       return `[[位置 ${h + ':' + m + ':' + s}]](timestamp://${second.toFixed(1)})`;
     }
 
+    const captureSubtitle = () => {
+      if (contentType.value === 'website') {
+        service.invoke('/note/captureSubtitle', '');
+      }
+    };
+
     return {
       initFlag, options, whenPlay, playerDom, playVideo, stopVideo, insertContent, contentType, webview,
-      forward, backward, recording, record, content, send, enterNote,
+      forward, backward, recording, record, content, send, enterNote, extendButtons, captureSubtitle,
     };
   },
 };

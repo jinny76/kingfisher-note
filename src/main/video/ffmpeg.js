@@ -1,5 +1,5 @@
 import ffmpeg from 'fluent-ffmpeg';
-import {captureAudio} from './server';
+import fs from 'fs';
 
 class Ffmepg {
 
@@ -88,6 +88,29 @@ class Ffmepg {
             resolve();
           }).
           save(`${input}.mp4`);
+    });
+  }
+
+  splitAudio(input) {
+    return new Promise((resolve, reject) => {
+      let tempDir = input.substring(0, input.lastIndexOf('.'));
+      fs.mkdirSync(tempDir, {recursive: true});
+      this.instance = ffmpeg().
+          input(input).
+          audioCodec('copy').
+          outputOptions('-f', 'segment', '-segment_time', '20').
+          on('progress', function(progress) {
+            console.log('Timemark: ' + progress.timemark);
+          }).
+          on('error', function(err) {
+            console.log('An error occurred: ' + err.message);
+            reject(err);
+          }).
+          on('end', function() {
+            console.log('Processing finished!');
+            resolve();
+          }).
+          save(`${tempDir}/out%03d.mp3`);
     });
   }
 
