@@ -1,7 +1,7 @@
 <template>
-  <div v-if="!embed" class="toolbar">
+  <div class="toolbar" id="idToolbar">
     <div class="panel">
-      <el-button title="插入时间" @click="insertContent('timestamp')">
+      <el-button title="插入时间" @click="insertContent('timestamp')" v-if="!embed" >
         <svg class="icon" height="20" p-id="5255" t="1713751961582" version="1.1"
              viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -15,7 +15,7 @@
             fill="#FFFFFF" p-id="5258"></path>
         </svg>
       </el-button>
-      <el-button title="插入截图" @click="insertContent('screenshot')">
+      <el-button title="插入截图" @click="insertContent('screenshot')" v-if="!embed" >
         <svg class="icon" height="20" p-id="13508" t="1713752087666" version="1.1"
              viewBox="0 0 1280 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -23,7 +23,7 @@
             fill="#FFFFFF" p-id="13509"></path>
         </svg>
       </el-button>
-      <el-button title="插入时间和截图" @click="insertContent('all')">
+      <el-button title="插入时间和截图" @click="insertContent('all')" v-if="!embed" >
         <svg class="icon" height="20" p-id="18671" t="1713752331119" version="1.1"
              viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -31,7 +31,7 @@
             fill="#FFFFFF" p-id="18672"></path>
         </svg>
       </el-button>
-      <el-button title="快进" @click="forward">
+      <el-button title="快进" @click="forward" v-if="!embed" >
         <svg class="icon" height="20" p-id="5223" t="1713840577418" version="1.1"
              viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -39,7 +39,7 @@
             fill="#FFFFFF" p-id="5224"></path>
         </svg>
       </el-button>
-      <el-button title="倒退" @click="backward">
+      <el-button title="倒退" @click="backward" v-if="!embed" >
         <svg class="icon" height="20" p-id="1220" t="1713840644659" version="1.1"
              viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -55,7 +55,7 @@
             fill="#FFFFFF" p-id="27367"></path>
         </svg>
       </el-button>
-      <el-button title="录像" @click="record('video')">
+      <el-button title="录像" @click="record('video')" v-if="!embed" >
         <svg class="icon" height="20" p-id="35629" t="1714691217630" version="1.1"
              viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -78,7 +78,7 @@
       </el-input>
     </div>
   </div>
-  <div v-if="recording" class="record blink">
+  <div v-show="recording" class="record blink" id="idRecording">
     <svg class="icon" height="20" p-id="14885" t="1714691020090" version="1.1"
          viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
       <path d="M512 0a512 512 0 1 1 0 1024A512 512 0 0 1 512 0z m0 64a448 448 0 1 0 0 896A448 448 0 0 0 512 64z"
@@ -87,15 +87,15 @@
             p-id="14887"></path>
     </svg>
   </div>
-  <vue3-video-player v-if="contentType === 'video'" v-show="initFlag" ref="playerDom"
+  <vue3-video-player v-show="contentType === 'video' && initFlag" ref="playerDom"
                      controls
                      style="width: 100%; height: 100%;display: flex" v-bind="options"
                      @play="whenPlay"></vue3-video-player>
-  <webview v-else ref="webview" :src="options.src" style="width: 100%; height: 100%;display: flex"></webview>
+  <webview v-show="contentType === 'website'" ref="webview" :src="options.src" style="width: 100%; height: 100%;display: flex"></webview>
 </template>
 
 <script lang="js">
-import {nextTick, onUnmounted, ref, watch} from 'vue';
+import {nextTick, onUnmounted, ref, watch, onMounted} from 'vue';
 import {useRoute} from 'vue-router';
 import service from '../utils/service';
 import {ElMessage} from 'element-plus';
@@ -183,6 +183,17 @@ export default {
             options.value.src = urlStr;
           }, 500);
         }
+      }
+    });
+
+    onMounted(() => {
+      if (noteModel.setting.value.displayMode === "same") {
+        let toolbar = document.querySelector("#idToolbar");
+        toolbar.style.top = "40px";
+        toolbar.style.width = "30%";
+
+        let recording = document.querySelector("#idRecording");
+        recording.style.top = "40px";
       }
     });
 
@@ -486,10 +497,8 @@ export default {
 
     const enterNote = () => {
       if (noteModel.setting.value.pauseWhenWrite) {
-        if (contentType.value === 'video') {
+        if (contentType.value === 'video' || contentType.value === 'website') {
           stopVideo();
-        } else {
-          service.invoke('/note/stopVideo', '');
         }
       }
     };

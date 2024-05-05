@@ -88,6 +88,7 @@ electronAPI.ipcRenderer.on('/client/record-start', async (event, params) => {
       mimeType: 'audio/webm', audioBitsPerSecond: 128000,
     });
   }
+  console.log('开始录制');
 
   const timeslice = 5000;
   const fileBits = [];
@@ -97,6 +98,7 @@ electronAPI.ipcRenderer.on('/client/record-start', async (event, params) => {
   };
 
   recorder.onstop = () => {
+    console.log('录制结束', fileBits.length);
     let file;
     if (type === 'video') {
       file = new Blob(fileBits, {type: 'video/webm;codecs=vp9'});

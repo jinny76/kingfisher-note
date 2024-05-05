@@ -23,7 +23,8 @@ const install = () => {
   });
 
   ipcMain.handle('/ai/analysisSubtitle', async (event, params) => {
-    let path = storeService.setting.assetsDir + '/' + JSON.parse(params).fileName;
+    let path = storeService.setting.assetsDir + '/' +
+        JSON.parse(params).fileName;
 
     if (!fs.existsSync(path)) {
       return {code: 404, message: '文件不存在'};
@@ -36,6 +37,10 @@ const install = () => {
           json.body.map((item) => {
             contentSubtitle += item.content + '\n';
           });
+        }
+
+        if (import.meta.env.DEV && contentSubtitle.length > 1000) { // 限制字幕长度
+          contentSubtitle = contentSubtitle.substring(0, 1000);
         }
 
         if (contentSubtitle) {

@@ -3,13 +3,8 @@ import storeService from './store';
 import {splitAudio, webmFix} from '../video/server';
 import fs from 'fs';
 
-let mainWindow = null;
-let windowManager = null;
-
-const install = (_mainWindow, _windowManager) => {
-  mainWindow = _mainWindow;
-  windowManager = _windowManager;
-  //console.log(mainWindow.getMediaSourceId());
+const install = (mainWindow, windowManager) => {
+  console.log(mainWindow.getMediaSourceId());
   desktopCapturer.getSources({
     types: ['screen', 'window'], // 设定需要捕获的是"屏幕"，还是"窗口"
     thumbnailSize: {
@@ -17,10 +12,10 @@ const install = (_mainWindow, _windowManager) => {
       width: 300, // 窗口或屏幕的截图快照宽度
     }, fetchWindowIcons: true, // 如果视频源是窗口且有图标，则设置该值可以捕获到的窗口图标
   }).then(sources => {
-    /*let index = 0;
+    let index = 0;
     sources.forEach(source => {
       console.log('source' + index++, source);
-    });*/
+    });
   });
 
   ipcMain.handle('/record/pop', (event, params) => {
@@ -38,26 +33,41 @@ const install = (_mainWindow, _windowManager) => {
   });
 
   ipcMain.handle('/record/start', async (event, params) => {
-    let videoWindow = windowManager.findWindowByRoute('/video/');
-    if (videoWindow) {
+    let targetWindow;
+
+    if (storeService.setting.displayMode === 'window') {
+      targetWindow = windowManager.findWindowByRoute('/video/');
+    } else {
+      targetWindow = mainWindow;
+    }
+
+    if (targetWindow) {
       let fileName = storeService.setting.assetsDir + '/' +
           `${Date.now()}.webm`;
-      videoWindow.webContents.send('/client/record-start', {
-        mediaSourceId: videoWindow.getMediaSourceId(),
+      targetWindow.webContents.send('/client/record-start', {
+        mediaSourceId: targetWindow.getMediaSourceId(),
         fileName: fileName,
         type: params,
       });
+      console.log('开始录制', fileName);
     } else {
       return {
-        code: 500, message: '未找到视频窗口',
+        code: 500, message: '未找窗口',
       };
     }
   });
 
   ipcMain.handle('/record/stop', async (event, params) => {
-    let videoWindow = windowManager.findWindowByRoute('/video/');
-    if (videoWindow) {
-      videoWindow.webContents.send('/client/record-stop', {});
+    let targetWindow;
+
+    if (storeService.setting.displayMode === 'window') {
+      targetWindow = windowManager.findWindowByRoute('/video/');
+    } else {
+      targetWindow = mainWindow;
+    }
+
+    if (targetWindow) {
+      targetWindow.webContents.send('/client/record-stop', {});
     } else {
       return {
         code: 500, message: '未找到视频窗口',
