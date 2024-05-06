@@ -1230,7 +1230,7 @@ export default {
     const showHelp = () =>
       nextTick(() =>
         Vditor.preview(document.getElementById('idHelp'), helpContent, {
-          cdn: 'https://dev.kingfisher.live/resource',
+          cdn: 'http://localhost:13999/vditor',
           theme: 'dark',
           width: '100%',
           height: '100%',
