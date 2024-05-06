@@ -42,3 +42,6 @@ publish:
   url: https://dev.kingfisher.live/resource/note
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/
+extraResources:
+  - "from": "./resources/vditor"
+    "to": "vditor"

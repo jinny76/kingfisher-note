@@ -46,4 +46,53 @@ export const convert = async (videoList, vcodec, acodec) => {
   };
 };
 
+export const captureAudio = async (videoList, acodec) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  console.log(videoList);
+  for (let i = 0; i < videoList.length; i++) {
+    await ffmpeg.captureAudio(videoList[i].path, acodec);
+  }
+  return {
+    code: 200,
+  };
+};
+export const webmFix = async (file) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  await ffmpeg.webmFix(file);
+  return {
+    code: 200,
+  };
+};
+
+export const splitAudio = async (file) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  await ffmpeg.splitAudio(file);
+  return {
+    code: 200,
+  };
+};
+
+export const fetchStream = async (file) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  let streams = await ffmpeg.fetchStream(file);
+  return {
+    result: streams,
+    code: 200,
+  };
+};
+
+export const extractSubtitle = async (input) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  let result = await ffmpeg.extractSubtitle(input);
+  return {
+    result: result,
+    code: 200,
+  };
+}
+
 export default StreamServer;

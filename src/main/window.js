@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain, Menu, Tray} from 'electron';
+import {app, BrowserWindow, ipcMain, Menu, session, Tray} from 'electron';
 import path, {join} from 'path';
 import icon from '../../resources/icon.ico?asset';
 
@@ -159,6 +159,12 @@ export class Window {
     win.once('ready-to-show', () => {
       win.maximize();
       win.show();
+
+      const webviewSession = session.fromPartition('webview');
+      webviewSession.webRequest.onBeforeRequest({ urls: ['https://aisubtitle.hdslb.com/*'] }, (details, callback) => {
+        console.log('Request:', details);
+        callback({ cancel: false });
+      });
     });
   }
 

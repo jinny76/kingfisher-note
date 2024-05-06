@@ -80,7 +80,7 @@ const init = function() {
             tagName === 'INPUT' ||
             tagName === 'SELECT' ||
             tagName === 'TEXTAREA') &&
-        (tag.className.indexOf('monaco-mouse-cursor-text') === -1 ||
+        (tag.className.indexOf('vditor-sv') === -1 ||
             !event.ctrlKey));
   };
 

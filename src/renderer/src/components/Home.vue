@@ -2,16 +2,16 @@
   <el-container style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
     <el-header style="padding: 0px; display: flex; justify-content: space-between">
       <el-menu
-          ref="menu"
-          :default-active="activeIndex"
-          active-text-color="#ffd04b"
-          background-color="#545c64"
-          class="el-menu-demo"
-          mode="horizontal"
-          popper-effect="dark"
-          style="width: 400px;"
-          text-color="#fff"
-          @select="handleSelect"
+        ref="menu"
+        :default-active="activeIndex"
+        active-text-color="#ffd04b"
+        background-color="#545c64"
+        class="el-menu-demo"
+        mode="horizontal"
+        popper-effect="dark"
+        style="width: 400px;"
+        text-color="#fff"
+        @select="handleSelect"
       >
         <el-sub-menu index="1">
           <template #title>文件</template>
@@ -32,9 +32,10 @@
         <el-sub-menu index="4">
           <template #title>工具</template>
           <el-menu-item id="idMenuSetting" index="4-1">设置</el-menu-item>
-          <el-menu-item index="4-2">转换视频</el-menu-item>
+          <el-menu-item index="4-2">视频工具</el-menu-item>
           <el-menu-item index="4-3">专注模式</el-menu-item>
-          <el-menu-item index="4-4">调试工具</el-menu-item>
+          <el-menu-item index="4-4">调试工具-主窗口</el-menu-item>
+          <el-menu-item index="4-5">调试工具-弹出窗口</el-menu-item>
           <el-sub-menu index="4-5">
             <template #title>其他工具</template>
             <el-menu-item index="4-5-1">截图</el-menu-item>
@@ -55,57 +56,61 @@
         <div style="padding-left: 40px">
           标签:
           <el-select
-              v-model="currNote.tags"
-              :max-collapse-tags="3"
-              :reserve-keyword="false"
-              allow-create
-              collapse-tags
-              collapse-tags-tooltip
-              default-first-option
-              filterable
-              multiple
-              placeholder="选择标签"
-              style="width: 300px"
+            v-model="currNote.tags"
+            :max-collapse-tags="3"
+            :reserve-keyword="false"
+            allow-create
+            collapse-tags
+            collapse-tags-tooltip
+            default-first-option
+            filterable
+            multiple
+            placeholder="选择标签"
+            style="width: 300px"
           >
             <el-option
-                v-for="item in tags"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+              v-for="item in tags"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
             />
           </el-select>
         </div>
         <div style="padding-left: 40px">
           版本:
           <el-select
-              v-model="currVersion"
-              empty-text="没有历史版本"
-              filterable
-              placeholder="加载历史版本"
-              style="width: 180px"
-              @change="loadVersion"
+            v-model="currVersion"
+            empty-text="没有历史版本"
+            filterable
+            placeholder="加载历史版本"
+            style="width: 180px"
+            @change="loadVersion"
           >
             <el-option
-                v-for="version in versions"
-                :key="version.time"
-                :label="version.index + ' ' + version.duration"
-                :title="version.label"
-                :value="version.time"
+              v-for="version in versions"
+              :key="version.time"
+              :label="version.index + ' ' + version.duration"
+              :title="version.label"
+              :value="version.time"
             />
           </el-select>
         </div>
         <div v-if="targetTime> 0" style="padding-left: 40px; width: 300px;">
           <el-progress
-              :percentage="restPercent"
-              :stroke-width="20"
-              :text-inside="true"
-              status="success">
+            :percentage="restPercent"
+            :stroke-width="20"
+            :text-inside="true"
+            status="success">
             <span style="color:white">您已经沉浸学习了 {{ studyTime }} </span>
           </el-progress>
         </div>
+        <div v-if="developEnv" style="padding: 5px;">
+          <el-button type="text" @click="reload">重新加载</el-button>
+          <el-button type="text" @click="test">测试</el-button>
+        </div>
       </div>
     </el-header>
-    <el-main style="padding: 0px;">
+    <el-main style="padding: 0">
       <component :is="mainComp" ref="mainComponent"></component>
     </el-main>
   </el-container>
@@ -136,35 +141,63 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="dialogConvertVisible" align-center draggable title="视频转换" width="1200">
+  <el-dialog v-model="dialogSubtitleVisible" align-center draggable title="选择字幕" width="435">
+    <el-table
+      :data="subtitleList"
+      border
+      height="400"
+      style="width: 100%"
+      @row-click="handleSubtitleClick"
+      >
+      <el-table-column
+        prop="title"
+        label="标题"
+        width="300">
+      </el-table-column>
+      <el-table-column
+        prop="language"
+        label="语言"
+        width="100">
+      </el-table-column>>
+    </el-table>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogSubtitleVisible = false">取消</el-button>
+      </div>
+    </template>
+  </el-dialog>
+  <el-dialog v-model="dialogConvertVisible" align-center draggable title="视频处理" width="1200">
     <el-upload
-        v-model:file-list="videoList"
-        :auto-upload="false"
-        :multiple="false"
+      v-model:file-list="videoList"
+      :auto-upload="false"
+      :multiple="false"
     >
       <el-button type="primary">选择视频</el-button>
       <template #tip>
         <div class="el-upload__tip">
-          由于播放器不支持除了MP4格式以外的视频抓图和定位, 我们可以把其他类型的视频文件转换为MP4
+          由于播放器不支持除了MP4格式以外的视频抓图和定位, 我们可以把其他类型的视频文件转换为MP4，也可以抓取音轨用于分析
         </div>
       </template>
     </el-upload>
-    <div style="width: 100%">
+    <div style="width: 100%; display: flex; align-items: center; align-content: center">
+      <div style="padding-right: 20px">转换编码</div>
       <el-checkbox v-model="convertOptions.h264">H264</el-checkbox>
       <el-checkbox v-model="convertOptions.mp3">MP3</el-checkbox>
     </div>
     <el-progress
-        v-show="showProgress"
-        :duration="10"
-        :percentage="100"
-        :stroke-width="15"
-        status="success"
-        striped
-        striped-flow
+      v-show="showProgress"
+      :duration="10"
+      :percentage="100"
+      :stroke-width="15"
+      status="success"
+      striped
+      striped-flow
     />
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="doConvert">转换</el-button>
+        <el-button @click="doConvert">转换视频</el-button>
+        <el-button @click="doCaptureAudio">抓取音轨</el-button>
+        <el-button @click="doCaptureSubtitle">抓取字幕</el-button>
         <el-button @click="dialogConvertVisible = false">关闭</el-button>
       </div>
     </template>
@@ -226,6 +259,7 @@ import service from '../utils/service';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import keyManager from '../utils/keys';
 import md5 from 'md5';
+import aiService from '../service/ai';
 
 export default {
   name: 'Home',
@@ -249,18 +283,6 @@ export default {
       canvas.height = _h - 4;
     };
 
-    const clock = () => {
-      const _d = new Date();
-      if (Math.floor(_d.getTime() / 100) % 2 === 0) {
-        let _y, _M, _D, _h, _m;
-        _y = _d.getFullYear();
-        _M = _d.getMonth() + 1;
-        _D = _d.getDate();
-        _h = _d.getHours();
-        _m = _d.getMinutes();
-      }
-    };
-
     let lockTimer;
 
     onMounted(() => {
@@ -280,8 +302,6 @@ export default {
         canvas.getContext('2d').fillText(text, x_pos, y_pos);
         letters[index] = y_pos > (canvas.height - 200) + Math.random() * 1e4 ? 0 : y_pos + 10;
       });
-
-      clock();
     };
 
     watch(locking, () => {
@@ -294,16 +314,20 @@ export default {
 
     const activeIndex = ref('1');
 
-    keyManager.registerHotkeyProcessor('ctrl+alt+1', () => service.invoke('/system/openDevTools', '',
-        result => console.log('打开开发者工具', result)), '打开开发者工具');
+    keyManager.init();
 
-    keyManager.registerHotkeyProcessor('ctrl+shift+l', () => {
-      locking.value = true;
+    keyManager.registerHotkeyProcessor('ctrl+alt+1', () => service.invoke('/system/openDevTools', '',
+      result => console.log('打开开发者工具', result)), '打开开发者工具');
+
+    keyManager.registerHotkeyProcessor('f11', () => {
+      focusMode(60);
+    }, '全屏');
+
+    keyManager.registerHotkeyProcessor('ctrl+shift+alt+l', () => {
+      window.event.preventDefault();
+      noteModel.locking.value = true;
       noteModel.stopColdDown();
     }, '锁定');
-
-    keyManager.registerHotkeyProcessor('f11', () => service.invoke('/system/fullscreen', '',
-        result => console.log('切换全屏', result)), '全屏');
 
     window.electron.ipcRenderer.on('/client/error', function(event, arg) {
       console.error('错误', JSON.parse(arg));
@@ -330,6 +354,35 @@ export default {
       }).catch(() => console.log('取消重启'));
     };
     window.electron.ipcRenderer.on('/client/downloaded', downloadedListener);
+
+    function focusMode(value) {
+      if (!value) {
+        value = 60;
+      }
+
+      targetTime.value = value * 60;
+      if (targetTime.value < 0) {
+        targetTime.value = 0;
+      }
+      noteModel.openTime = Date.now();
+      ElMessage.success('已进入专注模式，其他程序将无法打扰您，ESC键退出专注模式');
+
+      studyTimer = setInterval(() => {
+        let time = (Date.now() - noteModel.openTime) / 1000;
+        let h = Math.floor(time / 3600);
+        let m = Math.floor((time % 3600) / 60).toString().padStart(2, '0');
+        let s = Math.floor(time % 60).toString().padStart(2, '0');
+        studyTime.value = `${h}小时 ${m}分钟 ${s}秒`;
+        restPercent.value = Math.floor((time % targetTime.value) / targetTime.value * 100);
+
+        if (Math.floor(time / 3600) > 0 && Math.floor((time % 3600) / 60) === 0 && Math.floor(time % 60) === 0) {
+          ElMessage.success('您已经沉浸学习了一个小时，站起来运动一下吧！');
+        }
+      }, 1000);
+
+      service.invoke('/system/fullscreen', '', () => {
+      });
+    }
 
     const handleSelect = index => {
       switch (index) {
@@ -364,7 +417,7 @@ export default {
           break;
         case '4-3':
 
-          ElMessageBox.prompt('预计学习时间', '专注模式', {
+          ElMessageBox.prompt('预计学习时间(分钟)', '专注模式', {
             confirmButtonText: '开始',
             cancelButtonText: '取消',
             inputType: 'number',
@@ -372,37 +425,16 @@ export default {
             inputErrorMessage: '请输入学习时间（分钟）',
             inputValue: 60,
           }).then(({value}) => {
-            if (!value) {
-              value = 60;
-            }
-
-            targetTime.value = value * 60;
-            if (targetTime.value < 0) {
-              targetTime.value = 0;
-            }
-            noteModel.openTime = Date.now();
-            ElMessage.success('已进入专注模式，其他程序将无法打扰您，ESC键退出专注模式');
-
-            studyTimer = setInterval(() => {
-              let time = (Date.now() - noteModel.openTime) / 1000;
-              let h = Math.floor(time / 3600);
-              let m = Math.floor((time % 3600) / 60).toString().padStart(2, '0');
-              let s = Math.floor(time % 60).toString().padStart(2, '0');
-              studyTime.value = `${h}小时 ${m}分钟 ${s}秒`;
-              restPercent.value = Math.floor((time % targetTime.value) / targetTime.value * 100);
-
-              if (Math.floor(time / 3600) > 0 && Math.floor((time % 3600) / 60) === 0 && Math.floor(time % 60) === 0) {
-                ElMessage.success('您已经沉浸学习了一个小时，站起来运动一下吧！');
-              }
-            }, 1000);
-
-            service.invoke('/system/fullscreen', '', () => {
-            });
+            focusMode(value);
           }).catch(() => {
           });
           break;
         case '4-4':
           service.invoke('/system/openDevTools', '', () => {
+          });
+          break;
+        case '4-5':
+          service.invoke('/system/openPopDevTools', '', () => {
           });
           break;
         case '4-1':
@@ -484,7 +516,7 @@ export default {
       noteModel.setting.value = newSetting;
 
       service.invoke('/store/updateSetting', JSON.stringify(noteModel.setting.value), result => console.log(
-          '更新设置', result));
+        '更新设置', result));
 
       noteModel.startColdDown();
       dialogSettingVisible.value = false;
@@ -518,14 +550,94 @@ export default {
       }), result => {
         showProgress.value = false;
         console.log('转换成功', result);
-        ElMessage.success('转换成功');
-        dialogConvertVisible.value = false;
+        ElMessage.success('转换成功，请查看文件夹');
       }, error => {
         console.error('转换失败', error);
         ElMessage.error('转换失败');
         showProgress.value = false;
       });
     };
+
+    const doCaptureAudio = () => {
+      console.log('抓取音轨', videoList.value);
+      showProgress.value = true;
+      service.invoke('/note/captureAudio', JSON.stringify({
+        files: videoList.value.map(file => {
+          let raw = file.raw;
+          return {
+            name: raw.name,
+            path: raw.path,
+            size: raw.size,
+            type: raw.type,
+            lastModified: raw.lastModified,
+          };
+        }),
+      }), result => {
+        showProgress.value = false;
+        console.log('抓取成功', result);
+        ElMessage.success('抓取成功，请查看文件夹');
+      }, error => {
+        console.error('抓取失败', error);
+        ElMessage.error('抓取失败');
+        showProgress.value = false;
+      });
+    };
+
+    const doCaptureSubtitle = () => {
+      console.log('抓取字幕', videoList.value);
+      showProgress.value = true;
+      let raw = videoList.value[0].raw;
+      service.invoke('/note/getStreams', JSON.stringify({
+        files: {
+          name: raw.name,
+          path: raw.path,
+          size: raw.size,
+          type: raw.type,
+          lastModified: raw.lastModified,
+        },
+      }), result => {
+        showProgress.value = false;
+        console.log('抓取成功', result);
+        if (result.code === 200) {
+          subtitleList.value = result.result.filter(item=>{
+            return item.codec_type === 'subtitle';
+          }).map(item => {
+            return {
+              path: raw.path,
+              index: item.index,
+              codecName: item.codec_name,
+              title: item.tags.title,
+              language: item.tags.language,
+            };
+          });
+          dialogSubtitleVisible.value = true;
+        } else {
+          ElMessage.error('流信息获取失败');
+        }
+      }, error => {
+        console.error('抓取失败', error);
+        ElMessage.error('流信息获取失败');
+        showProgress.value = false;
+      });
+    };
+
+    const handleSubtitleClick = row => {
+      console.log('选择字幕', row);
+      dialogSubtitleVisible.value = false;
+      showProgress.value = true;
+      service.invoke('/note/extractSubtitle', JSON.stringify(row), result => {
+        console.log('抓取成功', result);
+        ElMessage.success('抓取成功，请查看文件夹');
+        showProgress.value = false;
+      }, error => {
+        console.error('抓取失败', error);
+        ElMessage.error('抓取失败');
+        showProgress.value = false;
+      });
+    };
+
+    const subtitleList = ref([]);
+    const dialogSubtitleVisible = ref(false);
 
     const loadVersion = time => {
       console.log('加载历史版本', time);
@@ -544,7 +656,7 @@ export default {
           if (!value) {
             value = '';
           }
-          if (md5(value + noteModel.constPassword) == noteModel.setting.value.password) {
+          if (md5(value + noteModel.constPassword) === noteModel.setting.value.password) {
             locking.value = false;
             noteModel.startColdDown();
             locking.value = false;
@@ -569,7 +681,58 @@ export default {
     let targetTime = ref(0);
     let studyTimer = 0;
 
+    const developEnv = import.meta.env.DEV;
+    const reload = () => {
+      window.location.reload();
+    };
+
+    let record = false;
+
+    const test = () => {
+      /*service.invoke('/record/split', {fileName: "D:\\Movie\\1.mp3"}, result => {
+        console.log('测试', result)
+        if (result.files) {
+          let text = [];
+          let index = 0;
+          stt(result.files[index], index);
+
+          function stt(file, i){
+            service.invoke('/store/downloadFile', file, r => {
+              if (r.code === 200) {
+                let file = new File([r.data], Date.now() + ".mp3", {type: 'audio/mp3'});
+                aiService.stt(file, r => {
+                  console.log('识别结果', r);
+                  text.push(r.message);
+                  i++
+                  if (i < 10) {
+                    stt(result.files[i], i);
+                  } else {
+                    console.log('识别完成', text.join('\n'));
+                  }
+                });
+              } else {
+                ElMessage.error('下载失败');
+              }
+            });
+          }
+        }
+      });*/
+      service.invoke('/ai/analysisSubtitle', {
+        fileName: "BV1X7411F744-1.bilibili.json"
+      }, result => {
+        if (result.code === 200) {
+          console.log('分析结果', result.data);
+        } else {
+          ElMessage.warning(result.message);
+        }
+      });
+
+    };
+
     return {
+      test,
+      developEnv,
+      reload,
       studyTime,
       restPercent,
       targetTime,
@@ -582,9 +745,14 @@ export default {
       dialogSettingVisible,
       dialogHelpVisible,
       dialogConvertVisible,
+      dialogSubtitleVisible,
+      subtitleList,
+      handleSubtitleClick,
       videoList,
       activeIndex,
       doConvert,
+      doCaptureAudio,
+      doCaptureSubtitle,
       handleSelect,
       mainComp,
       mainComponent,

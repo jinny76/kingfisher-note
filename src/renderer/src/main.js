@@ -10,7 +10,9 @@ import '@cloudgeek/vue3-video-player/dist/vue3-video-player.css';
 
 const app = createApp(App).use(router).use(ElementPlus).use(Vue3VideoPlayer, {
   lang: 'zh-CN',
-}).mount('#app');
+})
+window.kfApp = app;
+app.mount('#app');
 
 console.log('打开网址', window.location.href);
 if (window.location.href.indexOf('#') !== -1) {

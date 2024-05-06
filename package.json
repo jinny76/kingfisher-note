@@ -1,10 +1,10 @@
 {
   "name": "KingfisherNote",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "灵翠笔记，一款音视频笔记软件",
   "main": "./out/main/index.js",
   "author": "太白雪霁",
-  "publishDate": "2024-04-26",
+  "publishDate": "2024-05-03",
   "homepage": "http://www.kingfishers.cn",
   "scripts": {
     "format": "prettier --write .",
@@ -24,6 +24,7 @@
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "axios": "^1.6.8",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "electron-updater": "^6.1.8",
@@ -35,11 +36,13 @@
     "hls.js": "^1.5.8",
     "hotkeys-js": "^3.13.7",
     "md5": "^2.3.0",
+    "openai": "^4.40.2",
     "pinyin-match": "^1.2.5",
     "tesseract.js": "^5.0.5",
     "vditor": "^3.10.4",
     "vue": "^3.4.15",
     "vue-router": "^4.3.0",
+    "vue3-clipboard": "^1.0.0",
     "ws": "^8.16.0"
   },
   "devDependencies": {

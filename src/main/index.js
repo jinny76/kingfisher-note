@@ -8,6 +8,7 @@ import {
   Menu,
   protocol,
   shell,
+  session,
 } from 'electron';
 import {join} from 'path';
 import {electronApp, is, optimizer} from '@electron-toolkit/utils';
@@ -16,6 +17,8 @@ import StreamServer from './video/server';
 import storeService from './service/store';
 import noteService from './service/note';
 import systemService from './service/system';
+import aiService from './service/ai';
+import recordService from './service/record';
 import {checkUpdate} from './update';
 import {initHttpServer} from './http';
 
@@ -34,8 +37,7 @@ function createMainWindow() {
     fullscreenable: true,
     simpleFullscreen: true,
     show: false,
-    autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? {icon} : {icon}),
+    autoHideMenuBar: true, ...(process.platform === 'linux' ? {icon} : {icon}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -112,12 +114,21 @@ app.whenReady().then(() => {
     callback(decodeURI(path.normalize(url)));
   });
 
+  protocol.registerFileProtocol('vhttp', (request, callback) => {
+    const url = request.url.replace('vhttp://', 'http://');
+    callback(url);
+  });
+
+  protocol.registerFileProtocol('vhttps', (request, callback) => {
+    const url = request.url.replace('vhttps://', 'https://');
+    callback(url);
+  });
+
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created',
-      (_, window) => optimizer.watchWindowShortcuts(
-          window));
+      (_, window) => optimizer.watchWindowShortcuts(window));
 
   createMainWindow();
 
@@ -130,8 +141,10 @@ app.whenReady().then(() => {
   });
 
   storeService.install();
-  noteService.install(windowManager);
-  systemService.install(mainWindow);
+  noteService.install(mainWindow, windowManager);
+  systemService.install(mainWindow, windowManager);
+  aiService.install();
+  recordService.install(mainWindow, windowManager);
 
   checkUpdate(mainWindow, ipcMain);
 });
