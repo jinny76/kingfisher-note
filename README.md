@@ -1,6 +1,7 @@
 # 灵翠笔记
 
-灵翠笔记是一款基于 Electron + Vue3 + Vite 开发的跨平台桌面应用，支持 Windows、macOS 和 Linux。主要用于记录视频笔记，支持视频播放、笔记记录、笔记导出等功能。
+灵翠笔记是一款基于 Electron + Vue3 + Vite 开发的跨平台桌面应用，支持 Windows、macOS 和
+Linux。主要用于记录视频笔记，支持视频播放、笔记记录、笔记导出等功能。
 
 <!-- PROJECT SHIELDS -->
 
@@ -19,7 +20,7 @@
     <img src="resources/icon.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">灵翠笔记</h3>
+<h3 align="center">灵翠笔记</h3>
   <p align="center">
     你的多媒体笔记
     <br />
@@ -35,19 +36,21 @@
 
 </p>
 
-灵翠笔记是一款基于 Electron + Vue3 + Vite 开发的跨平台桌面应用，支持 Windows、macOS 和 Linux。主要用于记录视频笔记，支持视频播放、笔记记录、笔记导出等功能。
+灵翠笔记是一款基于 Electron + Vue3 + Vite 开发的跨平台桌面应用，支持 Windows、macOS 和
+Linux。主要用于记录视频笔记，支持视频播放、笔记记录、笔记导出等功能。
 
 ## 目录
+
 - [用户教程](http://resource.kingfisher.live/note/%E6%95%99%E5%AD%A6%E8%A7%86%E9%A2%91.mp4)
 - [上手指南](#上手指南)
-  - [开发前的配置要求](#开发前的配置要求)
-  - [安装步骤](#安装步骤)
+    - [开发前的配置要求](#开发前的配置要求)
+    - [安装步骤](#安装步骤)
 - [文件目录说明](#文件目录说明)
 - [开发的架构](#开发的架构)
 - [部署](#部署)
 - [使用到的框架](#使用到的框架)
 - [贡献者](#贡献者)
-  - [如何参与开源项目](#如何参与开源项目)
+    - [如何参与开源项目](#如何参与开源项目)
 - [版本控制](#版本控制)
 - [作者](#作者)
 - [鸣谢](#鸣谢)
@@ -127,7 +130,6 @@ $ npm run build:linux
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-
 ### 版本控制
 
 该项目使用Git进行版本管理。您可以在repository参看当前可用版本。
@@ -138,7 +140,7 @@ $ npm run build:linux
 
 jinni@kingfishers.cn
 
-Wechat:jinny76  &ensp; qq:147279
+Wechat:jinny76 &ensp; qq:147279
 
 *您也可以在贡献者名单中参看所有参与该项目的开发者。*
 
@@ -152,16 +154,29 @@ Wechat:jinny76  &ensp; qq:147279
 - [Vditor](https://github.com/Vanessa219/vditor)
 
 <!-- links -->
+
 [your-project-path]:jinny76/kingfisher-note
+
 [contributors-shield]: https://img.shields.io/github/contributors/jinny76/kingfisher-note.svg?style=flat-square
+
 [contributors-url]: https://github.com/jinny76/kingfisher-note/graphs/contributors
+
 [forks-shield]: https://img.shields.io/github/forks/jinny76/kingfisher-note.svg?style=flat-square
+
 [forks-url]: https://github.com/jinny76/kingfisher-note/network/members
+
 [stars-shield]: https://img.shields.io/github/stars/jinny76/kingfisher-note.svg?style=flat-square
+
 [stars-url]: https://github.com/jinny76/kingfisher-note/stargazers
+
 [issues-shield]: https://img.shields.io/github/issues/jinny76/kingfisher-note.svg?style=flat-square
+
 [issues-url]: https://img.shields.io/github/issues/jinny76/kingfisher-note.svg
+
 [license-shield]: https://img.shields.io/github/license/jinny76/kingfisher-note.svg?style=flat-square
+
 [license-url]: https://github.com/jinny76/kingfisher-note/blob/master/LICENSE.txt
+
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
+
 [linkedin-url]: https://www.linkedin.com/in/jinni-kim-8903a836/
