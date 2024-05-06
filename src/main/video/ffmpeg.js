@@ -93,7 +93,7 @@ class Ffmepg {
 
   splitAudio(input) {
     return new Promise((resolve, reject) => {
-      let tempDir = input.substring(0, input.lastIndexOf('.'));
+      let tempDir = Date.now().toString();
       fs.mkdirSync(tempDir, {recursive: true});
       this.instance = ffmpeg().
           input(input).
@@ -108,7 +108,7 @@ class Ffmepg {
           }).
           on('end', function() {
             console.log('Processing finished!');
-            resolve();
+            resolve(tempDir);
           }).
           save(`${tempDir}/out%03d.mp3`);
     });

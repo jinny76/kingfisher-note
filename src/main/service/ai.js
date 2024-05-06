@@ -9,7 +9,7 @@ const aiServer = 'https://ai.kingfisher.live/aiapi/';
 const openaiServer = 'https://api.moonshot.cn/v1';
 const openaiKey = 'sk-oPDHAkwRsZF6oVl3Tb3fRWUs8sFdDa6E0tLFlIstzlqtQCbs';
 
-const install = () => {
+const install = (mainWindow, windowManager) => {
   ipcMain.handle('/ai/stt', async (event, params) => {
     console.log(params);
     if (!fs.existsSync(storeService.setting.assetsDir + '/' + params)) {
@@ -51,6 +51,8 @@ const install = () => {
             contentSubtitle += linePart[linePart.length - 1] + '\n';
           }
         });
+      } else if (path.endsWith('.txt')) {
+        contentSubtitle = fs.readFileSync(path, 'utf-8');
       }
 
       if (import.meta.env.DEV && contentSubtitle.length > 1000) { // 限制字幕长度

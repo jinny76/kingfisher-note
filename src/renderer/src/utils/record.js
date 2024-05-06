@@ -94,9 +94,7 @@ class Recorder {
       } else {
         this.config.errorHanduler && this.config.errorHanduler('不支持此类型!');
       }
-
     }
-
   }
 
   stop() {

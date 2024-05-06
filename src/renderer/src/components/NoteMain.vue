@@ -226,10 +226,13 @@ export default {
     };
 
     watch(noteModel.currNote, () => {
-      if (editor && noteModel.currNote.value.data) {
+      if (editor) {
         utils.runUntil(() => {
           return editor.vditor.lute != null;
         }, () => {
+          if (noteModel.currNote.value.data == undefined) {
+            noteModel.currNote.value.data = '';
+          }
           editor.setValue(noteModel.currNote.value.data);
         });
       }
@@ -370,6 +373,15 @@ export default {
                 if (dom.href.startsWith('page://')) {
                   nextTick(() => gotoPage(dom.href.replace('page://', '')));
                   return false;
+                } else if (dom.href.startsWith('subtitle://')) {
+                  ElMessageBox.confirm('要不要对字幕进行分析？', '字幕分析', {
+                    confirmButtonText: '是',
+                    cancelButtonText: '否',
+                    type: 'success',
+                  }).then(() => {
+                    analysisSubtitle(JSON.stringify({fileName: dom.href.replace('subtitle://', '')}));
+                  }).catch(() => {
+                  });
                 } else if (dom.href === 'https://' && openBible(dom.innerText)) {
                   return false;
                 } else if (dom.href.startsWith('timestamp://')) {
@@ -821,7 +833,7 @@ export default {
       }).then(() => {
         analysisSubtitle(arg);
       }).catch(() => {
-        console.log('取消分析字幕');
+        insertText(`\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`)
       });
     };
     electron.ipcRenderer.on('/client/captureSubtitle', captureSubtitleListener);

@@ -2,16 +2,16 @@
   <el-container style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
     <el-header style="padding: 0px; display: flex; justify-content: space-between">
       <el-menu
-        ref="menu"
-        :default-active="activeIndex"
-        active-text-color="#ffd04b"
-        background-color="#545c64"
-        class="el-menu-demo"
-        mode="horizontal"
-        popper-effect="dark"
-        style="width: 400px;"
-        text-color="#fff"
-        @select="handleSelect"
+          ref="menu"
+          :default-active="activeIndex"
+          active-text-color="#ffd04b"
+          background-color="#545c64"
+          class="el-menu-demo"
+          mode="horizontal"
+          popper-effect="dark"
+          style="width: 400px;"
+          text-color="#fff"
+          @select="handleSelect"
       >
         <el-sub-menu index="1">
           <template #title>文件</template>
@@ -32,7 +32,7 @@
         <el-sub-menu index="4">
           <template #title>工具</template>
           <el-menu-item id="idMenuSetting" index="4-1">设置</el-menu-item>
-          <el-menu-item index="4-2">视频工具</el-menu-item>
+          <el-menu-item index="4-2">文件处理</el-menu-item>
           <el-menu-item index="4-3">专注模式</el-menu-item>
           <el-menu-item index="4-4">调试工具-主窗口</el-menu-item>
           <el-menu-item index="4-5">调试工具-弹出窗口</el-menu-item>
@@ -56,51 +56,51 @@
         <div style="padding-left: 40px">
           标签:
           <el-select
-            v-model="currNote.tags"
-            :max-collapse-tags="3"
-            :reserve-keyword="false"
-            allow-create
-            collapse-tags
-            collapse-tags-tooltip
-            default-first-option
-            filterable
-            multiple
-            placeholder="选择标签"
-            style="width: 300px"
+              v-model="currNote.tags"
+              :max-collapse-tags="3"
+              :reserve-keyword="false"
+              allow-create
+              collapse-tags
+              collapse-tags-tooltip
+              default-first-option
+              filterable
+              multiple
+              placeholder="选择标签"
+              style="width: 300px"
           >
             <el-option
-              v-for="item in tags"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+                v-for="item in tags"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
             />
           </el-select>
         </div>
         <div style="padding-left: 40px">
           版本:
           <el-select
-            v-model="currVersion"
-            empty-text="没有历史版本"
-            filterable
-            placeholder="加载历史版本"
-            style="width: 180px"
-            @change="loadVersion"
+              v-model="currVersion"
+              empty-text="没有历史版本"
+              filterable
+              placeholder="加载历史版本"
+              style="width: 180px"
+              @change="loadVersion"
           >
             <el-option
-              v-for="version in versions"
-              :key="version.time"
-              :label="version.index + ' ' + version.duration"
-              :title="version.label"
-              :value="version.time"
+                v-for="version in versions"
+                :key="version.time"
+                :label="version.index + ' ' + version.duration"
+                :title="version.label"
+                :value="version.time"
             />
           </el-select>
         </div>
         <div v-if="targetTime> 0" style="padding-left: 40px; width: 300px;">
           <el-progress
-            :percentage="restPercent"
-            :stroke-width="20"
-            :text-inside="true"
-            status="success">
+              :percentage="restPercent"
+              :stroke-width="20"
+              :text-inside="true"
+              status="success">
             <span style="color:white">您已经沉浸学习了 {{ studyTime }} </span>
           </el-progress>
         </div>
@@ -132,7 +132,9 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="dialogSettingVisible" align-center draggable title="设置" width="800">
+  <el-dialog v-model="dialogSettingVisible" :close-on-click-modal="false" :close-on-press-escape="false" align-center
+             draggable
+             title="设置" width="800">
     <NoteSetting ref="settingDialog"></NoteSetting>
     <template #footer>
       <div class="dialog-footer">
@@ -141,24 +143,27 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="dialogSubtitleVisible" align-center draggable title="选择字幕" width="435">
+  <el-dialog v-model="dialogSubtitleVisible" :close-on-click-modal="false" :close-on-press-escape="false" align-center
+             draggable
+             title="选择字幕" width="435">
     <el-table
-      :data="subtitleList"
-      border
-      height="400"
-      style="width: 100%"
-      @row-click="handleSubtitleClick"
-      >
+        :data="subtitleList"
+        border
+        height="400"
+        style="width: 100%"
+        @row-click="handleSubtitleClick"
+    >
       <el-table-column
-        prop="title"
-        label="标题"
-        width="300">
+          label="标题"
+          prop="title"
+          width="300">
       </el-table-column>
       <el-table-column
-        prop="language"
-        label="语言"
-        width="100">
-      </el-table-column>>
+          label="语言"
+          prop="language"
+          width="100">
+      </el-table-column>
+      >
     </el-table>
     <template #footer>
       <div class="dialog-footer">
@@ -166,16 +171,19 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="dialogConvertVisible" align-center draggable title="视频处理" width="1200">
+  <el-dialog v-model="dialogConvertVisible" :close-on-click-modal="false" :close-on-press-escape="false" align-center
+             draggable
+             title="文件处理" width="800">
     <el-upload
-      v-model:file-list="videoList"
-      :auto-upload="false"
-      :multiple="false"
+        v-model:file-list="videoList"
+        :auto-upload="false"
+        :multiple="false"
+        accept="video/*,audio/*"
     >
-      <el-button type="primary">选择视频</el-button>
+      <el-button type="primary">选择文件</el-button>
       <template #tip>
         <div class="el-upload__tip">
-          由于播放器不支持除了MP4格式以外的视频抓图和定位, 我们可以把其他类型的视频文件转换为MP4，也可以抓取音轨用于分析
+          由于播放器不支持除了MP4格式以外的视频抓图和定位, 我们可以把其他类型的视频文件转换为MP4，也可以对文件进行其他操作
         </div>
       </template>
     </el-upload>
@@ -185,13 +193,13 @@
       <el-checkbox v-model="convertOptions.mp3">MP3</el-checkbox>
     </div>
     <el-progress
-      v-show="showProgress"
-      :duration="10"
-      :percentage="100"
-      :stroke-width="15"
-      status="success"
-      striped
-      striped-flow
+        v-show="showProgress"
+        :duration="10"
+        :percentage="100"
+        :stroke-width="15"
+        status="success"
+        striped
+        striped-flow
     />
     <template #footer>
       <div class="dialog-footer">
@@ -256,10 +264,10 @@ import NoteMain from './NoteMain.vue';
 import NoteSetting from './NoteSetting.vue';
 import noteModel from '../model/note';
 import service from '../utils/service';
+import aiService from '../service/ai';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import keyManager from '../utils/keys';
 import md5 from 'md5';
-import aiService from '../service/ai';
 
 export default {
   name: 'Home',
@@ -317,11 +325,9 @@ export default {
     keyManager.init();
 
     keyManager.registerHotkeyProcessor('ctrl+alt+1', () => service.invoke('/system/openDevTools', '',
-      result => console.log('打开开发者工具', result)), '打开开发者工具');
+        result => console.log('打开开发者工具', result)), '打开开发者工具');
 
-    keyManager.registerHotkeyProcessor('f11', () => {
-      focusMode(60);
-    }, '全屏');
+    keyManager.registerHotkeyProcessor('f11', () => focusMode(60), '全屏');
 
     keyManager.registerHotkeyProcessor('ctrl+shift+alt+l', () => {
       window.event.preventDefault();
@@ -424,9 +430,7 @@ export default {
             inputPattern: /^\d+$/,
             inputErrorMessage: '请输入学习时间（分钟）',
             inputValue: 60,
-          }).then(({value}) => {
-            focusMode(value);
-          }).catch(() => {
+          }).then(({value}) => focusMode(value)).catch(() => {
           });
           break;
         case '4-4':
@@ -516,7 +520,7 @@ export default {
       noteModel.setting.value = newSetting;
 
       service.invoke('/store/updateSetting', JSON.stringify(noteModel.setting.value), result => console.log(
-        '更新设置', result));
+          '更新设置', result));
 
       noteModel.startColdDown();
       dialogSettingVisible.value = false;
@@ -534,91 +538,161 @@ export default {
 
     const doConvert = () => {
       console.log('转换视频', videoList.value);
-      showProgress.value = true;
-      service.invoke('/note/convert', JSON.stringify({
-        files: videoList.value.map(file => {
-          let raw = file.raw;
-          return {
-            name: raw.name,
-            path: raw.path,
-            size: raw.size,
-            type: raw.type,
-            lastModified: raw.lastModified,
-          };
-        }),
-        options: convertOptions.value,
-      }), result => {
-        showProgress.value = false;
-        console.log('转换成功', result);
-        ElMessage.success('转换成功，请查看文件夹');
-      }, error => {
-        console.error('转换失败', error);
-        ElMessage.error('转换失败');
-        showProgress.value = false;
-      });
+      if (videoList.value.length > 0) {
+        showProgress.value = true;
+        service.invoke('/note/convert', JSON.stringify({
+          files: videoList.value.map(file => {
+            let raw = file.raw;
+            return {
+              name: raw.name,
+              path: raw.path,
+              size: raw.size,
+              type: raw.type,
+              lastModified: raw.lastModified,
+            };
+          }),
+          options: convertOptions.value,
+        }), result => {
+          showProgress.value = false;
+          console.log('转换成功', result);
+          ElMessage.success('转换成功，请查看文件夹');
+        }, error => {
+          console.error('转换失败', error);
+          ElMessage.error('转换失败');
+          showProgress.value = false;
+        });
+      } else {
+        ElMessage.error('请选择文件');
+      }
     };
 
     const doCaptureAudio = () => {
       console.log('抓取音轨', videoList.value);
-      showProgress.value = true;
-      service.invoke('/note/captureAudio', JSON.stringify({
-        files: videoList.value.map(file => {
-          let raw = file.raw;
-          return {
-            name: raw.name,
-            path: raw.path,
-            size: raw.size,
-            type: raw.type,
-            lastModified: raw.lastModified,
-          };
-        }),
-      }), result => {
-        showProgress.value = false;
-        console.log('抓取成功', result);
-        ElMessage.success('抓取成功，请查看文件夹');
-      }, error => {
-        console.error('抓取失败', error);
-        ElMessage.error('抓取失败');
-        showProgress.value = false;
-      });
+      if (videoList.value.length > 0) {
+        showProgress.value = true;
+        service.invoke('/note/captureAudio', JSON.stringify({
+          files: videoList.value.map(file => {
+            let raw = file.raw;
+            return {
+              name: raw.name,
+              path: raw.path,
+              size: raw.size,
+              type: raw.type,
+              lastModified: raw.lastModified,
+            };
+          }),
+        }), result => {
+          showProgress.value = false;
+          console.log('抓取成功', result);
+          ElMessage.success('抓取成功，请查看文件夹');
+        }, error => {
+          console.error('抓取失败', error);
+          ElMessage.error('抓取失败');
+          showProgress.value = false;
+        });
+      } else {
+        ElMessage.error('请选择文件');
+      }
     };
 
     const doCaptureSubtitle = () => {
+      const ignoreList = ['优优独播剧场', '作曲 李宗盛', '请不吝点赞'];
+
       console.log('抓取字幕', videoList.value);
-      showProgress.value = true;
-      let raw = videoList.value[0].raw;
-      service.invoke('/note/getStreams', JSON.stringify({
-        files: {
-          name: raw.name,
-          path: raw.path,
-          size: raw.size,
-          type: raw.type,
-          lastModified: raw.lastModified,
-        },
-      }), result => {
-        showProgress.value = false;
-        console.log('抓取成功', result);
-        if (result.code === 200) {
-          subtitleList.value = result.result.filter(item=>{
-            return item.codec_type === 'subtitle';
-          }).map(item => {
-            return {
-              path: raw.path,
-              index: item.index,
-              codecName: item.codec_name,
-              title: item.tags.title,
-              language: item.tags.language,
-            };
+      if (videoList.value.length > 0) {
+        showProgress.value = true;
+        let firstFile = videoList.value[0];
+        if (firstFile.raw.name.endsWith('.mp3') || firstFile.raw.name.endsWith('.wav')
+            || firstFile.raw.name.endsWith('.flac') || firstFile.raw.name.endsWith('.m4a')) {
+          service.invoke('/record/split', {fileName: firstFile.raw.path}, result => {
+            if (result.files) {
+              let text = [];
+              let index = 0;
+              stt(result.files[index], index);
+
+              function stt(_file, i) {
+                service.invoke('/store/downloadFile', _file, r => {
+                  if (r.code === 200) {
+                    let file = new File([r.data], Date.now() + '.mp3', {type: 'audio/mp3'});
+                    aiService.stt(file, r => {
+                      console.log('识别结果', r);
+                      let ignore = false;
+                      ignoreList.every(ignoreItem => {
+                        if (r.message.indexOf(ignoreItem) > -1) {
+                          ignore = true;
+                          return false;
+                        } else {
+                          return true;
+                        }
+                      });
+                      if (!ignore) {
+                        text.push(r.message);
+                      }
+                      i++;
+                      if (i < 10) {
+                        //if (i < result.files.length) {
+                        stt(result.files[i], i);
+                      } else {
+                        console.log('识别完成');
+                        service.invoke('/store/saveAsrResult', {
+                          text: text.join('\n'),
+                          fileName: firstFile.raw.path,
+                          tempDir: _file,
+                        }, result => {
+                          if (result.code === 200) {
+                            //ElMessage.success('保存成功');
+                          } else {
+                            ElMessage.error('保存失败');
+                          }
+                          showProgress.value = false;
+                        }, error => {
+                          console.error('保存失败', error);
+                          ElMessage.error('保存失败');
+                          showProgress.value = false;
+                        });
+                      }
+                    });
+                  } else {
+                    ElMessage.error('下载失败');
+                  }
+                });
+              }
+            }
           });
-          dialogSubtitleVisible.value = true;
         } else {
-          ElMessage.error('流信息获取失败');
+          let raw = firstFile.raw;
+          service.invoke('/note/getStreams', JSON.stringify({
+            files: {
+              name: raw.name,
+              path: raw.path,
+              size: raw.size,
+              type: raw.type,
+              lastModified: raw.lastModified,
+            },
+          }), result => {
+            showProgress.value = false;
+            console.log('抓取成功', result);
+            if (result.code === 200) {
+              subtitleList.value = result.result.filter(item => item.codec_type === 'subtitle').map(item => ({
+                path: raw.path,
+                index: item.index,
+                codecName: item.codec_name,
+                title: item.tags.title,
+                language: item.tags.language,
+              }));
+              dialogSubtitleVisible.value = true;
+            } else {
+              ElMessage.error('流信息获取失败');
+            }
+          }, error => {
+            console.error('抓取失败', error);
+            ElMessage.error('流信息获取失败');
+            showProgress.value = false;
+          });
         }
-      }, error => {
-        console.error('抓取失败', error);
-        ElMessage.error('流信息获取失败');
-        showProgress.value = false;
-      });
+      } else {
+        ElMessage.error('请选择文件');
+      }
     };
 
     const handleSubtitleClick = row => {
@@ -682,9 +756,7 @@ export default {
     let studyTimer = 0;
 
     const developEnv = import.meta.env.DEV;
-    const reload = () => {
-      window.location.reload();
-    };
+    const reload = () => window.location.reload();
 
     let record = false;
 
@@ -718,7 +790,7 @@ export default {
         }
       });*/
       service.invoke('/ai/analysisSubtitle', {
-        fileName: "BV1X7411F744-1.bilibili.json"
+        fileName: 'BV1X7411F744-1.bilibili.json',
       }, result => {
         if (result.code === 200) {
           console.log('分析结果', result.data);

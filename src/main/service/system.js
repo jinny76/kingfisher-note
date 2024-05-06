@@ -18,7 +18,7 @@ const install = (mainWindow, windowManager) => {
   });
 
   ipcMain.handle('/system/openPopDevTools', (event, params) => {
-    let videoWindow = windowManager.findWindowByRoute("/video")
+    let videoWindow = windowManager.findWindowByRoute('/video');
     if (videoWindow) {
       videoWindow.webContents.openDevTools();
       return {
@@ -40,6 +40,39 @@ const install = (mainWindow, windowManager) => {
       code: 200,
       message: '全屏成功',
     };
+  });
+
+  ipcMain.handle('/system/redirect', (event, params) => {
+    if (typeof params === 'string' && params.length > 0 && (params[0] === '{' || params[0] === '[')) {
+      params = JSON.parse(params);
+    }
+
+    let targetWindow;
+    if (params.target !== 'main') {
+      targetWindow = windowManager.findWindowByRoute(params.target);
+    } else {
+      targetWindow = mainWindow;
+    }
+
+    if (targetWindow) {
+      if (params.route) {
+        targetWindow.webContents.send(params.route, params.args);
+        return {
+          code: 200,
+          message: '转发成功',
+        };
+      } else {
+        return {
+          code: 500,
+          message: '未找到路由',
+        };
+      }
+    } else {
+      return {
+        code: 500,
+        message: '未找到窗口',
+      };
+    }
   });
 
   console.log('注册系统服务');

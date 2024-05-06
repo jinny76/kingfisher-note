@@ -69,8 +69,9 @@ export const webmFix = async (file) => {
 export const splitAudio = async (file) => {
   const ffmpeg = new Ffmpeg();
   ffmpeg.init();
-  await ffmpeg.splitAudio(file);
+  let tempDir = await ffmpeg.splitAudio(file);
   return {
+    target: tempDir,
     code: 200,
   };
 };
@@ -93,6 +94,6 @@ export const extractSubtitle = async (input) => {
     result: result,
     code: 200,
   };
-}
+};
 
 export default StreamServer;

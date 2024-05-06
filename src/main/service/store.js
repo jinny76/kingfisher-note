@@ -2,6 +2,7 @@ import {ipcMain} from 'electron';
 import fs from 'fs';
 import crypto from 'crypto';
 import md5 from 'md5';
+import pathService from 'path';
 
 const algorithm = 'aes-256-cbc';
 const encryptPrefix = '!!!secure:';
@@ -78,7 +79,7 @@ if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
   loadNoteMeta();
 }
 
-const install = () => {
+const install = (mainWindow, windowManager) => {
   ipcMain.handle('/store/saveNote', (event, params) => {
     console.log('开始保存文件');
     // save file to "note" folder
@@ -138,7 +139,8 @@ const install = () => {
       //find all versions
       const files = fs.readdirSync(setting.noteDir);
       files.forEach(file => {
-        if (file.startsWith(path) && (file.endsWith('.bak') || file.endsWith('.auto'))) {
+        if (file.startsWith(path) &&
+            (file.endsWith('.bak') || file.endsWith('.auto'))) {
           data = fs.readFileSync(`${setting.noteDir}/${file}`, 'utf-8');
           fs.writeFileSync(`${setting.noteDir}/${file}`,
               encryptPrefix + encrypt(data, key));
@@ -291,7 +293,7 @@ const install = () => {
     return {
       code: 500,
       message: '参数错误',
-    }
+    };
   });
 
   ipcMain.handle('/store/downloadFile', (event, params) => {
@@ -311,6 +313,29 @@ const install = () => {
     return {
       code: 500,
       message: '参数错误',
+    };
+  });
+
+  ipcMain.handle('/store/saveAsrResult', (event, params) => {
+    if (params) {
+      if (params.text) {
+        fs.writeFileSync(params.fileName + '.txt', params.text);
+        console.log('保存成功', params.fileName + '.txt');
+        //remove directory of params.tempDir
+        fs.rmdirSync(pathService.dirname(params.tempDir), {recursive: true});
+
+        mainWindow.webContents.send('/client/captureSubtitle',
+            JSON.stringify({fileName: params.fileName + '.txt'}));
+      }
+
+      return {
+        code: 200,
+      };
+    } else {
+      return {
+        code: 500,
+        message: '参数错误',
+      };
     }
   });
 

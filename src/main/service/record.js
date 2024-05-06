@@ -85,15 +85,15 @@ const install = (mainWindow, windowManager) => {
 
   ipcMain.handle('/record/split', async (event, params) => {
     console.log('切割文件', params);
-    await splitAudio(params.fileName);
-    let target = params.fileName.substring(0, params.fileName.lastIndexOf('.'));
+    let result = await splitAudio(params.fileName);
+    let target = result.target;
     //list all files
     let files = fs.readdirSync(target);
-    let result = [];
+    let resultFiles = [];
     files.forEach(file => {
-      result.push(target + '/' + file);
+      resultFiles.push(target + '/' + file);
     });
-    params.files = result;
+    params.files = resultFiles;
     return params;
   });
 };

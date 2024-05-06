@@ -409,7 +409,13 @@ export default {
           cancelButtonText: '取消',
         }).then(() => {
           service.invoke('/note/analysisSubtitle', arg);
-        }).catch(() => console.log('取消分析字幕'));
+        }).catch(() => {
+          service.invoke("/system/redirect", {
+            target: "main",
+            route: "/client/send",
+            args: `\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`
+          })
+        });
       }
     };
     electron.ipcRenderer.on('/client/captureSubtitle', captureSubtitleListener);
