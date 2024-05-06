@@ -45,3 +45,5 @@ electronDownload:
 extraResources:
   - "from": "./resources/vditor"
     "to": "vditor"
+  - "from": "./resources/ffmpeg"
+    "to": "ffmpeg"

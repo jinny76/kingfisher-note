@@ -8,7 +8,8 @@ class Ffmepg {
   }
 
   init() {
-    ffmpeg.setFfmpegPath(require('@ffmpeg-installer/ffmpeg').path);
+    //ffmpeg.setFfmpegPath(require('@ffmpeg-installer/ffmpeg').path);
+    ffmpeg.setFfmpegPath("./resources/ffmpeg/ffmpeg");
   }
 
   create(input) {
