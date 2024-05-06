@@ -479,15 +479,15 @@ export default {
       step.value = ['#idMenuFile', '#idNoteEditor'];
       let toolbar = document.querySelector('.vditor-toolbar');
       if (toolbar) {
-        step.value.push(toolbar.children[23]);
-        step.value.push(toolbar.children[26]);
-        step.value.push(toolbar.children[27]);
+        step.value.push(toolbar.children[25]);
         step.value.push(toolbar.children[28]);
         step.value.push(toolbar.children[29]);
         step.value.push(toolbar.children[30]);
         step.value.push(toolbar.children[31]);
-        step.value.push(toolbar.children[34]);
-        step.value.push(toolbar.children[37]);
+        step.value.push(toolbar.children[32]);
+        step.value.push(toolbar.children[33]);
+        step.value.push(toolbar.children[36]);
+        step.value.push(toolbar.children[39]);
       }
 
       showTour.value = true;
@@ -602,8 +602,12 @@ export default {
       if (videoList.value.length > 0) {
         showProgress.value = true;
         let firstFile = videoList.value[0];
-        if (firstFile.raw.name.endsWith('.mp3') || firstFile.raw.name.endsWith('.wav')
-            || firstFile.raw.name.endsWith('.flac') || firstFile.raw.name.endsWith('.m4a')) {
+        let firstFileName = firstFile.raw.name;
+        if (firstFileName.endsWith('.mp3') || firstFileName.endsWith('.wav')
+            || firstFileName.endsWith('.flac') || firstFileName.endsWith('.m4a')
+            || firstFileName.endsWith('.aac') || firstFileName.endsWith('.wma')
+            || firstFileName.endsWith('.ape') || firstFileName.endsWith('.ogg')
+            || firstFileName.endsWith('.webm')) {
           service.invoke('/record/split', {fileName: firstFile.raw.path}, result => {
             if (result.files) {
               let text = [];
@@ -629,7 +633,7 @@ export default {
                         text.push(r.message);
                       }
                       i++;
-                      if (i < 10) {
+                      if (i < 10 && i < result.files.length) {
                         //if (i < result.files.length) {
                         stt(result.files[i], i);
                       } else {

@@ -100,6 +100,7 @@ import aiService from '../service/ai';
 import helpContent from '../help.md?raw';
 import {ElLoading, ElMessage, ElMessageBox} from 'element-plus';
 import {handleEvent, initPlugins, plugins} from '../plugin';
+import {copyText} from 'vue3-clipboard';
 
 export default {
   name: 'NoteMain',
@@ -374,14 +375,26 @@ export default {
                   nextTick(() => gotoPage(dom.href.replace('page://', '')));
                   return false;
                 } else if (dom.href.startsWith('subtitle://')) {
-                  ElMessageBox.confirm('要不要对字幕进行分析？', '字幕分析', {
-                    confirmButtonText: '是',
-                    cancelButtonText: '否',
-                    type: 'success',
-                  }).then(() => {
-                    analysisSubtitle(JSON.stringify({fileName: dom.href.replace('subtitle://', '')}));
-                  }).catch(() => {
-                  });
+                  if (noteModel.setting.value.aiServer && noteModel.setting.value.aiKey) {
+                    ElMessageBox.confirm('要不要对字幕进行分析？', '字幕分析', {
+                      confirmButtonText: '是',
+                      cancelButtonText: '否',
+                      type: 'success',
+                    }).then(() => {
+                      analysisSubtitle(JSON.stringify({fileName: dom.href.replace('subtitle://', '')}));
+                    }).catch(() => {
+                      service.invoke('/store/downloadFile', dom.href.replace('subtitle://', ''), r => {
+                        if (r.code === 200) {
+                          copyText(new TextDecoder().decode(r.data));
+                          ElMessage.success('字幕已经复制到剪贴板');
+                        } else {
+                          ElMessage.error('下载失败');
+                        }
+                      });
+                    });
+                  } else {
+                    ElMessage.warning('设置了AI服务就可以对字幕进行分析');
+                  }
                 } else if (dom.href === 'https://' && openBible(dom.innerText)) {
                   return false;
                 } else if (dom.href.startsWith('timestamp://')) {
@@ -826,15 +839,19 @@ export default {
     }
 
     let captureSubtitleListener = function(event, arg) {
-      ElMessageBox.confirm('字幕已经生成，要不要进行分析？', '字幕分析', {
-        confirmButtonText: '是',
-        cancelButtonText: '否',
-        type: 'success',
-      }).then(() => {
-        analysisSubtitle(arg);
-      }).catch(() => {
-        insertText(`\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`)
-      });
+      if (noteModel.setting.value.aiServer && noteModel.setting.value.aiKey) {
+        ElMessageBox.confirm('字幕已经生成，要不要进行分析？', '字幕分析', {
+          confirmButtonText: '是',
+          cancelButtonText: '否',
+          type: 'success',
+        }).then(() => {
+          analysisSubtitle(arg);
+        }).catch(() => {
+          insertText(`\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`);
+        });
+      } else {
+        insertText(`\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`);
+      }
     };
     electron.ipcRenderer.on('/client/captureSubtitle', captureSubtitleListener);
 

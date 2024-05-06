@@ -110,7 +110,7 @@ class Ffmepg {
             console.log('Processing finished!');
             resolve(tempDir);
           }).
-          save(`${tempDir}/out%03d.mp3`);
+          save(`${tempDir}/out%03d.${input.substring(input.lastIndexOf('.') + 1)}`);
     });
   }
 

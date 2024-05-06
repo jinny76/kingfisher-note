@@ -6,9 +6,6 @@ import OpenAI from 'openai';
 
 const aiServer = 'https://ai.kingfisher.live/aiapi/';
 
-const openaiServer = 'https://api.moonshot.cn/v1';
-const openaiKey = 'sk-oPDHAkwRsZF6oVl3Tb3fRWUs8sFdDa6E0tLFlIstzlqtQCbs';
-
 const install = (mainWindow, windowManager) => {
   ipcMain.handle('/ai/stt', async (event, params) => {
     console.log(params);
@@ -61,7 +58,7 @@ const install = (mainWindow, windowManager) => {
 
       if (contentSubtitle) {
         const client = new OpenAI({
-          baseURL: openaiServer, apiKey: openaiKey,
+          baseURL: storeService.setting.aiServer, apiKey: storeService.setting.aiKey,
         });
 
         const completion = await client.chat.completions.create({

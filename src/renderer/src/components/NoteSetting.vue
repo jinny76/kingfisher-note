@@ -69,7 +69,7 @@
         <el-input v-model="setting.password" clearable placeholder="请输入访问密码" type="password">
           <template #append>
             仅解锁：
-            <el-switch v-model="setting.onlyForUnlock" />
+            <el-switch v-model="setting.onlyForUnlock"/>
           </template>
         </el-input>
       </el-col>
@@ -90,6 +90,19 @@
         <el-input v-model="setting.forwardStep" placeholder="请输入快进步长" type="number">
           <template #append>
             秒
+          </template>
+        </el-input>
+      </el-col>
+    </el-row>
+    <el-row style="padding: 5px;">
+      <el-col :span="6" title="AI分析">AI分析：</el-col>
+      <el-col :span="18" class="ai-server" style="display: flex">
+        <el-input v-model="setting.aiKey" placeholder="请输入APP KEY" type="password" clearable>
+          <template #prefix>
+            <el-select v-model="setting.aiServer" placeholder="请选择AI供应商" style="width: 200px;" clearable>
+              <el-option v-for="item in aiServers" :key="item.value" :label="item.label"
+                         :value="item.value"></el-option>
+            </el-select>
           </template>
         </el-input>
       </el-col>
@@ -117,9 +130,22 @@ export default {
     };
 
     return {
-      setting, updateSetting, insertFor: noteModel.insertFor,
+      setting, updateSetting, insertFor: noteModel.insertFor, aiServers: noteModel.aiServers,
     };
   },
 };
 
 </script>
+
+<style lang="scss">
+.ai-server {
+  .el-select__wrapper {
+    box-shadow: 0px 0px 0px 0px #000000;
+    width: 120px;
+  }
+
+  .el-select__wrapper:hover {
+    box-shadow: 0px 0px 0px 0px #000000;
+  }
+}
+</style>

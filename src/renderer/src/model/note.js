@@ -22,6 +22,8 @@ const setting = ref({
   onlyForUnlock: true,
   timestampOffset: 1,
   forwardStep: 5,
+  aiServer: '',
+  aiKey: '',
 });
 
 const insertFor = [
@@ -29,6 +31,11 @@ const insertFor = [
   {value: 'chapter', label: '章节'},
   {value: 'any', label: '所有'},
 ];
+
+const aiServers = [
+  {label:'OpenAI', value:"https://api.openai.com/v1/chat/completions"},
+  {label:'Kimi', value:"https://api.moonshot.cn/v1"},
+]
 
 const settingReady = ref(false);
 
@@ -117,4 +124,5 @@ export default {
   openTime,
   aiServer,
   insertFor,
+  aiServers
 };

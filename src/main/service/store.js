@@ -298,6 +298,12 @@ const install = (mainWindow, windowManager) => {
 
   ipcMain.handle('/store/downloadFile', (event, params) => {
     if (params) {
+      params = decodeURIComponent(params);
+
+      if (!fs.existsSync(params)) {
+        params = setting.assetsDir + '/' + params;
+      }
+
       if (!fs.existsSync(params)) {
         return {
           code: 404,
