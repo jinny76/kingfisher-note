@@ -2,7 +2,12 @@ import {ipcMain} from 'electron';
 import fs from 'fs';
 import storeService from './store';
 import {createWorker} from 'tesseract.js';
-import {captureAudio, convert} from '../video/server';
+import {
+  captureAudio,
+  convert,
+  extractSubtitle,
+  fetchStream,
+} from '../video/server';
 
 const rootPath = process.cwd();
 
@@ -29,13 +34,13 @@ const install = (mainWindow, windowManager) => {
       const dataBuffer = Buffer.from(base64Data, 'base64');
       screenshotId = new Date().getTime();
       fs.writeFileSync(
-          `${storeService.setting.screenshotDir}/${screenshotId}.png`,
-          dataBuffer);
+        `${storeService.setting.screenshotDir}/${screenshotId}.png`,
+        dataBuffer);
     }
 
     windowManager.main.focus();
     windowManager.main.webContents.send('/client/insertAll',
-        JSON.stringify({time, screenshotId}));
+      JSON.stringify({time, screenshotId}));
 
     return {
       code: 200, message: '保存成功',
@@ -90,10 +95,22 @@ const install = (mainWindow, windowManager) => {
   ipcMain.handle('/note/convert', async (event, params) => {
     let request = JSON.parse(params);
     await convert(request.files, request.options.h264 ? 'h264' : null,
-        request.options.mp3 ? 'mp3' : null);
+      request.options.mp3 ? 'mp3' : null);
     return {
       code: 200,
     };
+  });
+
+  ipcMain.handle('/note/getStreams', async (event, params) => {
+    let request = JSON.parse(params);
+    try {
+      let result = await fetchStream(request.files.path);
+      return result;
+    } catch (e) {
+      return {
+        code: 500, message: e.message,
+      };
+    }
   });
 
   ipcMain.handle('/note/captureAudio', async (event, params) => {
@@ -102,6 +119,13 @@ const install = (mainWindow, windowManager) => {
     return {
       code: 200,
     };
+  });
+
+  ipcMain.handle('/note/extractSubtitle', async(event, params) => {
+    let result = await extractSubtitle(JSON.parse(params));
+    mainWindow.webContents.send('/client/captureSubtitle',
+      JSON.stringify({fileName: result.result}));
+    return result;
   });
 
   ipcMain.handle('/note/webInsertContent', (event, params) => {
@@ -214,6 +238,10 @@ const install = (mainWindow, windowManager) => {
     }
   });
 
+  ipcMain.handle('/note/analysisSubtitle', async (event, params) => {
+    mainWindow.webContents.send('/client/analysisSubtitle', params);
+  });
+
   const WebSocketServer = require('ws').Server;
   let wss = new WebSocketServer({port: 18888});
   let ws;
@@ -229,7 +257,7 @@ const install = (mainWindow, windowManager) => {
         let videoWindow = windowManager.findWindowByRoute('/video/');
         if (videoWindow) {
           videoWindow.webContents.send('/client/getTimestamp',
-              JSON.stringify({time: data.time}));
+            JSON.stringify({time: data.time}));
         }
       } else if (data.action === 'captureSubtitle') {
         let args = data.args;
@@ -237,21 +265,30 @@ const install = (mainWindow, windowManager) => {
         if (args.type === 'bilibili') {
           let url = args.url.replace('/?', '?');
           let movieId = url.substring(url.lastIndexOf('/') + 1,
-              url.lastIndexOf('?'));
+            url.lastIndexOf('?'));
           let page = 1;
           let firstParam = url.substring(url.lastIndexOf('?') + 1,
-              url.indexOf('&')).
-              split('=');
+            url.indexOf('&')).
+            split('=');
           if (firstParam[0] === 'p') {
             page = firstParam[1];
           }
 
           fs.writeFileSync(
-              `${storeService.setting.assetsDir}/${movieId}-${page}.bilibili.json`,
-              JSON.stringify(args.subtitle),
-              {encoding: 'utf-8', overwrite: true});
-          mainWindow.webContents.send('/client/captureSubtitle',
-              JSON.stringify({fileName: `${movieId}-${page}.bilibili.json`}));
+            `${storeService.setting.assetsDir}/${movieId}-${page}.bilibili.json`,
+            JSON.stringify(args.subtitle),
+            {encoding: 'utf-8', overwrite: true});
+
+          let targetWindow;
+
+          if (storeService.setting.displayMode === 'window') {
+            targetWindow = windowManager.findWindowByRoute('/video/');
+          } else {
+            targetWindow = mainWindow;
+          }
+
+          targetWindow.webContents.send('/client/captureSubtitle',
+            JSON.stringify({fileName: `${movieId}-${page}.bilibili.json`}));
         }
       }
     });

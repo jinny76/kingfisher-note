@@ -32,7 +32,7 @@
         <el-sub-menu index="4">
           <template #title>工具</template>
           <el-menu-item id="idMenuSetting" index="4-1">设置</el-menu-item>
-          <el-menu-item index="4-2">转换视频</el-menu-item>
+          <el-menu-item index="4-2">视频工具</el-menu-item>
           <el-menu-item index="4-3">专注模式</el-menu-item>
           <el-menu-item index="4-4">调试工具-主窗口</el-menu-item>
           <el-menu-item index="4-5">调试工具-弹出窗口</el-menu-item>
@@ -141,6 +141,31 @@
       </div>
     </template>
   </el-dialog>
+  <el-dialog v-model="dialogSubtitleVisible" align-center draggable title="选择字幕" width="435">
+    <el-table
+      :data="subtitleList"
+      border
+      height="400"
+      style="width: 100%"
+      @row-click="handleSubtitleClick"
+      >
+      <el-table-column
+        prop="title"
+        label="标题"
+        width="300">
+      </el-table-column>
+      <el-table-column
+        prop="language"
+        label="语言"
+        width="100">
+      </el-table-column>>
+    </el-table>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogSubtitleVisible = false">取消</el-button>
+      </div>
+    </template>
+  </el-dialog>
   <el-dialog v-model="dialogConvertVisible" align-center draggable title="视频处理" width="1200">
     <el-upload
       v-model:file-list="videoList"
@@ -172,6 +197,7 @@
       <div class="dialog-footer">
         <el-button @click="doConvert">转换视频</el-button>
         <el-button @click="doCaptureAudio">抓取音轨</el-button>
+        <el-button @click="doCaptureSubtitle">抓取字幕</el-button>
         <el-button @click="dialogConvertVisible = false">关闭</el-button>
       </div>
     </template>
@@ -524,8 +550,7 @@ export default {
       }), result => {
         showProgress.value = false;
         console.log('转换成功', result);
-        ElMessage.success('转换成功');
-        dialogConvertVisible.value = false;
+        ElMessage.success('转换成功，请查看文件夹');
       }, error => {
         console.error('转换失败', error);
         ElMessage.error('转换失败');
@@ -550,14 +575,69 @@ export default {
       }), result => {
         showProgress.value = false;
         console.log('抓取成功', result);
-        ElMessage.success('抓取成功');
-        dialogConvertVisible.value = false;
+        ElMessage.success('抓取成功，请查看文件夹');
       }, error => {
         console.error('抓取失败', error);
         ElMessage.error('抓取失败');
         showProgress.value = false;
       });
     };
+
+    const doCaptureSubtitle = () => {
+      console.log('抓取字幕', videoList.value);
+      showProgress.value = true;
+      let raw = videoList.value[0].raw;
+      service.invoke('/note/getStreams', JSON.stringify({
+        files: {
+          name: raw.name,
+          path: raw.path,
+          size: raw.size,
+          type: raw.type,
+          lastModified: raw.lastModified,
+        },
+      }), result => {
+        showProgress.value = false;
+        console.log('抓取成功', result);
+        if (result.code === 200) {
+          subtitleList.value = result.result.filter(item=>{
+            return item.codec_type === 'subtitle';
+          }).map(item => {
+            return {
+              path: raw.path,
+              index: item.index,
+              codecName: item.codec_name,
+              title: item.tags.title,
+              language: item.tags.language,
+            };
+          });
+          dialogSubtitleVisible.value = true;
+        } else {
+          ElMessage.error('流信息获取失败');
+        }
+      }, error => {
+        console.error('抓取失败', error);
+        ElMessage.error('流信息获取失败');
+        showProgress.value = false;
+      });
+    };
+
+    const handleSubtitleClick = row => {
+      console.log('选择字幕', row);
+      dialogSubtitleVisible.value = false;
+      showProgress.value = true;
+      service.invoke('/note/extractSubtitle', JSON.stringify(row), result => {
+        console.log('抓取成功', result);
+        ElMessage.success('抓取成功，请查看文件夹');
+        showProgress.value = false;
+      }, error => {
+        console.error('抓取失败', error);
+        ElMessage.error('抓取失败');
+        showProgress.value = false;
+      });
+    };
+
+    const subtitleList = ref([]);
+    const dialogSubtitleVisible = ref(false);
 
     const loadVersion = time => {
       console.log('加载历史版本', time);
@@ -665,10 +745,14 @@ export default {
       dialogSettingVisible,
       dialogHelpVisible,
       dialogConvertVisible,
+      dialogSubtitleVisible,
+      subtitleList,
+      handleSubtitleClick,
       videoList,
       activeIndex,
       doConvert,
       doCaptureAudio,
+      doCaptureSubtitle,
       handleSelect,
       mainComp,
       mainComponent,

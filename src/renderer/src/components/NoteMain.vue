@@ -98,7 +98,7 @@ import utils from '../utils/utils';
 import website from '../utils/website';
 import aiService from '../service/ai';
 import helpContent from '../help.md?raw';
-import {ElMessage, ElMessageBox} from 'element-plus';
+import {ElLoading, ElMessage, ElMessageBox} from 'element-plus';
 import {handleEvent, initPlugins, plugins} from '../plugin';
 
 export default {
@@ -793,22 +793,43 @@ export default {
     };
     electron.ipcRenderer.on('/client/send', sendListener);
 
-    let captureSubtitleListener = function(event, arg) {
-      ElMessageBox.confirm('字幕已经生成，要不要进行分析', '字幕分析', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-      }).then(() => {
-        service.invoke('/ai/analysisSubtitle', arg, result => {
+    function analysisSubtitle(arg) {
+      const loading = ElLoading.service({fullscreen: true});
+      service.invoke('/ai/analysisSubtitle', arg, result => {
+        try {
           if (result.code === 200) {
+            ElMessage.success('分析字幕成功');
             let content = '\n\n' + result.data.replace('```markdown', '').replace('```', '') + '\n';
             insertText(content);
           } else {
             ElMessage.warning(result.message);
           }
-        });
-      }).catch(() => console.log('取消分析字幕'));
+        } catch (e) {
+          ElMessage.error('分析字幕失败');
+        }
+        loading.close();
+      }, () => {
+        loading.close();
+      });
+    }
+
+    let captureSubtitleListener = function(event, arg) {
+      ElMessageBox.confirm('字幕已经生成，要不要进行分析？', '字幕分析', {
+        confirmButtonText: '是',
+        cancelButtonText: '否',
+        type: 'success',
+      }).then(() => {
+        analysisSubtitle(arg);
+      }).catch(() => {
+        console.log('取消分析字幕');
+      });
     };
     electron.ipcRenderer.on('/client/captureSubtitle', captureSubtitleListener);
+
+    let analysisSubtitleListener = function(event, arg) {
+      analysisSubtitle(arg);
+    };
+    electron.ipcRenderer.on('/client/analysisSubtitle', analysisSubtitleListener);
 
     const insertText = text => {
       if (editor) {
@@ -876,6 +897,7 @@ export default {
       window.electron.ipcRenderer.removeListener('/client/send', sendListener);
       window.electron.ipcRenderer.removeListener('/client/record-save', recordSaveListener);
       window.electron.ipcRenderer.removeListener('/client/captureSubtitle', captureSubtitleListener);
+      window.electron.ipcRenderer.removeListener('/client/analysisSubtitle', analysisSubtitleListener);
     });
 
     const createNewNote = () => {

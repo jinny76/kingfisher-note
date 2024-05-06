@@ -136,6 +136,42 @@ class Ffmepg {
     });
   }
 
+  fetchStream(input) {
+    return new Promise((resolve, reject) => {
+      ffmpeg.ffprobe(input, function(err, metadata) {
+        if (err) {
+          reject(err);
+        } else {
+          if (metadata.streams) {
+            resolve(metadata.streams);
+          } else {
+            reject('没有流信息');
+          }
+        }
+      });
+    });
+  }
+
+  extractSubtitle(input) {
+    return new Promise((resolve, reject) => {
+      this.instance = ffmpeg().
+          input(input.path).
+          outputOptions('-map', '0:' + input.index).
+          on('progress', function(progress) {
+            console.log('Timemark: ' + progress.timemark);
+          }).
+          on('error', function(err) {
+            console.log('An error occurred: ' + err.message);
+            reject(err);
+          }).
+          on('end', function() {
+            console.log('Processing finished!');
+            resolve(`${input.path}.${input.title}.${input.codecName}`);
+          }).
+          save(`${input.path}.${input.title}.${input.codecName}`);
+    });
+  }
+
   kill() {
     this.instance?.kill('');
   }

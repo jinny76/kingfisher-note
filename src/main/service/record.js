@@ -4,7 +4,7 @@ import {splitAudio, webmFix} from '../video/server';
 import fs from 'fs';
 
 const install = (mainWindow, windowManager) => {
-  console.log(mainWindow.getMediaSourceId());
+  //console.log(mainWindow.getMediaSourceId());
   desktopCapturer.getSources({
     types: ['screen', 'window'], // 设定需要捕获的是"屏幕"，还是"窗口"
     thumbnailSize: {
@@ -14,7 +14,7 @@ const install = (mainWindow, windowManager) => {
   }).then(sources => {
     let index = 0;
     sources.forEach(source => {
-      console.log('source' + index++, source);
+      //console.log('source' + index++, source);
     });
   });
 

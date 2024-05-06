@@ -75,4 +75,24 @@ export const splitAudio = async (file) => {
   };
 };
 
+export const fetchStream = async (file) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  let streams = await ffmpeg.fetchStream(file);
+  return {
+    result: streams,
+    code: 200,
+  };
+};
+
+export const extractSubtitle = async (input) => {
+  const ffmpeg = new Ffmpeg();
+  ffmpeg.init();
+  let result = await ffmpeg.extractSubtitle(input);
+  return {
+    result: result,
+    code: 200,
+  };
+}
+
 export default StreamServer;

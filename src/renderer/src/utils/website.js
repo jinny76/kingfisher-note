@@ -2,6 +2,15 @@ const websites = {
   'www.bilibili.com': {
     debug: false, replace: 'www.b.com',
     loadScript: `
+    window.KFEventHandler = {
+      captureSubtitle: function(){
+        let button = document.querySelector(".bpx-player-ctrl-subtitle");
+        if (button) {
+          button.childNodes[1].childNodes[0].click();
+        }
+      }
+    };
+
     window.KfXHR = (function(){
 
       // save the native XHR method to xhrConstructor;
@@ -228,15 +237,6 @@ const websites = {
         button.click();
       }
     }, 1000);
-    window.kfEventHandler = {
-      "captureSubtitle": function() {
-        let button = document.querySelector(".bpx-player-ctrl-subtitle");
-        console.log("captureSubtitle", button);
-        if (button) {
-          button.childNodes[1].childNodes[0].click();
-        }
-      }
-    };
     `,
     captureSubtitle: true,
   }, 'www.youtube.com': {

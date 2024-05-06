@@ -98,7 +98,7 @@
 import {nextTick, onUnmounted, ref, watch, onMounted} from 'vue';
 import {useRoute} from 'vue-router';
 import service from '../utils/service';
-import {ElMessage} from 'element-plus';
+import {ElMessage, ElMessageBox} from 'element-plus';
 import utils from '../utils/utils';
 import website from '../utils/website';
 import noteModel from '../model/note';
@@ -214,8 +214,8 @@ export default {
           window.kfsocket.addEventListener("message", function (event) {
             console.log("Message from server ", event.data);
             let eventData = JSON.parse(event.data);
-            if (window.kfEventHandler && window.kfEventHandler[eventData.action]){
-              window.kfEventHandler[eventData.action](eventData.args);
+            if (window.KFEventHandler && window.KFEventHandler[eventData.action]){
+              window.KFEventHandler[eventData.action](eventData.args);
             } else if (eventData.action === "insertContent") {
               if (eventData.args === 'timestamp') {
                 let video = document.querySelector("${videoQuery}");
@@ -402,6 +402,18 @@ export default {
     };
     window.electron.ipcRenderer.on('/client/getTimestamp', getTimestampListene);
 
+    let captureSubtitleListener = function(event, arg) {
+      if (noteModel.setting.value.displayMode === 'window') {
+        ElMessageBox.confirm('字幕已经生成，要不要进行分析', '字幕分析', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+        }).then(() => {
+          service.invoke('/note/analysisSubtitle', arg);
+        }).catch(() => console.log('取消分析字幕'));
+      }
+    };
+    electron.ipcRenderer.on('/client/captureSubtitle', captureSubtitleListener);
+
     const playVideo = () => {
       if (contentType.value === 'video') {
         let video = playerDom.value.$el.childNodes[0];
@@ -459,6 +471,8 @@ export default {
       window.electron.ipcRenderer.removeListener('/client/forward', forwardListener);
       window.electron.ipcRenderer.removeListener('/client/backward', backwardListener);
       window.electron.ipcRenderer.removeListener('/client/changePage', changePageListener);
+      window.electron.ipcRenderer.removeListener('/client/getTimestamp', getTimestampListene);
+      window.electron.ipcRenderer.removeListener('/client/captureSubtitle', captureSubtitleListener);
     });
 
     const recording = ref(false);
