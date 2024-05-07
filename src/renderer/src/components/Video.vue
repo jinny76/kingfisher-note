@@ -220,7 +220,7 @@ export default {
               if (eventData.args === 'timestamp') {
                 let video = document.querySelector("${videoQuery}");
                 if (video) {
-                  window.kfsocket.send(JSON.stringify({action: 'insertContent', time: video.currentTime - ${noteModel.setting.value.timestampOffset}}));
+                  window.kfsocket.send(JSON.stringify({action: 'insertContent', type: eventData.args, time: video.currentTime - ${noteModel.setting.value.timestampOffset}}));
                 }
               } else if (eventData.args === 'screenshot') {
                 let video = document.querySelector("${videoQuery}");
@@ -231,7 +231,7 @@ export default {
                   canvas.height = video.videoHeight;
 
                   canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-                  window.kfsocket.send(JSON.stringify({action: 'insertContent', screenshot: canvas.toDataURL()}));
+                  window.kfsocket.send(JSON.stringify({action: 'insertContent', type: eventData.args, screenshot: canvas.toDataURL()}));
                 }
               } else if (eventData.args === 'all') {
                 let video = document.querySelector("${videoQuery}");
@@ -242,7 +242,7 @@ export default {
                   canvas.height = video.videoHeight;
 
                   canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-                  window.kfsocket.send(JSON.stringify({action: 'insertContent', time: video.currentTime - ${noteModel.setting.value.timestampOffset}, screenshot: canvas.toDataURL()}));
+                  window.kfsocket.send(JSON.stringify({action: 'insertContent', type: eventData.args, time: video.currentTime - ${noteModel.setting.value.timestampOffset}, screenshot: canvas.toDataURL()}));
                 }
               }
             } else if (eventData.action === "locateVideo") {
@@ -321,7 +321,9 @@ export default {
       if (contentType.value === 'video') {
         let video = playerDom.value.$el.childNodes[0];
         if (video) {
-          let data = {};
+          let data = {
+            type: type
+          };
 
           if (type === 'timestamp' || type === 'all') {
             data.time = video.currentTime - noteModel.setting.value.timestampOffset;

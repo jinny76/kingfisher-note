@@ -633,6 +633,25 @@ export default {
               },
             },
             {
+              hotkey: '⇧⌘S',
+              name: 'insert-start',
+              tipPosition: 's',
+              tip: '插入起点',
+              className: 'right',
+              icon: '<svg t="1715042911547" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="13204" width="200" height="200"><path d="M244.285281 180.348274c-147.887825 147.823832-147.887825 387.573609 0 535.429438l192.298968 192.298967a106.644336 106.644336 0 0 0 150.831502 0l192.298968-192.298967c147.887825-147.823832 147.887825-387.573609 0-535.429438-147.823832-147.887825-387.573609-147.887825-535.429438 0z m512.807912 22.621526c135.377193 135.345197 135.377193 354.841189 0 490.186386l-192.298967 192.298967a74.647835 74.647835 0 0 1-105.588452 0l-192.298967-192.298967c-135.377193-135.345197-135.377193-354.841189 0-490.186386 132.977456-133.009452 347.162029-135.345197 482.987173-7.03923l7.199213 7.03923z" fill="#FFFFFF" p-id="13205"></path><path d="M683.24527 491.802209c-3.071664 31.484556-7.67916 51.834331-13.822488 61.433281-5.75937 9.214992-18.429984 14.206446-38.395801 14.206446h-69.11244c-23.03748 0-34.55622-11.51874-34.556221-34.55622v-131.313638h100.213039V340.874717h-104.436577V303.662787h143.600294v135.921134h-99.445123v77.175558c0 7.67916 4.223538 11.51874 12.670614 11.902699h44.539128c8.447076 0 13.43853-3.83958 15.742279-10.750825 2.303748-6.911244 3.83958-19.965816 4.991454-38.779758l38.011842 12.670614z m-322.908682-25.341228l35.708095 4.223538a596.414767 596.414767 0 0 1-5.75937 65.656819c9.214992 14.590404 19.1979 25.725186 29.948724 33.788304v-122.482603h-74.871811v-36.859969h65.656819v-45.307044h-59.129533V329.355977h59.129533V280.241349h39.931632v49.146624h54.905995v36.092053h-54.905995v45.307044h59.897449v36.859969h-51.834331v43.003296h49.914541v36.092053h-49.914541v60.665364c23.805396 4.607496 66.040777 7.295202 126.706142 7.295202 46.842877-0.383958 81.783055-1.151874 104.820535-2.687706l-6.911244 38.395801H594.550971c-90.230131 0-146.671958-5.375412-169.32548-15.35832-16.126236-7.67916-30.71664-19.581858-43.387255-36.476011-5.375412 20.733732-11.51874 40.699548-19.1979 59.513491l-31.100598-27.261018c16.894152-43.387255 26.493102-91.382005 28.79685-144.36821z" fill="#FFFFFF" p-id="13206"></path></svg>',
+              click() {
+                if (noteModel.currNote.value.name) {
+                  noteModel.startingPoint.value = Date.now();
+                  insertContent('screenshot');
+                  setTimeout(() => {
+                    insertText(`\n\n[[起点]](start://${Date.now()})\n`);
+                  }, 200);
+                } else {
+                  ElMessage.warning('请先打开一个笔记');
+                }
+              },
+            },
+            {
               hotkey: '⇧⌘R',
               name: 'ocr',
               tipPosition: 's',
@@ -805,14 +824,17 @@ export default {
     let insertAllListener = function(event, arg) {
       let data = JSON.parse(arg);
       if (data) {
+        if (noteModel.startingPoint.value > 0) {
+          data.time = (Date.now() - noteModel.startingPoint.value) / 1000;
+        }
         if (!handleInsert) {
           let content;
-          if (data.time && data.screenshotId) {
+          if (data.time && data.screenshotId && data.type === 'all') {
             content = '\n\n' + formatTime(data.time) + '\n' + insertMdImg(data.screenshotId) + '\n';
             noteModel.lastScreenshot.value = data.screenshotId;
-          } else if (data.time) {
+          } else if (data.time && data.type === 'timestamp') {
             content = '\n\n' + formatTime(data.time) + '\n';
-          } else if (data.screenshotId) {
+          } else if (data.screenshotId && data.type === 'screenshot') {
             content = '\n\n' + insertMdImg(data.screenshotId) + '\n';
             noteModel.lastScreenshot.value = data.screenshotId;
           }

@@ -103,6 +103,8 @@ const currPage = ref(1);
 
 const aiServer = 'https://ai.kingfisher.live/aiapi/';
 
+const startingPoint = ref(0)
+
 export default {
   currNote,
   noteList,
@@ -124,5 +126,6 @@ export default {
   openTime,
   aiServer,
   insertFor,
-  aiServers
+  aiServers,
+  startingPoint,
 };

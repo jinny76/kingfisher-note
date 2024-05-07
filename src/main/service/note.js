@@ -15,12 +15,12 @@ const install = (mainWindow, windowManager) => {
   ipcMain.handle('/note/insertAll', (event, params) => {
     console.log('开始插入内容');
     // save file to "note" folder
-    const {time, screenshot} = JSON.parse(params);
+    const {time, screenshot, type} = JSON.parse(params);
 
-    return insertAll(time, screenshot);
+    return insertAll(time, screenshot, type);
   });
 
-  function insertAll(time, screenshot) {
+  function insertAll(time, screenshot, type) {
     console.log(storeService.setting.screenshotDir);
 
     if (!fs.existsSync(storeService.setting.screenshotDir)) {
@@ -40,7 +40,7 @@ const install = (mainWindow, windowManager) => {
 
     windowManager.main.focus();
     windowManager.main.webContents.send('/client/insertAll',
-      JSON.stringify({time, screenshotId}));
+      JSON.stringify({time, screenshotId, type}));
 
     return {
       code: 200, message: '保存成功',
@@ -252,7 +252,7 @@ const install = (mainWindow, windowManager) => {
     ws.on('message', message => {
       let data = JSON.parse(message);
       if (data.action === 'insertContent') {
-        insertAll(data.time, data.screenshot);
+        insertAll(data.time, data.screenshot, data.type);
       } else if (data.action === 'getTimestamp') {
         let videoWindow = windowManager.findWindowByRoute('/video/');
         if (videoWindow) {
