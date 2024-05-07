@@ -1,4 +1,5 @@
 import {ipcMain} from 'electron';
+const log = require('electron-log');
 
 const install = (mainWindow, windowManager) => {
   ipcMain.handle('/system/info', (event, params) => ({
@@ -42,8 +43,23 @@ const install = (mainWindow, windowManager) => {
     };
   });
 
+  ipcMain.handle('/system/isWindowExist', (event, params) => {
+    if (windowManager.findWindowByRoute(`/${params}/`)) {
+      return {
+        code: 200,
+        result: true,
+      };
+    } else {
+      return {
+        code: 200,
+        result: false,
+      };
+    }
+  });
+
   ipcMain.handle('/system/redirect', (event, params) => {
-    if (typeof params === 'string' && params.length > 0 && (params[0] === '{' || params[0] === '[')) {
+    if (typeof params === 'string' && params.length > 0 &&
+        (params[0] === '{' || params[0] === '[')) {
       params = JSON.parse(params);
     }
 
@@ -75,7 +91,7 @@ const install = (mainWindow, windowManager) => {
     }
   });
 
-  console.log('注册系统服务');
+  log.log('注册系统服务');
 };
 
 export default {

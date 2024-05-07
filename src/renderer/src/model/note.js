@@ -33,9 +33,20 @@ const insertFor = [
 ];
 
 const aiServers = [
-  {label:'OpenAI', value:"https://api.openai.com/v1/chat/completions"},
-  {label:'Kimi', value:"https://api.moonshot.cn/v1"},
-]
+  {label: 'OpenAI', value: 'https://api.openai.com/v1/chat/completions'},
+  {label: 'Kimi', value: 'https://api.moonshot.cn/v1'},
+];
+
+const favoriteContent = localStorage.getItem('KC_FAVORITE');
+
+const favorite = ref(favoriteContent ? JSON.parse(favoriteContent) : [
+  '此处甚好',
+  '这里是重点',
+  '这里有问题，留后续整理',
+  '这里不太明白',
+]);
+
+localStorage.getItem('KC_FAVORITE', JSON.stringify(favorite.value));
 
 const settingReady = ref(false);
 
@@ -103,7 +114,7 @@ const currPage = ref(1);
 
 const aiServer = 'https://ai.kingfisher.live/aiapi/';
 
-const startingPoint = ref(0)
+const startingPoint = ref(0);
 
 export default {
   currNote,
@@ -128,4 +139,5 @@ export default {
   insertFor,
   aiServers,
   startingPoint,
+  favorite,
 };

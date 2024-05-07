@@ -1,5 +1,7 @@
 (function printLogo() {
-  console.log(`
+  const log = require('electron-log');
+
+  log.log(`
 
 
    ..:.................. .

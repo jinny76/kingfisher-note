@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
 import storeService from './service/store';
+const log = require('electron-log');
 
 export const initHttpServer = () => {
   const server = express();
@@ -20,6 +21,6 @@ export const initHttpServer = () => {
 
   server.use('/vditor', express.static('./resources/vditor'));
 
-  server.listen(13999, () => console.log(
+  server.listen(13999, () => log.log(
       'HTTP 服务器启动 http://localhost:13999'));
 };

@@ -15,17 +15,20 @@
         <el-button @click="searchPrev">上一个</el-button>
         <el-button @click="closeSearch">X</el-button>
       </div>
+      <div :style="popStyle" class="favorite-panel">
+        <div v-for="item in favorite" class="favorite-item" @click="useFavorite(item)">{{ item }}</div>
+      </div>
       <div id="idNoteEditor" ref="noteEditor">
       </div>
     </el-main>
   </el-container>
   <input ref="fileInput" accept="video/*,audio/*,application/pdf,text/html" style="display: none" type="file"
-         @change="selectFileAndPlay" />
+         @change="selectFileAndPlay"/>
   <el-dialog v-model="dialogOpenVisible" align-center draggable title="打开笔记" width="900">
     <el-input v-model="noteSearch" placeholder="搜索笔记, 可以根据名字和标签搜索, 支持拼音搜索">
       <template #append>
         全文：
-        <el-switch v-model="fullTextSearch" />
+        <el-switch v-model="fullTextSearch"/>
       </template>
     </el-input>
     <el-table v-if="!fullTextSearch" :data="noteList" empty-text="没有找到笔记" max-height="200px" stripe
@@ -160,7 +163,7 @@ export default {
           tags: note.tags,
           key: note.key,
           like: note.like,
-          auto: auto,
+          auto,
         }), result => {
           console.log('保存笔记成功', result);
           if (!auto) {
@@ -196,11 +199,14 @@ export default {
       }
     };
 
+    const windowOpen = ref(false);
+
     const openVideo = (video, insertNote = false, cb) => {
       if ('same' === noteModel.setting.value.displayMode) {
         noteModel.videoUrl.value = video;
       } else {
         service.send('window-new', {route: '/video/' + encodeURIComponent(video), alwaysOnTop: true});
+        windowOpen.value = true;
       }
       lastVideo = video;
       noteModel.currPage.value = 1;
@@ -228,9 +234,7 @@ export default {
 
     watch(noteModel.currNote, () => { // 新的笔记打开
       if (editor) {
-        utils.runUntil(() => {
-          return editor.vditor.lute != null;
-        }, () => {
+        utils.runUntil(() => editor.vditor.lute != null, () => {
           if (noteModel.currNote.value.data == undefined) {
             noteModel.currNote.value.data = '';
           }
@@ -261,9 +265,10 @@ export default {
         let path = res.result.path;
         if (path.endsWith('.wav') || path.endsWith('.mp3')) {
           insertText(
-            `\n\n[音频](kingfisher://${path}) [[转文字](tts://${path.substring(path.lastIndexOf('/') + 1) + '/'})]\n`);
+              `\n\n[音频](kingfisher://${path}) [[转文字](tts://${path.substring(path.lastIndexOf('/') + 1) +
+              '/'})]\n`);
         } else if (path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.gif')
-          || path.endsWith('.bmp') || path.endsWith('.webp')) {
+            || path.endsWith('.bmp') || path.endsWith('.webp')) {
           insertText(`\n\n![](kingfisher://${path})\n`);
         } else {
           insertText(`\n\n[[附件 ${path.substring(path.lastIndexOf('/') + 1)}]](kingfisher://${path})\n`);
@@ -307,13 +312,13 @@ export default {
                 while (parentNode.tagName !== 'DIV') {
                   parentNode = parentNode.parentNode;
                 }
-                if ((noteModel.setting.value.autoTimestamp === 'chapter' &&
-                    currNode.parentNode.innerText.indexOf('[[位置')
-                    === -1 && currNode.parentNode.previousSibling?.innerText?.startsWith('#'))
-                  || (noteModel.setting.value.autoTimestamp === 'any' && content.length > 0
-                    && content.replaceAll('\n', '') !== '' && content.indexOf('[[位置') === -1
-                    && content !== ')')) {
-                  handleInsert = (data) => {
+                if (noteModel.setting.value.autoTimestamp === 'chapter' &&
+                        currNode.parentNode.innerText.indexOf('[[位置')
+                        === -1 && currNode.parentNode.previousSibling?.innerText?.startsWith('#')
+                    || noteModel.setting.value.autoTimestamp === 'any' && content.length > 0
+                        && content.replaceAll('\n', '') !== '' && content.indexOf('[[位置') === -1
+                        && content !== ')') {
+                  handleInsert = data => {
                     let text = formatTime(data.time);
                     selObj = window.getSelection();
                     range = selObj.getRangeAt(0);
@@ -378,9 +383,7 @@ export default {
                   service.invoke('/store/downloadAsset', path, result => {
                     if (result.code === 200) {
                       let file = new File([result.data], 'audio.wav', {type: 'audio/wav'});
-                      aiService.stt(file, result => {
-                        insertText(`\n> ${result.message}\n`);
-                      });
+                      aiService.stt(file, result => insertText(`\n> ${result.message}\n`));
                     } else {
                       ElMessage.error('下载失败');
                     }
@@ -396,18 +399,15 @@ export default {
                       confirmButtonText: '是',
                       cancelButtonText: '否',
                       type: 'success',
-                    }).then(() => {
-                      analysisSubtitle(JSON.stringify({fileName: dom.href.replace('subtitle://', '')}));
-                    }).catch(() => {
-                      service.invoke('/store/downloadFile', dom.href.replace('subtitle://', ''), r => {
-                        if (r.code === 200) {
-                          copyText(new TextDecoder().decode(r.data));
-                          ElMessage.success('字幕已经复制到剪贴板');
-                        } else {
-                          ElMessage.error('下载失败');
-                        }
-                      });
-                    });
+                    }).then(() => analysisSubtitle(JSON.stringify({fileName: dom.href.replace('subtitle://', '')}))).catch(() =>
+                        service.invoke('/store/downloadFile', dom.href.replace('subtitle://', ''), r => {
+                          if (r.code === 200) {
+                            copyText(new TextDecoder().decode(r.data));
+                            ElMessage.success('字幕已经复制到剪贴板');
+                          } else {
+                            ElMessage.error('下载失败');
+                          }
+                        }));
                   } else {
                     ElMessage.warning('设置了AI服务就可以对字幕进行分析');
                   }
@@ -423,7 +423,7 @@ export default {
                     let startIndex = content.indexOf('(', videoIndex);
                     let endIndex = content.indexOf(')', videoIndex);
                     videoUrl = decodeURIComponent(
-                      content.substring(startIndex + 1, endIndex).replace('kingfisher://', ''));
+                        content.substring(startIndex + 1, endIndex).replace('kingfisher://', ''));
                     if (videoUrl.startsWith('vhttps://') || videoUrl.startsWith('vhttp://')) {
                       videoUrl = website.handleReplacedWebsite(videoUrl);
                     }
@@ -431,12 +431,11 @@ export default {
                   if (lastVideo != videoUrl) {
                     closeVideo();
                     nextTick(() =>
-                      openVideo(videoUrl, false, () => {
-                        service.invoke('/note/locateVideo', JSON.stringify({
-                          videoUrl,
-                          location: dom.href.replace('timestamp://', ''),
-                        }));
-                      }));
+                        openVideo(videoUrl, false, () =>
+                            service.invoke('/note/locateVideo', JSON.stringify({
+                              videoUrl,
+                              location: dom.href.replace('timestamp://', ''),
+                            }))));
                   } else {
                     service.invoke('/note/locateVideo', JSON.stringify({
                       videoUrl,
@@ -477,19 +476,15 @@ export default {
               icon: '<svg t="1714563898775" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4246" width="200" height="200"><path d="M341.205333 682.666667H170.922667A85.12 85.12 0 0 1 85.333333 597.418667V426.581333C85.333333 379.178667 123.648 341.333333 170.922667 341.333333h170.282666A85.333333 85.333333 0 0 1 426.666667 426.666667H170.922667C170.538667 426.666667 170.666667 597.418667 170.666667 597.418667c0 0.128 256-0.085333 256-0.085334 0 47.146667-38.101333 85.333333-85.461334 85.333334z m511.872-85.333334c0.426667 0 0.256-170.752 0.256-170.752L597.333333 426.666667c0-47.146667 38.101333-85.333333 85.461334-85.333334h170.282666C900.352 341.333333 938.666667 379.178667 938.666667 426.581333v170.837334A85.12 85.12 0 0 1 853.077333 682.666667h-170.282666A85.333333 85.333333 0 0 1 597.333333 597.333333h255.744z m-213.205333-128A42.410667 42.410667 0 0 1 682.666667 512c0 23.722667-19.157333 42.666667-42.794667 42.666667H384.128A42.410667 42.410667 0 0 1 341.333333 512c0-23.722667 19.157333-42.666667 42.794667-42.666667h255.744z" fill="#FFFFFF" p-id="4247"></path></svg>',
               click() {
                 if (window.event.ctrlKey) {
-                  handleEvent({name: 'insertLink'}, (result) => {
+                  handleEvent({name: 'insertLink'}, result => {
                     if (result) {
                       editor.focus();
-                      nextTick(() => {
-                        editor.insertValue(result);
-                      });
+                      nextTick(() => editor.insertValue(result));
                     }
                   });
                 } else {
                   editor.focus();
-                  nextTick(() => {
-                    editor.insertValue('\n[]()\n');
-                  });
+                  nextTick(() => editor.insertValue('\n[]()\n'));
                 }
               },
             },
@@ -560,8 +555,8 @@ export default {
                     inputPattern: /\S/,
                     inputErrorMessage: '网址不能为空',
                   }).
-                    then(({value}) => openVideo(value.replace('http', 'vhttp'), true)).
-                    catch(() => console.log('取消打开网址'));
+                      then(({value}) => openVideo(value.replace('http', 'vhttp'), true)).
+                      catch(() => console.log('取消打开网址'));
                 } else {
                   ElMessage.warning('请先打开一个笔记');
                 }
@@ -643,9 +638,29 @@ export default {
                 if (noteModel.currNote.value.name) {
                   noteModel.startingPoint.value = Date.now();
                   insertContent('screenshot');
-                  setTimeout(() => {
-                    insertText(`\n\n[[起点]](start://${Date.now()})\n`);
-                  }, 200);
+                  setTimeout(() => insertText(`\n\n[[起点]](start://${Date.now()})\n`), 200);
+                } else {
+                  ElMessage.warning('请先打开一个笔记');
+                }
+              },
+            },
+            {
+              hotkey: '⇧⌘Z',
+              name: 'insert-tips',
+              tipPosition: 's',
+              tip: '插入常用语句',
+              className: 'right',
+              icon: '<svg t="1715062254097" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4471" width="200" height="200"><path d="M815.261538 781.784615l-17.723076 17.723077c-19.692308 19.692308-45.292308 29.538462-72.861539 29.538462h-51.2c-47.261538 0-98.461538-37.415385-98.461538-102.4v-49.230769c0-39.384615 17.723077-63.015385 27.56923-76.8l212.676923-216.615385c5.907692-5.907692 11.815385-19.692308 11.815385-27.569231V192.984615C827.076923 141.784615 783.753846 98.461538 732.553846 98.461538H228.430769C177.230769 98.461538 133.907692 145.723077 133.907692 192.984615H102.4C66.953846 192.984615 39.384615 222.523077 39.384615 257.969231s27.569231 63.015385 63.015385 63.015384h31.507692v128H102.4C66.953846 448.984615 39.384615 476.553846 39.384615 512s27.569231 63.015385 63.015385 63.015385h31.507692v128H102.4c-35.446154 0-63.015385 29.538462-63.015385 63.015384 0 35.446154 27.569231 63.015385 63.015385 63.015385h31.507692c0 63.015385 43.323077 94.523077 94.523077 94.523077h504.123077c51.2 0 94.523077-43.323077 94.523077-94.523077V787.692308c0-9.846154-3.938462-11.815385-11.815385-5.907693z m-161.476923-445.046153c0 17.723077-13.784615 31.507692-31.507692 31.507692h-315.076923c-17.723077 0-31.507692-13.784615-31.507692-31.507692v-31.507693c0-17.723077 13.784615-31.507692 31.507692-31.507692h315.076923c17.723077 0 31.507692 13.784615 31.507692 31.507692v31.507693zM512 718.769231c0 17.723077-13.784615 31.507692-31.507692 31.507692h-173.292308c-17.723077 0-31.507692-13.784615-31.507692-31.507692v-31.507693c0-17.723077 13.784615-31.507692 31.507692-31.507692h173.292308c17.723077 0 31.507692 13.784615 31.507692 31.507692v31.507693z m47.261538-191.015385c0 17.723077-13.784615 31.507692-31.507692 31.507692H307.2c-17.723077 0-31.507692-13.784615-31.507692-31.507692v-31.507692c0-17.723077 13.784615-31.507692 31.507692-31.507692h220.553846c17.723077 0 31.507692 13.784615 31.507692 31.507692v31.507692z m415.507693-86.646154l-19.692308-19.692307c-11.815385-11.815385-31.507692-11.815385-43.323077 0L671.507692 669.538462c-1.969231 0-1.969231 3.938462-1.96923 3.938461v53.169231c0 3.938462 0 7.876923 3.938461 7.876923h51.2c1.969231 0 3.938462-1.969231 5.907692-1.969231l242.215385-244.184615c15.753846-13.784615 15.753846-33.476923 1.969231-47.261539z" fill="#FFFFFF" p-id="4472"></path></svg>',
+              click() {
+                if (noteModel.currNote.value.name) {
+                  let selection = window.getSelection();
+                  let range = selection.getRangeAt(0);
+                  let text = range.commonAncestorContainer;
+                  popStyle.value = {
+                    display: 'block',
+                    left: text.offsetLeft + 'px',
+                    top: text.offsetTop + 'px',
+                  };
                 } else {
                   ElMessage.warning('请先打开一个笔记');
                 }
@@ -743,13 +758,7 @@ export default {
           ],
         });
 
-        utils.runUntil(() => {
-          return document.querySelector('.vditor-sv');
-        }, () => {
-          keyManager.registerHotkeyProcessor('ctrl+alt+v', () => {
-            ElMessage.success('视频快捷键已启用');
-          });
-        });
+        utils.runUntil(() => document.querySelector('.vditor-sv'), () => keyManager.registerHotkeyProcessor('ctrl+alt+v', () => ElMessage.success('视频快捷键已启用')));
       }
     });
 
@@ -871,9 +880,7 @@ export default {
           ElMessage.error('分析字幕失败');
         }
         loading.close();
-      }, () => {
-        loading.close();
-      });
+      }, () => loading.close());
     }
 
     let captureSubtitleListener = function(event, arg) {
@@ -882,11 +889,7 @@ export default {
           confirmButtonText: '是',
           cancelButtonText: '否',
           type: 'success',
-        }).then(() => {
-          analysisSubtitle(arg);
-        }).catch(() => {
-          insertText(`\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`);
-        });
+        }).then(() => analysisSubtitle(arg)).catch(() => insertText(`\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`));
       } else {
         insertText(`\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`);
       }
@@ -933,12 +936,18 @@ export default {
           insertText(content);
         } else if (arg.type === 'audio') {
           let content = `\n\n[音频](kingfisher://${arg.fileName}) [[转文字](tts://${arg.fileName.substring(
-            arg.fileName.lastIndexOf('/') + 1) + '/'})]\n`;
+              arg.fileName.lastIndexOf('/') + 1) + '/'})]\n`;
           insertText(content);
         }
       }
     };
     electron.ipcRenderer.on('/client/record-save', recordSaveListener);
+
+    let windowCloseListener = function(event, arg) {
+      windowOpen.value = false;
+      console.log("视频窗口关闭");
+    };
+    electron.ipcRenderer.on('/client/window-close', windowCloseListener);
 
     // format 1.2222 to 0:0:1
     function formatTime(second) {
@@ -965,28 +974,28 @@ export default {
       window.electron.ipcRenderer.removeListener('/client/record-save', recordSaveListener);
       window.electron.ipcRenderer.removeListener('/client/captureSubtitle', captureSubtitleListener);
       window.electron.ipcRenderer.removeListener('/client/analysisSubtitle', analysisSubtitleListener);
+      window.electron.ipcRenderer.removeListener('/client/window-close', windowCloseListener);
     });
 
-    const createNewNote = () => {
-      ElMessageBox.prompt('请输入笔记名称', '新建笔记', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputPattern: /\S/,
-        inputErrorMessage: '笔记名称不能为空',
-      }).then(({value}) => {
-        closeVideo();
-        service.invoke('/store/newNote', value, result => {
-          if (result.code === 200) {
-            noteModel.currNote.value = {
-              name: value + '.kfnote',
-              data: '',
-            };
-          } else {
-            ElMessage.warning(result.message);
-          }
-        });
-      }).catch(() => console.log('取消新建笔记'));
-    };
+    const createNewNote = () =>
+        ElMessageBox.prompt('请输入笔记名称', '新建笔记', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputPattern: /\S/,
+          inputErrorMessage: '笔记名称不能为空',
+        }).then(({value}) => {
+          closeVideo();
+          service.invoke('/store/newNote', value, result => {
+            if (result.code === 200) {
+              noteModel.currNote.value = {
+                name: value + '.kfnote',
+                data: '',
+              };
+            } else {
+              ElMessage.warning(result.message);
+            }
+          });
+        }).catch(() => console.log('取消新建笔记'));
 
     const listNote = () => {
       dialogOpenVisible.value = true;
@@ -1188,10 +1197,10 @@ export default {
         } else if (previousTag === 'MAIN' && nextTag === 'ASIDE') {
           type = 'MAIN-ASIDE';
         } else if (previousTag === 'HEADER' && nextTag === 'MAIN' ||
-          previousTag === 'FOOTER' && nextTag === 'MAIN') {
+            previousTag === 'FOOTER' && nextTag === 'MAIN') {
           type = 'HEADER-MAIN';
         } else if (previousTag === 'MAIN' && nextTag === 'HEADER' ||
-          previousTag === 'MAIN' && nextTag === 'FOOTER') {
+            previousTag === 'MAIN' && nextTag === 'FOOTER') {
           type = 'MAIN-HEADER';
         }
 
@@ -1279,15 +1288,15 @@ export default {
     }
 
     const showHelp = () =>
-      nextTick(() =>
-        Vditor.preview(document.getElementById('idHelp'), helpContent, {
-          cdn: 'http://localhost:13999/vditor',
-          theme: 'dark',
-          width: '100%',
-          height: '100%',
-          mode: 'sv',
-          icon: 'material',
-        }));
+        nextTick(() =>
+            Vditor.preview(document.getElementById('idHelp'), helpContent, {
+              cdn: 'http://localhost:13999/vditor',
+              theme: 'dark',
+              width: '100%',
+              height: '100%',
+              mode: 'sv',
+              icon: 'material',
+            }));
 
     const loadVersion = time => {
       let note = {
@@ -1314,19 +1323,20 @@ export default {
           cancelButtonText: '取消',
           type: 'warning',
         }).then(() =>
-          service.invoke('/store/deleteNote', JSON.stringify({path: noteModel.currNote.value.name}), result => {
-            if (result.code === 200) {
-              ElMessage.success('删除成功');
-              noteModel.recentNotes.value = noteModel.recentNotes.value.filter(note => note.name !== noteModel.currNote.value.name);
-              localStorage.setItem('RECENT_NOTES', JSON.stringify(recentNotes.value));
-              noteModel.currNote.value = {
-                name: '',
-                data: '',
-              };
-            } else {
-              ElMessage.warning(result.message);
-            }
-          })).catch(() => console.log('取消删除笔记'));
+            service.invoke('/store/deleteNote', JSON.stringify({path: noteModel.currNote.value.name}), result => {
+              if (result.code === 200) {
+                ElMessage.success('删除成功');
+                noteModel.recentNotes.value = noteModel.recentNotes.value.filter(
+                    note => note.name !== noteModel.currNote.value.name);
+                localStorage.setItem('RECENT_NOTES', JSON.stringify(recentNotes.value));
+                noteModel.currNote.value = {
+                  name: '',
+                  data: '',
+                };
+              } else {
+                ElMessage.warning(result.message);
+              }
+            })).catch(() => console.log('取消删除笔记'));
       } else {
         ElMessage.warning('请先打开笔记');
       }
@@ -1342,17 +1352,17 @@ export default {
             inputErrorMessage: '密码不能为空',
             inputType: 'password',
           }).then(({value}) =>
-            service.invoke('/store/encryptNote', JSON.stringify({
-              path: noteModel.currNote.value.name,
-              key: value,
-            }), result => {
-              if (result.code === 200) {
-                ElMessage.success('加密成功，请完事保存密码，系统不会保存密码，也无法找回');
-                noteModel.currNote.value.key = value;
-              } else {
-                ElMessage.warning(result.message);
-              }
-            })).catch(() => console.log('取消加密笔记'));
+              service.invoke('/store/encryptNote', JSON.stringify({
+                path: noteModel.currNote.value.name,
+                key: value,
+              }), result => {
+                if (result.code === 200) {
+                  ElMessage.success('加密成功，请完事保存密码，系统不会保存密码，也无法找回');
+                  noteModel.currNote.value.key = value;
+                } else {
+                  ElMessage.warning(result.message);
+                }
+              })).catch(() => console.log('取消加密笔记'));
         } else {
           ElMessage.warning('笔记已加密');
         }
@@ -1421,9 +1431,7 @@ export default {
       doSearch(textSearch.value.text, true);
     };
 
-    const searchPrev = () => {
-      doSearch(textSearch.value.text, false);
-    };
+    const searchPrev = () => doSearch(textSearch.value.text, false);
 
     const doSearch = (text, direction) => {
       editor.focus();
@@ -1585,7 +1593,25 @@ export default {
       });
     };
 
+    const popStyle = ref({
+      display: 'none',
+    });
+
+    const useFavorite = item => {
+      handleInsert = data => {
+        clearTimeout(timer);
+        let text = formatTime(data.time);
+        insertText(`\n\n${item} ${text}\n`);
+        handleInsert = null;
+      };
+      insertContent('timestamp');
+      popStyle.value.display = 'none';
+      let timer = setTimeout(() => insertText(`\n\n${item}\n`), 1000);
+    };
+
     return {
+      popStyle,
+      useFavorite,
       searchBox,
       textSearch,
       closeSearch,
@@ -1616,6 +1642,7 @@ export default {
       showHelp,
       tags: noteModel.tags,
       drag,
+      favorite: noteModel.favorite,
     };
   },
 };
@@ -1623,6 +1650,24 @@ export default {
 </script>
 
 <style>
+.favorite-panel {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid dodgerblue;
+  box-shadow: dodgerblue 0px 0px 10px;
+  background-color: rgb(84, 92, 100);
+
+  .favorite-item {
+    padding: 5px;
+    cursor: pointer;
+  }
+
+  .favorite-item:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: dodgerblue;
+  }
+}
+
 .vertical-dragbar {
   width: 5px;
   height: 100%;

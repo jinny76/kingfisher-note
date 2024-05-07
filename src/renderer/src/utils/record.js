@@ -27,7 +27,7 @@ class Recorder {
 
       let _self = this;
       let getMediaSuccess = function(stream) {
-        console.log('success get ===========');
+        console.log('获取流成功！');
         let mediaSource = _self.audioContext.createMediaStreamSource(stream);
 
         mediaSource.connect(audioNode);
@@ -53,7 +53,7 @@ class Recorder {
             {types: ['screen']},
         ).then(async sources => {
           for (const source of sources) {
-            console.log(source.name);
+            console.log("源名称", source.name);
             if (source.name === 'Entire screen' || source.name ===
                 'Entire Screen') {
               try {
@@ -101,7 +101,7 @@ class Recorder {
     try {
       this.audioContext.close();
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 

@@ -10,10 +10,11 @@ import {
 } from '../video/server';
 
 const rootPath = process.cwd();
+const log = require('electron-log');
 
 const install = (mainWindow, windowManager) => {
   ipcMain.handle('/note/insertAll', (event, params) => {
-    console.log('开始插入内容');
+    log.log('开始插入内容');
     // save file to "note" folder
     const {time, screenshot, type} = JSON.parse(params);
 
@@ -21,8 +22,6 @@ const install = (mainWindow, windowManager) => {
   });
 
   function insertAll(time, screenshot, type) {
-    console.log(storeService.setting.screenshotDir);
-
     if (!fs.existsSync(storeService.setting.screenshotDir)) {
       fs.mkdirSync(storeService.setting.screenshotDir);
     }
@@ -34,13 +33,13 @@ const install = (mainWindow, windowManager) => {
       const dataBuffer = Buffer.from(base64Data, 'base64');
       screenshotId = new Date().getTime();
       fs.writeFileSync(
-        `${storeService.setting.screenshotDir}/${screenshotId}.png`,
-        dataBuffer);
+          `${storeService.setting.screenshotDir}/${screenshotId}.png`,
+          dataBuffer);
     }
 
     windowManager.main.focus();
     windowManager.main.webContents.send('/client/insertAll',
-      JSON.stringify({time, screenshotId, type}));
+        JSON.stringify({time, screenshotId, type}));
 
     return {
       code: 200, message: '保存成功',
@@ -48,7 +47,7 @@ const install = (mainWindow, windowManager) => {
   }
 
   ipcMain.handle('/note/locateVideo', (event, params) => {
-    console.log('开始定位视频', params);
+    log.log('开始定位视频', params);
     let videoWindow = windowManager.findWindowByRoute('/video/');
     if (videoWindow) {
       videoWindow.webContents.send('/client/locateVideo', params);
@@ -95,7 +94,7 @@ const install = (mainWindow, windowManager) => {
   ipcMain.handle('/note/convert', async (event, params) => {
     let request = JSON.parse(params);
     await convert(request.files, request.options.h264 ? 'h264' : null,
-      request.options.mp3 ? 'mp3' : null);
+        request.options.mp3 ? 'mp3' : null);
     return {
       code: 200,
     };
@@ -121,10 +120,10 @@ const install = (mainWindow, windowManager) => {
     };
   });
 
-  ipcMain.handle('/note/extractSubtitle', async(event, params) => {
+  ipcMain.handle('/note/extractSubtitle', async (event, params) => {
     let result = await extractSubtitle(JSON.parse(params));
     mainWindow.webContents.send('/client/captureSubtitle',
-      JSON.stringify({fileName: result.result}));
+        JSON.stringify({fileName: result.result}));
     return result;
   });
 
@@ -132,48 +131,47 @@ const install = (mainWindow, windowManager) => {
     ws.send(JSON.stringify({
       action: 'insertContent', args: params,
     }));
-    console.log('发送插入内容', params);
+    log.log('发送插入内容', params);
   });
 
   ipcMain.handle('/note/webLocateVideo', (event, params) => {
     ws.send(JSON.stringify({
       action: 'locateVideo', args: params,
     }));
-    console.log('定位视频', params);
+    log.log('定位视频', params);
   });
 
   ipcMain.handle('/note/webPlayVideo', (event, params) => {
     ws.send(JSON.stringify({
       action: 'playVideo',
     }));
-    console.log('播放视频', params);
+    log.log('播放视频', params);
   });
 
   ipcMain.handle('/note/webStopVideo', (event, params) => {
     ws.send(JSON.stringify({
       action: 'stopVideo',
     }));
-    console.log('暂停视频', params);
+    log.log('暂停视频', params);
   });
 
   ipcMain.handle('/note/webForward', (event, params) => {
     ws.send(JSON.stringify({
       action: 'forward', args: params,
     }));
-    console.log('快进', params);
+    log.log('快进', params);
   });
 
-  ipcMain.handle('/note/captureSubtitle', (event, params) => {
-    ws.send(JSON.stringify({
-      action: 'captureSubtitle',
-    }));
-  });
+  ipcMain.handle('/note/captureSubtitle', (event, params) =>
+      ws.send(JSON.stringify({
+        action: 'captureSubtitle',
+      })));
 
   ipcMain.handle('/note/webBackward', (event, params) => {
     ws.send(JSON.stringify({
       action: 'backward', args: params,
     }));
-    console.log('快退', params);
+    log.log('快退', params);
   });
 
   ipcMain.handle('/note/closeVideo', (event, params) => {
@@ -183,9 +181,8 @@ const install = (mainWindow, windowManager) => {
     }
   });
 
-  ipcMain.handle('/note/send', (event, params) => {
-    mainWindow.webContents.send('/client/send', params);
-  });
+  ipcMain.handle('/note/send', (event, params) => mainWindow.webContents.send(
+      '/client/send', params));
 
   ipcMain.handle('/note/changePage', (event, params) => {
     let videoWindow = windowManager.findWindowByRoute('/video/');
@@ -201,18 +198,17 @@ const install = (mainWindow, windowManager) => {
     }
   });
 
-  ipcMain.handle('/note/getTimestamp', (event, params) => {
-    ws.send(JSON.stringify({
-      action: 'getTimestamp',
-    }));
-  });
+  ipcMain.handle('/note/getTimestamp', (event, params) =>
+      ws.send(JSON.stringify({
+        action: 'getTimestamp',
+      })));
 
   ipcMain.handle('/note/ocr', async (event, params) => {
     let screenshot = `${storeService.setting.screenshotDir}/${params}.png`;
 
     if (worker) {
       const {data: {text}} = await worker.recognize(screenshot);
-      console.log(text);
+      log.log('识别结果', text);
       return {
         code: 200, message: '识别成功', data: text,
       };
@@ -238,15 +234,14 @@ const install = (mainWindow, windowManager) => {
     }
   });
 
-  ipcMain.handle('/note/analysisSubtitle', async (event, params) => {
-    mainWindow.webContents.send('/client/analysisSubtitle', params);
-  });
+  ipcMain.handle('/note/analysisSubtitle', async (event, params) => mainWindow.webContents.send(
+      '/client/analysisSubtitle', params));
 
   const WebSocketServer = require('ws').Server;
   let wss = new WebSocketServer({port: 18888});
   let ws;
   wss.on('connection', _ws => {
-    console.log('客户端已连接');
+    log.log('客户端已连接');
     ws = _ws;
 
     ws.on('message', message => {
@@ -257,7 +252,7 @@ const install = (mainWindow, windowManager) => {
         let videoWindow = windowManager.findWindowByRoute('/video/');
         if (videoWindow) {
           videoWindow.webContents.send('/client/getTimestamp',
-            JSON.stringify({time: data.time}));
+              JSON.stringify({time: data.time}));
         }
       } else if (data.action === 'captureSubtitle') {
         let args = data.args;
@@ -265,19 +260,19 @@ const install = (mainWindow, windowManager) => {
         if (args.type === 'bilibili') {
           let url = args.url.replace('/?', '?');
           let movieId = url.substring(url.lastIndexOf('/') + 1,
-            url.lastIndexOf('?'));
+              url.lastIndexOf('?'));
           let page = 1;
           let firstParam = url.substring(url.lastIndexOf('?') + 1,
-            url.indexOf('&')).
-            split('=');
+              url.indexOf('&')).
+              split('=');
           if (firstParam[0] === 'p') {
             page = firstParam[1];
           }
 
           fs.writeFileSync(
-            `${storeService.setting.assetsDir}/${movieId}-${page}.bilibili.json`,
-            JSON.stringify(args.subtitle),
-            {encoding: 'utf-8', overwrite: true});
+              `${storeService.setting.assetsDir}/${movieId}-${page}.bilibili.json`,
+              JSON.stringify(args.subtitle),
+              {encoding: 'utf-8', overwrite: true});
 
           let targetWindow;
 
@@ -288,7 +283,7 @@ const install = (mainWindow, windowManager) => {
           }
 
           targetWindow.webContents.send('/client/captureSubtitle',
-            JSON.stringify({fileName: `${movieId}-${page}.bilibili.json`}));
+              JSON.stringify({fileName: `${movieId}-${page}.bilibili.json`}));
         }
       }
     });
@@ -300,7 +295,7 @@ const install = (mainWindow, windowManager) => {
     worker = await createWorker('eng+chi_sim');
   })();
 
-  console.log('注册笔记服务');
+  log.log('注册笔记服务');
 };
 
 export default {

@@ -3,8 +3,10 @@ import storeService from './store';
 import {splitAudio, webmFix} from '../video/server';
 import fs from 'fs';
 
+const log = require('electron-log');
+
 const install = (mainWindow, windowManager) => {
-  //console.log(mainWindow.getMediaSourceId());
+  //log.log(mainWindow.getMediaSourceId());
   desktopCapturer.getSources({
     types: ['screen', 'window'], // 设定需要捕获的是"屏幕"，还是"窗口"
     thumbnailSize: {
@@ -14,14 +16,13 @@ const install = (mainWindow, windowManager) => {
   }).then(sources => {
     let index = 0;
     sources.forEach(source => {
-      //console.log('source' + index++, source);
+      //log.log('source' + index++, source);
     });
   });
 
   ipcMain.handle('/record/pop', (event, params) => {
     let videoWindow = windowManager.findWindowByRoute('/video/');
     if (videoWindow) {
-      console.log(videoWindow.getMediaSourceId());
       return {
         code: 200, message: videoWindow.getMediaSourceId(),
       };
@@ -49,7 +50,7 @@ const install = (mainWindow, windowManager) => {
         fileName: fileName,
         type: params,
       });
-      console.log('开始录制', fileName);
+      log.log('开始录制', fileName);
     } else {
       return {
         code: 500, message: '未找窗口',
@@ -76,7 +77,7 @@ const install = (mainWindow, windowManager) => {
   });
 
   ipcMain.handle('/record/save', async (event, params) => {
-    console.log('保存文件', params);
+    log.log('保存文件', params);
     await webmFix(params.fileName);
     fs.rmSync(params.fileName);
     params.fileName = params.fileName.replace('.webm', '.fixed.webm');
@@ -84,7 +85,7 @@ const install = (mainWindow, windowManager) => {
   });
 
   ipcMain.handle('/record/split', async (event, params) => {
-    console.log('切割文件', params);
+    log.log('切割文件', params);
     let result = await splitAudio(params.fileName);
     let target = result.target;
     //list all files

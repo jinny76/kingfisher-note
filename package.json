@@ -27,6 +27,7 @@
     "axios": "^1.6.8",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
+    "electron-log": "^5.1.2",
     "electron-updater": "^6.1.8",
     "element-plus": "^2.7.0",
     "express": "^4.19.2",

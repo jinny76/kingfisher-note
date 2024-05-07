@@ -1,6 +1,8 @@
 import http from 'node:http';
 import Ffmpeg from './ffmpeg';
 
+const log = require('electron-log');
+
 class StreamServer {
   constructor(port = 19555) {
     this.port = port;
@@ -10,7 +12,7 @@ class StreamServer {
     const ffmpeg = new Ffmpeg();
     ffmpeg.init();
     const server = http.createServer((request, response) => {
-      console.log(request.url);
+      log.log("请求", request.url);
       ffmpeg.kill();
       const url = new URL(request.url || '', `http://${request.headers.host}`);
       const input = url.searchParams.get('v');
@@ -23,13 +25,12 @@ class StreamServer {
         response.setHeaders(headers);
         //让options请求快速返回
         if (response.method === 'OPTIONS') {
-          console.log('OPTION');
           return response.end();
         }
         ffmpeg.create(input).pipe(response, {end: true});
       }
     });
-    server.listen(this.port, () => console.log(
+    server.listen(this.port, () => log.log(
         `视频服务器启动 ${this.port}`));
   }
 }
@@ -37,7 +38,6 @@ class StreamServer {
 export const convert = async (videoList, vcodec, acodec) => {
   const ffmpeg = new Ffmpeg();
   ffmpeg.init();
-  console.log(videoList);
   for (let i = 0; i < videoList.length; i++) {
     await ffmpeg.convert(videoList[i].path, vcodec, acodec);
   }
@@ -49,7 +49,6 @@ export const convert = async (videoList, vcodec, acodec) => {
 export const captureAudio = async (videoList, acodec) => {
   const ffmpeg = new Ffmpeg();
   ffmpeg.init();
-  console.log(videoList);
   for (let i = 0; i < videoList.length; i++) {
     await ffmpeg.captureAudio(videoList[i].path, acodec);
   }

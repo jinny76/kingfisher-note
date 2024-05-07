@@ -6,9 +6,10 @@ import OpenAI from 'openai';
 
 const aiServer = 'https://ai.kingfisher.live/aiapi/';
 
+const log = require('electron-log');
+
 const install = (mainWindow, windowManager) => {
   ipcMain.handle('/ai/stt', async (event, params) => {
-    console.log(params);
     if (!fs.existsSync(storeService.setting.assetsDir + '/' + params)) {
       return {code: 404, message: '文件不存在'};
     }
@@ -34,7 +35,7 @@ const install = (mainWindow, windowManager) => {
         let fileContent = fs.readFileSync(path);
         let json = JSON.parse(fileContent);
         if (json && json.body) {
-          json.body.map((item) => {
+          json.body.map(item => {
             contentSubtitle += item.content + '\n';
           });
         }
@@ -58,7 +59,8 @@ const install = (mainWindow, windowManager) => {
 
       if (contentSubtitle) {
         const client = new OpenAI({
-          baseURL: storeService.setting.aiServer, apiKey: storeService.setting.aiKey,
+          baseURL: storeService.setting.aiServer,
+          apiKey: storeService.setting.aiKey,
         });
 
         const completion = await client.chat.completions.create({
@@ -71,7 +73,7 @@ const install = (mainWindow, windowManager) => {
               content: `以下时一段视频的字幕内容, 请为我生成视频的学习笔记，需要是Markdown格式的。字幕内容是：\n${contentSubtitle}`,
             }], temperature: 0.3,
         });
-        console.log(completion.choices[0].message.content);
+        log.log('分析结果', completion.choices[0].message.content);
         return {
           code: 200,
           message: '生成成功',
@@ -81,7 +83,7 @@ const install = (mainWindow, windowManager) => {
     }
   });
 
-  console.log('注册AI服务');
+  log.log('注册AI服务');
 };
 
 export default {

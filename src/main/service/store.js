@@ -13,8 +13,9 @@ let iv = md5('kingisher note').substring(0, 16);
 const initVector = Buffer.from(iv);
 
 const rootPath = process.env.HOME || process.env.USERPROFILE;
+const log = require('electron-log');
 
-console.log('当前路径', rootPath);
+log.log('当前路径', rootPath);
 
 let setting = {
   noteDir: rootPath.replaceAll('\\', '/') + '/kfnote/note',
@@ -62,14 +63,14 @@ const saveNoteMeta = () => {
 
 //获取设置
 if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
-  console.log('未找到设置文件');
+  log.log('未找到设置文件');
   if (!fs.existsSync(rootPath + '/kfnote')) {
     fs.mkdirSync(rootPath + '/kfnote');
   }
   fs.writeFileSync(`${rootPath}/kfnote/setting.json`, JSON.stringify(setting),
       'utf-8');
   if (isDevelopment) {
-    console.log('设置文件已创建', setting);
+    log.log('设置文件已创建', setting);
   }
   loadNoteMeta();
 } else {
@@ -79,19 +80,19 @@ if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
     setting[key] = localSetting[key];
   });
   if (isDevelopment) {
-    console.log('设置文件已加载', setting);
+    log.log('设置文件已加载', setting);
   }
   loadNoteMeta();
 }
 
 const install = (mainWindow, windowManager) => {
   ipcMain.handle('/store/saveNote', (event, params) => {
-    console.log('开始保存文件');
+    log.log('开始保存文件');
     // save file to "note" folder
     const {path, data, tags, key, like, auto} = JSON.parse(params);
 
+    noteMeta[path] = noteMeta[path] || {};
     if (tags) {
-      noteMeta[path] = noteMeta[path] || {};
       noteMeta[path].tags = tags;
     }
     noteMeta[path].like = like;
@@ -134,7 +135,7 @@ const install = (mainWindow, windowManager) => {
   });
 
   ipcMain.handle('/store/encryptNote', (event, params) => {
-    console.log('开始加密文件');
+    log.log('开始加密文件');
     const {path, key} = JSON.parse(params);
 
     if (fs.existsSync(`${setting.noteDir}/${path}`)) {
@@ -205,7 +206,7 @@ const install = (mainWindow, windowManager) => {
   });
 
   ipcMain.handle('/store/getNoteList', (event, params) => {
-    console.log('开始获取文件列表');
+    log.log('开始获取文件列表');
     // get file list from "note" folder
     if (!fs.existsSync(setting.noteDir)) {
       return [];
@@ -226,7 +227,7 @@ const install = (mainWindow, windowManager) => {
   });
 
   ipcMain.handle('/store/getNote', (event, params) => {
-    console.log('开始获取文件');
+    log.log('开始获取文件');
     // get file from "note" folder
     let {path, time, key} = JSON.parse(params);
 
@@ -272,7 +273,7 @@ const install = (mainWindow, windowManager) => {
       Object.keys(newSetting).forEach(key => {
         setting[key] = newSetting[key];
       });
-      console.log('更新设置', setting);
+      log.log('更新设置', setting);
       fs.writeFileSync(`${rootPath}/kfnote/setting.json`,
           JSON.stringify(setting), 'utf-8');
     }
@@ -331,7 +332,7 @@ const install = (mainWindow, windowManager) => {
     if (params) {
       if (params.text) {
         fs.writeFileSync(params.fileName + '.txt', params.text);
-        console.log('保存成功', params.fileName + '.txt');
+        log.log('保存成功', params.fileName + '.txt');
         //remove directory of params.tempDir
         fs.rmdirSync(pathService.dirname(params.tempDir), {recursive: true});
 
@@ -351,7 +352,7 @@ const install = (mainWindow, windowManager) => {
   });
 
   ipcMain.handle('/store/newNote', (event, params) => {
-    console.log('开始新建文件');
+    log.log('开始新建文件');
     if (setting.noteDir) {
       if (!fs.existsSync(setting.noteDir)) {
         fs.mkdirSync(setting.noteDir);
@@ -376,7 +377,7 @@ const install = (mainWindow, windowManager) => {
   });
 
   ipcMain.handle('/store/searchAllLinesFromNotes', (event, params) => {
-    console.log('开始搜索所有笔记');
+    log.log('开始搜索所有笔记');
     const {keyword} = JSON.parse(params);
     const files = fs.readdirSync(setting.noteDir);
     let result = [];
@@ -405,7 +406,7 @@ const install = (mainWindow, windowManager) => {
     };
   });
 
-  console.log('注册存储服务');
+  log.log('注册存储服务');
 };
 
 const storeAssets = async (req, res) => {
@@ -413,7 +414,7 @@ const storeAssets = async (req, res) => {
     fs.mkdirSync(setting.assetsDir);
   }
 
-  console.log(req.files);
+  log.log(req.files);
   let file = req.files['file[]'];
   let target = setting.assetsDir + '/' + Date.now() +
       file.name.substring(file.name.lastIndexOf('.'));

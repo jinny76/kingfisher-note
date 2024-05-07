@@ -2,6 +2,8 @@ import {app, BrowserWindow, ipcMain, Menu, session, Tray} from 'electron';
 import path, {join} from 'path';
 import icon from '../../resources/icon.ico?asset';
 
+const log = require('electron-log');
+
 // 新建窗口时可以传入的一些options配置项
 export const windowsCfg = {
   id: null, //唯一 id
@@ -37,7 +39,7 @@ export class Window {
 
   // 窗口配置
   winOpts(options) {
-    console.log('窗口配置', options);
+    log.log('窗口配置', options);
     return {
       width: options.width || 800,
       height: options.height || 600,
@@ -79,6 +81,7 @@ export class Window {
   // 创建窗口
   createWindows(options) {
     let args = Object.assign({}, windowsCfg, options);
+    const _self = this;
     // 判断窗口是否存在
     for (let i in this.group) {
       if (
@@ -86,7 +89,7 @@ export class Window {
           this.group[i].route === args.route &&
           !this.group[i].isMultiWindow
       ) {
-        console.log('窗口已经存在了');
+        log.log('窗口已经存在了');
         let window = this.getWindow(Number(i));
         window.restore();
         window.focus();
@@ -97,10 +100,9 @@ export class Window {
     let opt = this.winOpts(args);
     // 判断是否有父窗口
     if (args.parentId) {
-      console.log('parentId：' + args.parentId);
       opt.parent = this.getWindow(args.parentId); // 获取主窗口
     } else if (this.main) {
-      console.log('当前为主窗口');
+      log.log('当前为主窗口');
     } // 还可以继续做其它判断
 
     // 根据传入配置项，修改窗口的相关参数
@@ -120,7 +122,7 @@ export class Window {
     if (args.alwaysOnTop) {
       win.setAlwaysOnTop(true, 'screen-saver');
     }
-    console.log('窗口 id：' + win.id);
+    log.log('窗口 Id：' + win.id);
     this.group[win.id] = {
       route: args.route,
       isMultiWindow: args.isMultiWindow,
@@ -132,14 +134,17 @@ export class Window {
     // 是否主窗口
     if (args.isMainWin) {
       if (this.main) {
-        console.log('主窗口存在');
+        log.log('主窗口存在');
         delete this.group[this.main.id];
         this.main.close();
       }
       this.main = win;
     }
     args.id = win.id;
-    win.on('close', () => win.setOpacity(0));
+    win.on('close', () => {
+      win.setOpacity(0);
+      _self.main.webContents.send('/client/window-close', win.id);
+    });
 
     // 打开网址（加载页面）
     let winURL;
@@ -154,7 +159,7 @@ export class Window {
           : `${process.env['ELECTRON_RENDERER_URL']}/#?winId=${args.id}`;
       win.loadURL(winURL);
     }
-    console.log('新窗口地址:', winURL);
+    log.log('新窗口地址:', winURL);
 
     win.once('ready-to-show', () => {
       win.maximize();
@@ -162,7 +167,7 @@ export class Window {
 
       const webviewSession = session.fromPartition('webview');
       webviewSession.webRequest.onBeforeRequest({ urls: ['https://aisubtitle.hdslb.com/*'] }, (details, callback) => {
-        console.log('Request:', details);
+        //log.log('Request:', details);
         callback({ cancel: false });
       });
     });
@@ -170,7 +175,7 @@ export class Window {
 
   // 创建托盘
   createTray() {
-    console.log('创建托盘');
+    log.log('创建托盘');
     const contextMenu = Menu.buildFromTemplate([
       {
         label: '显示',
@@ -242,7 +247,7 @@ export class Window {
 
     // 最小化
     ipcMain.on('mini', (event, winId) => {
-      console.log('最小化窗口 id', winId);
+      log.log('最小化窗口 id', winId);
       if (winId) {
         this.getWindow(Number(winId)).minimize();
       } else {

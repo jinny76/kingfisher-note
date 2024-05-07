@@ -22,6 +22,11 @@ import recordService from './service/record';
 import {checkUpdate} from './update';
 import {initHttpServer} from './http';
 
+const log = require('electron-log');
+let date = new Date()
+let dateStr = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
+log.transports.file.resolvePathFn = () => 'log\\' + dateStr+ '.log';
+
 const isDevelopment = process.env.NODE_ENV !== 'production';
 const path = require('path');
 
@@ -95,7 +100,7 @@ function createMainWindow() {
 }
 
 process.on('uncaughtException', function(error) {
-  console.error('未捕获错误', error);
+  log.error('未捕获错误', error);
   if (mainWindow && mainWindow.webContents) {
     mainWindow.webContents.send('/client/error', JSON.stringify(error));
   }
@@ -106,7 +111,7 @@ app.whenReady().then(() => {
 
   protocol.registerFileProtocol('kingfisher', (request, callback) => {
     const url = request.url.substr('kingfisher'.length + 3);
-    console.log('转换视频链接', decodeURI(path.normalize(url)));
+    log.log('转换视频链接', decodeURI(path.normalize(url)));
     callback(decodeURI(path.normalize(url)));
   });
 
@@ -149,7 +154,7 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  console.log('关闭窗口', process.platform);
+  log.log('关闭窗口', process.platform);
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -161,4 +166,4 @@ windowManager.listen();
 const streamServer = new StreamServer();
 streamServer.start();
 
-console.log('Websocket 服务器启动 ws://localhost:18888');
+log.log('Websocket 服务器启动 ws://localhost:18888');

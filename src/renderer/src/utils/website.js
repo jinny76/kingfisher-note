@@ -255,7 +255,8 @@ const websites = {
                 }
               }
             }, 1000);`,
-  }, 'live.bilibili.com': {
+  },
+  'live.bilibili.com': {
     loadScript: `let timer = setInterval(() => {
               let div = document.querySelector(".player-section");
               if (div) {
@@ -268,6 +269,57 @@ const websites = {
               }
             }, 1000);`,
   },
+  'www.icourse163.org': {
+    debug: false,
+    loadScript: `             
+              let iframe = document.createElement('iframe');
+          　　 document.body.appendChild(iframe);
+          　　 window.console = iframe.contentWindow.console;
+              console.log("初始化")
+              let moved = false;
+              let srcChanged = false;
+              let timer = setInterval(() => {
+                let div = document.querySelector(".ux-video-player");  
+                let video = document.body.querySelector(".u-edu-h5player-mainvideo").childNodes[0];
+                video.crossOrigin = "anonymous";             
+                if (div) {
+                  div.style.width = "100%";
+                  div.style.height = "100vh";
+                  document.body.style.minWidth = "0px";
+                  if (!moved) {
+                    document.body.insertBefore(div, document.body.children[0]);
+                    moved = true
+                  }                  
+                  let src = video?.childNodes[0]?.src;
+                  if (src !== '' && !srcChanged) {
+                    srcChanged = true;
+                    video.removeChild(video.childNodes[0]);
+                    setTimeout(() => {
+                      video.src = src;
+                      video.play();
+                    },200);
+                  }                                
+              }
+            }, 1000);`,
+  },
+  "www.imooc.com": {
+    debug: false,
+    loadScript: `             
+              let iframe = document.createElement('iframe');
+          　　 document.body.appendChild(iframe);
+          　　 window.console = iframe.contentWindow.console;
+              console.log("初始化");
+              let kfTimer = setInterval(() => {
+                clearInterval(kfTimer);
+                let div = document.querySelector(".course-video-wrap");           
+                if (div) {
+                  div.style.width = "100%";
+                  div.style.height = "100vh";
+                  document.body.style.minWidth = "0px";                  
+                  document.body.insertBefore(div, document.body.children[0]);                                                                             
+              }
+            }, 1000);`,
+  }
 };
 
 const findWebsite = url => {

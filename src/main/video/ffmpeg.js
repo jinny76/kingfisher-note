@@ -1,6 +1,8 @@
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 
+const log = require('electron-log');
+
 class Ffmepg {
 
   constructor() {
@@ -21,13 +23,13 @@ class Ffmepg {
         format('mp4').
         outputOptions('-movflags', 'frag_keyframe+empty_moov+faststart').
         on('progress', function(progress) {
-          console.log('Timemark: ' + progress.timemark);
+          log.log('处理时间: ' + progress.timemark);
         }).
         on('error', function(err) {
-          console.log('An error occurred: ' + err.message);
+          log.log('发生错误: ' + err.message);
         }).
         on('end', function() {
-          console.log('Processing finished!');
+          log.log('处理完成');
         });
     return this.instance;
   }
@@ -44,14 +46,14 @@ class Ffmepg {
           input(input).
           audioCodec(audioc).
           on('progress', function(progress) {
-            console.log('Timemark: ' + progress.timemark);
+            log.log('处理时间: ' + progress.timemark);
           }).
           on('error', function(err) {
-            console.log('An error occurred: ' + err.message);
+            log.log('发生错误: ' + err.message);
             reject(err);
           }).
           on('end', function() {
-            console.log('Processing finished!');
+            log.log('处理完成');
             resolve();
           }).
           save(`${input}.mp3`);
@@ -78,14 +80,14 @@ class Ffmepg {
           audioCodec(audioc).
           format('mp4').
           on('progress', function(progress) {
-            console.log('Timemark: ' + progress.timemark);
+            log.log('处理时间: ' + progress.timemark);
           }).
           on('error', function(err) {
-            console.log('An error occurred: ' + err.message);
+            log.log('发生错误: ' + err.message);
             reject(err);
           }).
           on('end', function() {
-            console.log('Processing finished!');
+            log.log('处理完成');
             resolve();
           }).
           save(`${input}.mp4`);
@@ -101,14 +103,14 @@ class Ffmepg {
           audioCodec('copy').
           outputOptions('-f', 'segment', '-segment_time', '20').
           on('progress', function(progress) {
-            console.log('Timemark: ' + progress.timemark);
+            log.log('处理时间: ' + progress.timemark);
           }).
           on('error', function(err) {
-            console.log('An error occurred: ' + err.message);
+            log.log('发生错误: ' + err.message);
             reject(err);
           }).
           on('end', function() {
-            console.log('Processing finished!');
+            log.log('处理完成');
             resolve(tempDir);
           }).
           save(`${tempDir}/out%03d.${input.substring(input.lastIndexOf('.') + 1)}`);
@@ -123,14 +125,14 @@ class Ffmepg {
           audioCodec('copy').
           format('webm').
           on('progress', function(progress) {
-            console.log('Timemark: ' + progress.timemark);
+            log.log('处理时间: ' + progress.timemark);
           }).
           on('error', function(err) {
-            console.log('An error occurred: ' + err.message);
+            log.log('发生错误: ' + err.message);
             reject(err);
           }).
           on('end', function() {
-            console.log('Processing finished!');
+            log.log('处理完成');
             resolve();
           }).
           save(`${input.replace('.webm', '.fixed.webm')}`);
@@ -159,14 +161,14 @@ class Ffmepg {
           input(input.path).
           outputOptions('-map', '0:' + input.index).
           on('progress', function(progress) {
-            console.log('Timemark: ' + progress.timemark);
+            log.log('处理时间: ' + progress.timemark);
           }).
           on('error', function(err) {
-            console.log('An error occurred: ' + err.message);
+            log.log('发生错误: ' + err.message);
             reject(err);
           }).
           on('end', function() {
-            console.log('Processing finished!');
+            log.log('处理完成');
             resolve(`${input.path}.${input.title}.${input.codecName}`);
           }).
           save(`${input.path}.${input.title}.${input.codecName}`);

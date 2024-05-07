@@ -117,6 +117,8 @@ export default {
   emits: [],
   components: {},
   setup(props, {emit}) {
+    const developEnv = import.meta.env.DEV;
+
     let route = useRoute();
     const initFlag = ref(true);
     const options = ref({
@@ -212,7 +214,7 @@ export default {
           });
 
           window.kfsocket.addEventListener("message", function (event) {
-            console.log("Message from server ", event.data);
+            console.log("服务器消息", event.data);
             let eventData = JSON.parse(event.data);
             if (window.KFEventHandler && window.KFEventHandler[eventData.action]){
               window.KFEventHandler[eventData.action](eventData.args);
@@ -284,7 +286,7 @@ export default {
             }
           });
       `);
-          if (targetWebsite.debug) {
+          if (developEnv && targetWebsite?.debug) {
             webview.value.openDevTools();
           }
           if (targetWebsite?.loadScript) {
@@ -578,6 +580,7 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 5px;
+  pointer-events: none;
 
   .panel {
     display: flex;
@@ -585,6 +588,14 @@ export default {
     align-items: center;
     background-color: rgba(0, 0, 0, 0.5);
     opacity: 0.1;
+
+    button {
+      pointer-events: auto;
+    }
+
+    .el-input {
+      pointer-events: auto;
+    }
   }
 
   .panel:hover {
