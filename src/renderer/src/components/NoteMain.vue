@@ -226,7 +226,7 @@ export default {
       }
     };
 
-    watch(noteModel.currNote, () => {
+    watch(noteModel.currNote, () => { // 新的笔记打开
       if (editor) {
         utils.runUntil(() => {
           return editor.vditor.lute != null;
@@ -235,6 +235,22 @@ export default {
             noteModel.currNote.value.data = '';
           }
           editor.setValue(noteModel.currNote.value.data);
+          setTimeout(() => {
+            lastPosition = null;
+            setCursor();
+            editor.focus();
+            loadVersions();
+            noteModel.startColdDown();
+
+            if (autoSaveTimer) {
+              clearInterval(autoSaveTimer);
+            }
+            autoSaveTimer = setInterval(() => {
+              if (noteModel.currNote.value.changed) {
+                doSave(null, true);
+              }
+            }, 60000);
+          }, 200);
         });
       }
     });
@@ -1039,29 +1055,13 @@ export default {
 
           openFirstVideo();
           noteModel.lastScreenshot.value = null;
-
-          setTimeout(() => {
-            lastPosition = null;
-            setCursor();
-            editor.focus();
-            loadVersions();
-            noteModel.startColdDown();
-
-            if (autoSaveTimer) {
-              clearInterval(autoSaveTimer);
-            }
-            autoSaveTimer = setInterval(() => {
-              if (noteModel.currNote.value.changed) {
-                doSave(null, true);
-              }
-            }, 60000);
-          }, 500);
         } else if (result.code === 500 && result.message === '文件已加密') {
           ElMessageBox.prompt('请输入密码', '打开加密笔记-' + note.name.substring(0, note.name.indexOf('.')), {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             inputPattern: /\S/,
             inputErrorMessage: '密码不能为空',
+            inputType: 'password',
           }).then(({value}) => {
             note.key = value;
             callOpen(note, time);
@@ -1295,6 +1295,8 @@ export default {
           service.invoke('/store/deleteNote', JSON.stringify({path: noteModel.currNote.value.name}), result => {
             if (result.code === 200) {
               ElMessage.success('删除成功');
+              noteModel.recentNotes.value = noteModel.recentNotes.value.filter(note => note.name !== noteModel.currNote.value.name);
+              localStorage.setItem('RECENT_NOTES', JSON.stringify(recentNotes.value));
               noteModel.currNote.value = {
                 name: '',
                 data: '',
@@ -1316,13 +1318,14 @@ export default {
             cancelButtonText: '取消',
             inputPattern: /\S/,
             inputErrorMessage: '密码不能为空',
+            inputType: 'password',
           }).then(({value}) =>
             service.invoke('/store/encryptNote', JSON.stringify({
               path: noteModel.currNote.value.name,
               key: value,
             }), result => {
               if (result.code === 200) {
-                ElMessage.success('加密成功');
+                ElMessage.success('加密成功，请完事保存密码，系统不会保存密码，也无法找回');
                 noteModel.currNote.value.key = value;
               } else {
                 ElMessage.warning(result.message);

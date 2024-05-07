@@ -8,11 +8,11 @@ import {
   Menu,
   protocol,
   shell,
-  session,
 } from 'electron';
 import {join} from 'path';
 import {electronApp, is, optimizer} from '@electron-toolkit/utils';
 import icon from '../../resources/icon.ico?asset';
+import logo from './logo';
 import StreamServer from './video/server';
 import storeService from './service/store';
 import noteService from './service/note';
@@ -95,17 +95,13 @@ function createMainWindow() {
 }
 
 process.on('uncaughtException', function(error) {
-  console.error(error);
+  console.error('未捕获错误', error);
   if (mainWindow && mainWindow.webContents) {
     mainWindow.webContents.send('/client/error', JSON.stringify(error));
   }
 });
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
 
   protocol.registerFileProtocol('kingfisher', (request, callback) => {
@@ -165,4 +161,4 @@ windowManager.listen();
 const streamServer = new StreamServer();
 streamServer.start();
 
-console.log('Websocket server started on ws://localhost:18888');
+console.log('Websocket 服务器启动 ws://localhost:18888');

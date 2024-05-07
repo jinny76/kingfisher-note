@@ -2,16 +2,16 @@
   <el-container style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
     <el-header style="padding: 0px; display: flex; justify-content: space-between">
       <el-menu
-          ref="menu"
-          :default-active="activeIndex"
-          active-text-color="#ffd04b"
-          background-color="#545c64"
-          class="el-menu-demo"
-          mode="horizontal"
-          popper-effect="dark"
-          style="width: 400px;"
-          text-color="#fff"
-          @select="handleSelect"
+        ref="menu"
+        :default-active="activeIndex"
+        active-text-color="#ffd04b"
+        background-color="#545c64"
+        class="el-menu-demo"
+        mode="horizontal"
+        popper-effect="dark"
+        style="width: 400px;"
+        text-color="#fff"
+        @select="handleSelect"
       >
         <el-sub-menu index="1">
           <template #title>文件</template>
@@ -34,11 +34,12 @@
           <el-menu-item id="idMenuSetting" index="4-1">设置</el-menu-item>
           <el-menu-item index="4-2">文件处理</el-menu-item>
           <el-menu-item index="4-3">专注模式</el-menu-item>
-          <el-menu-item index="4-4">调试工具-主窗口</el-menu-item>
-          <el-menu-item index="4-5">调试工具-弹出窗口</el-menu-item>
+          <el-menu-item v-if="developEnv" index="4-4">调试工具-主窗口</el-menu-item>
+          <el-menu-item v-if="developEnv" index="4-5">调试工具-弹出窗口</el-menu-item>
           <el-sub-menu index="4-5">
             <template #title>其他工具</template>
             <el-menu-item index="4-5-1">截图</el-menu-item>
+            <el-menu-item index="4-5-2">剪贴板管理</el-menu-item>
           </el-sub-menu>
         </el-sub-menu>
         <el-sub-menu index="6">
@@ -56,57 +57,57 @@
         <div style="padding-left: 40px">
           标签:
           <el-select
-              v-model="currNote.tags"
-              :max-collapse-tags="3"
-              :reserve-keyword="false"
-              allow-create
-              collapse-tags
-              collapse-tags-tooltip
-              default-first-option
-              filterable
-              multiple
-              placeholder="选择标签"
-              style="width: 300px"
+            v-model="currNote.tags"
+            :max-collapse-tags="3"
+            :reserve-keyword="false"
+            allow-create
+            collapse-tags
+            collapse-tags-tooltip
+            default-first-option
+            filterable
+            multiple
+            placeholder="选择标签"
+            style="width: 300px"
           >
             <el-option
-                v-for="item in tags"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+              v-for="item in tags"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
             />
           </el-select>
         </div>
         <div style="padding-left: 40px">
           版本:
           <el-select
-              v-model="currVersion"
-              empty-text="没有历史版本"
-              filterable
-              placeholder="加载历史版本"
-              style="width: 180px"
-              @change="loadVersion"
+            v-model="currVersion"
+            empty-text="没有历史版本"
+            filterable
+            placeholder="加载历史版本"
+            style="width: 180px"
+            @change="loadVersion"
           >
             <el-option
-                v-for="version in versions"
-                :key="version.time"
-                :label="version.index + ' ' + version.duration"
-                :title="version.label"
-                :value="version.time"
+              v-for="version in versions"
+              :key="version.time"
+              :label="version.index + ' ' + version.duration"
+              :title="version.label"
+              :value="version.time"
             />
           </el-select>
         </div>
         <div v-if="targetTime> 0" style="padding-left: 40px; width: 300px;">
           <el-progress
-              :percentage="restPercent"
-              :stroke-width="20"
-              :text-inside="true"
-              status="success">
+            :percentage="restPercent"
+            :stroke-width="20"
+            :text-inside="true"
+            status="success">
             <span style="color:white">您已经沉浸学习了 {{ studyTime }} </span>
           </el-progress>
         </div>
         <div v-if="developEnv" style="padding: 5px;">
-          <el-button type="text" @click="reload">重新加载</el-button>
-          <el-button type="text" @click="test">测试</el-button>
+          <el-button @click="reload">重新加载</el-button>
+          <el-button @click="test">测试</el-button>
         </div>
       </div>
     </el-header>
@@ -125,7 +126,7 @@
   <el-dialog v-model="dialogAboutVisible" align-center title="关于" width="400">
     <p>作者：{{ '太白雪霁' }}</p>
     <p>版本：{{ version }}</p>
-    <p>日期：{{ '2024-04-26' }}</p>
+    <p>日期：{{ '2024-05-07' }}</p>
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="dialogAboutVisible = false">关闭</el-button>
@@ -147,21 +148,21 @@
              draggable
              title="选择字幕" width="435">
     <el-table
-        :data="subtitleList"
-        border
-        height="400"
-        style="width: 100%"
-        @row-click="handleSubtitleClick"
+      :data="subtitleList"
+      border
+      height="400"
+      style="width: 100%"
+      @row-click="handleSubtitleClick"
     >
       <el-table-column
-          label="标题"
-          prop="title"
-          width="300">
+        label="标题"
+        prop="title"
+        width="300">
       </el-table-column>
       <el-table-column
-          label="语言"
-          prop="language"
-          width="100">
+        label="语言"
+        prop="language"
+        width="100">
       </el-table-column>
       >
     </el-table>
@@ -175,10 +176,10 @@
              draggable
              title="文件处理" width="800">
     <el-upload
-        v-model:file-list="videoList"
-        :auto-upload="false"
-        :multiple="false"
-        accept="video/*,audio/*"
+      v-model:file-list="videoList"
+      :auto-upload="false"
+      :multiple="false"
+      accept="video/*,audio/*"
     >
       <el-button type="primary">选择文件</el-button>
       <template #tip>
@@ -193,13 +194,13 @@
       <el-checkbox v-model="convertOptions.mp3">MP3</el-checkbox>
     </div>
     <el-progress
-        v-show="showProgress"
-        :duration="10"
-        :percentage="100"
-        :stroke-width="15"
-        status="success"
-        striped
-        striped-flow
+      v-show="showProgress"
+      :duration="10"
+      :percentage="100"
+      :stroke-width="15"
+      status="success"
+      striped
+      striped-flow
     />
     <template #footer>
       <div class="dialog-footer">
@@ -325,7 +326,10 @@ export default {
     keyManager.init();
 
     keyManager.registerHotkeyProcessor('ctrl+alt+1', () => service.invoke('/system/openDevTools', '',
-        result => console.log('打开开发者工具', result)), '打开开发者工具');
+      result => console.log('打开主窗口开发者工具', result)), '打开主窗口开发者工具');
+
+    keyManager.registerHotkeyProcessor('ctrl+alt+2', () => service.invoke('/system/openPopDevTools', '',
+      result => console.log('打开弹出窗口开发者工具', result)), '打开弹出窗口开发者工具');
 
     keyManager.registerHotkeyProcessor('f11', () => focusMode(60), '全屏');
 
@@ -371,7 +375,12 @@ export default {
         targetTime.value = 0;
       }
       noteModel.openTime = Date.now();
-      ElMessage.success('已进入专注模式，其他程序将无法打扰您，ESC键退出专注模式');
+      ElMessage({
+        type: 'success',
+        message: '已进入专注模式，其他程序将无法打扰您，ESC键退出专注模式',
+        showClose: true,
+        offset: 50,
+      });
 
       studyTimer = setInterval(() => {
         let time = (Date.now() - noteModel.openTime) / 1000;
@@ -422,7 +431,6 @@ export default {
           dialogConvertVisible.value = true;
           break;
         case '4-3':
-
           ElMessageBox.prompt('预计学习时间(分钟)', '专注模式', {
             confirmButtonText: '开始',
             cancelButtonText: '取消',
@@ -447,6 +455,9 @@ export default {
           break;
         case '4-5-1':
           window.open('https://zh.snipaste.com/', '_blank');
+          break;
+        case '4-5-2':
+          window.open('https://www.joejoesoft.com/vcms/97/', '_blank');
           break;
         case '6-10':
           dialogAboutVisible.value = true;
@@ -510,20 +521,69 @@ export default {
 
     const settingDialog = ref();
 
+    const validate = setting => {
+      let result = true;
+      let errorMessage = '';
+
+      if (setting.noteDir === '') {
+        errorMessage += '笔记目录不能为空\n';
+        result = false;
+      } else if (setting.screenshotDir === '') {
+        errorMessage += '截图目录不能为空\n';
+        result = false;
+      } else if (setting.assetsDir === '') {
+        errorMessage += '资源目录不能为空\n';
+        result = false;
+      } else if (setting.lockTime == undefined || setting.lockTime === '') {
+        errorMessage += '锁定时间不能为空\n';
+        result = false;
+      } else if (setting.lockTime < 1) {
+        errorMessage += '锁定时间不能小于1分钟\n';
+        result = false;
+      } else if (setting.timestampOffset == undefined || setting.timestampOffset === '') {
+        errorMessage += '时间签偏移不能为空\n';
+        result = false;
+      } else if (setting.timestampOffset < 0) {
+        errorMessage += '时间签偏移不能小于0\n';
+        result = false;
+      } else if (setting.forwardStep == undefined || setting.forwardStep === '') {
+        errorMessage += '快进步长不能为空\n';
+        result = false;
+      } else if (setting.forwardStep < 1) {
+        errorMessage += '快进步长不能小于1\n';
+        result = false;
+      } else if (setting.aiServer !== '' && !setting.aiKey) {
+        errorMessage += 'AI KEY不能为空\n';
+        result = false;
+      } else if (setting.aiKey !== '' && !setting.aiServer) {
+        errorMessage += 'AI供应商不能为空\n';
+        result = false;
+      }
+
+      if (errorMessage !== '') {
+        ElMessage.error(errorMessage);
+      }
+
+      return result;
+    };
+
     const saveSetting = () => {
       let newSetting = settingDialog.value.setting;
-      if (newSetting.password === noteModel.constPassword) {
-        newSetting.password = noteModel.setting.value.password;
-      } else if (newSetting.password) {
-        newSetting.password = md5(newSetting.password + noteModel.constPassword);
-      }
-      noteModel.setting.value = newSetting;
 
-      service.invoke('/store/updateSetting', JSON.stringify(noteModel.setting.value), result => console.log(
+      if (validate(newSetting)) {
+        if (newSetting.password === noteModel.constPassword) {
+          newSetting.password = noteModel.setting.value.password;
+        } else if (newSetting.password) {
+          newSetting.password = md5(newSetting.password + noteModel.constPassword);
+        }
+        noteModel.setting.value = newSetting;
+
+        service.invoke('/store/updateSetting', JSON.stringify(noteModel.setting.value), result => console.log(
           '更新设置', result));
 
-      noteModel.startColdDown();
-      dialogSettingVisible.value = false;
+        noteModel.startColdDown();
+        dialogSettingVisible.value = false;
+      }
     };
 
     const videoList = ref([]);
@@ -604,10 +664,10 @@ export default {
         let firstFile = videoList.value[0];
         let firstFileName = firstFile.raw.name;
         if (firstFileName.endsWith('.mp3') || firstFileName.endsWith('.wav')
-            || firstFileName.endsWith('.flac') || firstFileName.endsWith('.m4a')
-            || firstFileName.endsWith('.aac') || firstFileName.endsWith('.wma')
-            || firstFileName.endsWith('.ape') || firstFileName.endsWith('.ogg')
-            || firstFileName.endsWith('.webm')) {
+          || firstFileName.endsWith('.flac') || firstFileName.endsWith('.m4a')
+          || firstFileName.endsWith('.aac') || firstFileName.endsWith('.wma')
+          || firstFileName.endsWith('.ape') || firstFileName.endsWith('.ogg')
+          || firstFileName.endsWith('.webm')) {
           service.invoke('/record/split', {fileName: firstFile.raw.path}, result => {
             if (result.files) {
               let text = [];

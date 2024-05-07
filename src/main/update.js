@@ -6,7 +6,7 @@ export const checkUpdate = (win, ipcMain) => {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
   mainWin = win;
-  // 检测是否有更新包并通知
+
   autoUpdater.checkForUpdatesAndNotify().then(res => {
     console.log('检测更新成功', res);
     if (res) {
@@ -15,27 +15,8 @@ export const checkUpdate = (win, ipcMain) => {
       mainWin.webContents.send('/client/updateNotAvailable', res);
     }
   }).catch(e => console.log('检测更新失败', e));
-  // 监听渲染进程的 install 事件，触发退出应用并安装
+
   ipcMain.handle('/update/install', () => autoUpdater.quitAndInstall());
-
-  /*if (process.env.NODE_ENV === 'development') {
-    setTimeout(() => {
-      mainWin.webContents.send('/client/updateAvailable', {});
-
-      let progress = 0;
-      let timer = setInterval(() => {
-        progress += 5;
-        mainWin.webContents.send('/client/updateProgress', {
-          speed: 1000,
-          percent: progress,
-        });
-        if (progress >= 100) {
-          clearInterval(timer);
-          mainWin.webContents.send('/client/downloaded');
-        }
-      }, 1000)
-    }, 3000)
-  }*/
 };
 
 autoUpdater.on('update-available', info => {

@@ -21,5 +21,5 @@ export const initHttpServer = () => {
   server.use('/vditor', express.static('./resources/vditor'));
 
   server.listen(13999, () => console.log(
-      'HTTP server started on http://localhost:13999'));
+      'HTTP 服务器启动 http://localhost:13999'));
 };

@@ -4,7 +4,7 @@
   "description": "灵翠笔记，一款音视频笔记软件",
   "main": "./out/main/index.js",
   "author": "太白雪霁",
-  "publishDate": "2024-05-03",
+  "publishDate": "2024-05-07",
   "homepage": "http://www.kingfishers.cn",
   "scripts": {
     "format": "prettier --write .",

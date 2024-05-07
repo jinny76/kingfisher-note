@@ -30,7 +30,7 @@ class StreamServer {
       }
     });
     server.listen(this.port, () => console.log(
-        `video server listen on ${this.port}`));
+        `视频服务器启动 ${this.port}`));
   }
 }
 

@@ -6,6 +6,7 @@ import pathService from 'path';
 
 const algorithm = 'aes-256-cbc';
 const encryptPrefix = '!!!secure:';
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // generate 16 bytes of random data
 let iv = md5('kingisher note').substring(0, 16);
@@ -67,7 +68,9 @@ if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
   }
   fs.writeFileSync(`${rootPath}/kfnote/setting.json`, JSON.stringify(setting),
       'utf-8');
-  console.log('设置文件已创建', setting);
+  if (isDevelopment) {
+    console.log('设置文件已创建', setting);
+  }
   loadNoteMeta();
 } else {
   let localSetting = JSON.parse(
@@ -75,7 +78,9 @@ if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
   Object.keys(localSetting).forEach(key => {
     setting[key] = localSetting[key];
   });
-  console.log('设置文件已加载', setting);
+  if (isDevelopment) {
+    console.log('设置文件已加载', setting);
+  }
   loadNoteMeta();
 }
 
