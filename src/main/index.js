@@ -8,6 +8,7 @@ import {
   Menu,
   protocol,
   shell,
+  nativeTheme,
 } from 'electron';
 import {join} from 'path';
 import {electronApp, is, optimizer} from '@electron-toolkit/utils';
@@ -64,6 +65,8 @@ function createMainWindow() {
     shell.openExternal(details.url);
     return {action: 'deny'};
   });
+
+  nativeTheme.themeSource = 'dark';
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.

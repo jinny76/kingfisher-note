@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 3466728 */
-  src: url('iconfont.woff2?t=1715130226081') format('woff2'),
-       url('iconfont.woff?t=1715130226081') format('woff'),
-       url('iconfont.ttf?t=1715130226081') format('truetype');
+  src: url('iconfont.woff2?t=1715136881384') format('woff2'),
+       url('iconfont.woff?t=1715136881384') format('woff'),
+       url('iconfont.ttf?t=1715136881384') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,58 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-kingfisherdebug:before {
+  content: "\e621";
+}
+
+.icon-kingfishersetting:before {
+  content: "\e614";
+}
+
+.icon-kingfishersave:before {
+  content: "\e626";
+}
+
+.icon-kingfisherdelete:before {
+  content: "\e629";
+}
+
+.icon-kingfishertime:before {
+  content: "\e62d";
+}
+
+.icon-kingfishernew:before {
+  content: "\e63c";
+}
+
+.icon-kingfishertools:before {
+  content: "\e65c";
+}
+
+.icon-kingfisherhelp:before {
+  content: "\e67b";
+}
+
+.icon-kingfisherlock:before {
+  content: "\e684";
+}
+
+.icon-kingfisheropen:before {
+  content: "\e695";
+}
+
+.icon-kingfisherconvert:before {
+  content: "\e6a0";
+}
+
+.icon-kingfisherfocus:before {
+  content: "\e6ae";
+}
+
+.icon-kingfisherabout:before {
+  content: "\e612";
 }
 
 .icon-kingfisherauto:before {

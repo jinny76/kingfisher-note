@@ -38,7 +38,7 @@
         <el-switch v-model="fullTextSearch" />
       </template>
     </el-input>
-    <el-table v-if="!fullTextSearch" :data="noteList" empty-text="没有找到笔记" max-height="200px" stripe
+    <el-table v-if="!fullTextSearch" :data="noteList" empty-text="没有找到笔记" max-height="600px" stripe
               style="width: 100%" @row-click="openNote">
       <el-table-column label="名称" prop="name" sortable width="280">
         <template #default="scope">

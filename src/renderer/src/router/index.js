@@ -4,7 +4,6 @@ import Video from '../components/Video.vue';
 
 const routes = [
   {
-    //路由初始指向
     path: '/',
     name: 'Home',
     component: Home,

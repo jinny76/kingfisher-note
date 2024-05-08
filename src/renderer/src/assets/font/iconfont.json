@@ -6,6 +6,97 @@
   "description": "Kingfisher",
   "glyphs": [
     {
+      "icon_id": "10943872",
+      "name": "debug",
+      "font_class": "debug",
+      "unicode": "e621",
+      "unicode_decimal": 58913
+    },
+    {
+      "icon_id": "774372",
+      "name": "setting",
+      "font_class": "setting",
+      "unicode": "e614",
+      "unicode_decimal": 58900
+    },
+    {
+      "icon_id": "774390",
+      "name": "save",
+      "font_class": "save",
+      "unicode": "e626",
+      "unicode_decimal": 58918
+    },
+    {
+      "icon_id": "774393",
+      "name": "delete",
+      "font_class": "delete",
+      "unicode": "e629",
+      "unicode_decimal": 58921
+    },
+    {
+      "icon_id": "774397",
+      "name": "time",
+      "font_class": "time",
+      "unicode": "e62d",
+      "unicode_decimal": 58925
+    },
+    {
+      "icon_id": "774412",
+      "name": "new",
+      "font_class": "new",
+      "unicode": "e63c",
+      "unicode_decimal": 58940
+    },
+    {
+      "icon_id": "774444",
+      "name": "tools",
+      "font_class": "tools",
+      "unicode": "e65c",
+      "unicode_decimal": 58972
+    },
+    {
+      "icon_id": "774475",
+      "name": "help",
+      "font_class": "help",
+      "unicode": "e67b",
+      "unicode_decimal": 59003
+    },
+    {
+      "icon_id": "774484",
+      "name": "lock",
+      "font_class": "lock",
+      "unicode": "e684",
+      "unicode_decimal": 59012
+    },
+    {
+      "icon_id": "774501",
+      "name": "open",
+      "font_class": "open",
+      "unicode": "e695",
+      "unicode_decimal": 59029
+    },
+    {
+      "icon_id": "774512",
+      "name": "convert",
+      "font_class": "convert",
+      "unicode": "e6a0",
+      "unicode_decimal": 59040
+    },
+    {
+      "icon_id": "774526",
+      "name": "focus",
+      "font_class": "focus",
+      "unicode": "e6ae",
+      "unicode_decimal": 59054
+    },
+    {
+      "icon_id": "924689",
+      "name": "about",
+      "font_class": "about",
+      "unicode": "e612",
+      "unicode_decimal": 58898
+    },
+    {
       "icon_id": "11474203",
       "name": "auto",
       "font_class": "auto",

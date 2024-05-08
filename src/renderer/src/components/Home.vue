@@ -1,52 +1,59 @@
 <template>
-  <el-container style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
+  <transition name="slide-fade">
+    <Splash v-if="showSplash"/>
+  </transition>
+  <el-container v-show="showNote" style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
     <el-header style="padding: 0px; display: flex; justify-content: space-between">
       <el-menu
-        ref="menu"
-        :default-active="activeIndex"
-        active-text-color="#ffd04b"
-        background-color="#545c64"
-        class="el-menu-demo"
-        mode="horizontal"
-        popper-effect="dark"
-        style="width: 400px;"
-        text-color="#fff"
-        @select="handleSelect"
+          ref="menu"
+          :default-active="activeIndex"
+          active-text-color="#ffd04b"
+          background-color="#545c64"
+          class="el-menu-demo"
+          mode="horizontal"
+          popper-effect="dark"
+          style="width: 400px;"
+          text-color="#fff"
+          @select="handleSelect"
       >
         <el-sub-menu index="1">
           <template #title>文件</template>
           <el-menu-item id="idMenuFile" index="2-1">
-            <i class="iconfont icon-kingfisherall"></i> 新建笔记
+            <i class="iconfont icon-kingfishernew"></i>&nbsp;&nbsp;新建笔记
           </el-menu-item>
-          <el-menu-item index="2-2">打开笔记</el-menu-item>
+          <el-menu-item index="2-2"><i class="iconfont icon-kingfisheropen"></i>&nbsp;&nbsp;打开笔记</el-menu-item>
           <el-sub-menu index="2-3">
-            <template #title>打开历史笔记</template>
+            <template #title><i class="iconfont icon-kingfishertime"></i>&nbsp;&nbsp;打开历史笔记</template>
             <el-menu-item v-for="note in recentNotes" :key="note.name" :index="note.name">
               {{ note.name.substring(0, note.name.indexOf('.')) }}
             </el-menu-item>
           </el-sub-menu>
-          <el-menu-item index="2-4">保存笔记</el-menu-item>
-          <el-menu-item index="2-5">删除笔记</el-menu-item>
-          <el-menu-item index="2-6">加密笔记</el-menu-item>
+          <el-menu-item index="2-4"><i class="iconfont icon-kingfishersave"></i>&nbsp;&nbsp;保存笔记</el-menu-item>
+          <el-menu-item index="2-5"><i class="iconfont icon-kingfisherdelete"></i>&nbsp;&nbsp;删除笔记</el-menu-item>
+          <el-menu-item index="2-6"><i class="iconfont icon-kingfisherlock"></i>&nbsp;&nbsp;加密笔记</el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="4">
           <template #title>工具</template>
-          <el-menu-item id="idMenuSetting" index="4-1">设置</el-menu-item>
-          <el-menu-item index="4-2">文件处理</el-menu-item>
-          <el-menu-item index="4-3">专注模式</el-menu-item>
-          <el-menu-item v-if="developEnv" index="4-4">调试工具-主窗口</el-menu-item>
-          <el-menu-item v-if="developEnv" index="4-5">调试工具-弹出窗口</el-menu-item>
+          <el-menu-item id="idMenuSetting" index="4-1"><i class="iconfont icon-kingfishersetting"></i>&nbsp;&nbsp;设置
+          </el-menu-item>
+          <el-menu-item index="4-2"><i class="iconfont icon-kingfisherconvert"></i>&nbsp;&nbsp;文件处理</el-menu-item>
+          <el-menu-item index="4-3"><i class="iconfont icon-kingfisherfocus"></i>&nbsp;&nbsp;专注模式</el-menu-item>
+          <el-menu-item v-if="developEnv" index="4-4"><i class="iconfont icon-kingfisherdebug"></i>&nbsp;&nbsp;调试工具-主窗口
+          </el-menu-item>
+          <el-menu-item v-if="developEnv" index="4-5"><i class="iconfont icon-kingfisherdebug"></i>&nbsp;&nbsp;调试工具-弹出窗口
+          </el-menu-item>
           <el-sub-menu index="4-5">
-            <template #title>其他工具</template>
+            <template #title><i class="iconfont icon-kingfishertools"></i>&nbsp;&nbsp;其他工具</template>
             <el-menu-item index="4-5-1">截图</el-menu-item>
             <el-menu-item index="4-5-2">剪贴板管理</el-menu-item>
           </el-sub-menu>
         </el-sub-menu>
         <el-sub-menu index="6">
           <template #title>帮助</template>
-          <el-menu-item index="6-1">使用说明</el-menu-item>
-          <el-menu-item index="6-2">快速上手</el-menu-item>
-          <el-menu-item index="6-10">关于</el-menu-item>
+          <el-menu-item index="6-1"><i class="iconfont icon-kingfisherhelp"></i>&nbsp;&nbsp;使用说明</el-menu-item>
+          <el-menu-item index="6-2"><i class="iconfont icon-kingfisherbussiness-man"></i>&nbsp;&nbsp;快速上手
+          </el-menu-item>
+          <el-menu-item index="6-10"><i class="iconfont icon-kingfisherabout"></i>&nbsp;&nbsp;关于</el-menu-item>
         </el-sub-menu>
       </el-menu>
       <div class="title-bar">
@@ -57,51 +64,51 @@
         <div style="padding-left: 40px">
           标签:
           <el-select
-            v-model="currNote.tags"
-            :max-collapse-tags="3"
-            :reserve-keyword="false"
-            allow-create
-            collapse-tags
-            collapse-tags-tooltip
-            default-first-option
-            filterable
-            multiple
-            placeholder="选择标签"
-            style="width: 300px"
+              v-model="currNote.tags"
+              :max-collapse-tags="3"
+              :reserve-keyword="false"
+              allow-create
+              collapse-tags
+              collapse-tags-tooltip
+              default-first-option
+              filterable
+              multiple
+              placeholder="选择标签"
+              style="width: 300px"
           >
             <el-option
-              v-for="item in tags"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+                v-for="item in tags"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
             />
           </el-select>
         </div>
         <div style="padding-left: 40px">
           版本:
           <el-select
-            v-model="currVersion"
-            empty-text="没有历史版本"
-            filterable
-            placeholder="加载历史版本"
-            style="width: 180px"
-            @change="loadVersion"
+              v-model="currVersion"
+              empty-text="没有历史版本"
+              filterable
+              placeholder="加载历史版本"
+              style="width: 180px"
+              @change="loadVersion"
           >
             <el-option
-              v-for="version in versions"
-              :key="version.time"
-              :label="version.index + ' ' + version.duration"
-              :title="version.label"
-              :value="version.time"
+                v-for="version in versions"
+                :key="version.time"
+                :label="version.index + ' ' + version.duration"
+                :title="version.label"
+                :value="version.time"
             />
           </el-select>
         </div>
         <div v-if="targetTime> 0" style="padding-left: 40px; width: 300px;">
           <el-progress
-            :percentage="restPercent"
-            :stroke-width="20"
-            :text-inside="true"
-            status="success">
+              :percentage="restPercent"
+              :stroke-width="20"
+              :text-inside="true"
+              status="success">
             <span style="color:white">您已经沉浸学习了 {{ studyTime }} </span>
           </el-progress>
         </div>
@@ -148,21 +155,21 @@
              draggable
              title="选择字幕" width="435">
     <el-table
-      :data="subtitleList"
-      border
-      height="400"
-      style="width: 100%"
-      @row-click="handleSubtitleClick"
+        :data="subtitleList"
+        border
+        height="400"
+        style="width: 100%"
+        @row-click="handleSubtitleClick"
     >
       <el-table-column
-        label="标题"
-        prop="title"
-        width="300">
+          label="标题"
+          prop="title"
+          width="300">
       </el-table-column>
       <el-table-column
-        label="语言"
-        prop="language"
-        width="100">
+          label="语言"
+          prop="language"
+          width="100">
       </el-table-column>
       >
     </el-table>
@@ -176,10 +183,10 @@
              draggable
              title="文件处理" width="800">
     <el-upload
-      v-model:file-list="videoList"
-      :auto-upload="false"
-      :multiple="false"
-      accept="video/*,audio/*"
+        v-model:file-list="videoList"
+        :auto-upload="false"
+        :multiple="false"
+        accept="video/*,audio/*"
     >
       <el-button type="primary">选择文件</el-button>
       <template #tip>
@@ -194,13 +201,13 @@
       <el-checkbox v-model="convertOptions.mp3">MP3</el-checkbox>
     </div>
     <el-progress
-      v-show="showProgress"
-      :duration="10"
-      :percentage="100"
-      :stroke-width="15"
-      status="success"
-      striped
-      striped-flow
+        v-show="showProgress"
+        :duration="10"
+        :percentage="100"
+        :stroke-width="15"
+        status="success"
+        striped
+        striped-flow
     />
     <template #footer>
       <div class="dialog-footer">
@@ -261,6 +268,7 @@
 
 <script lang="js">
 import {nextTick, onMounted, ref, watch} from 'vue';
+import Splash from './Splash.vue';
 import NoteMain from './NoteMain.vue';
 import NoteSetting from './NoteSetting.vue';
 import noteModel from '../model/note';
@@ -272,7 +280,7 @@ import md5 from 'md5';
 
 export default {
   name: 'Home',
-  components: {NoteMain, NoteSetting},
+  components: {Splash, NoteMain, NoteSetting},
   setup() {
     let canvas;
     let letters = Array(512).join(1).split('');
@@ -294,9 +302,16 @@ export default {
 
     let lockTimer;
 
+    const showSplash = ref(true);
+    const showNote = ref(false);
+
     onMounted(() => {
       initCanvas();
       window.onresize = () => initCanvas();
+      setTimeout(() => {
+        showSplash.value = false;
+        setTimeout(() => showNote.value = true, 1000);
+        }, 2000);
     });
 
     const draw = () => {
@@ -326,10 +341,10 @@ export default {
     keyManager.init();
 
     keyManager.registerHotkeyProcessor('ctrl+alt+1', () => service.invoke('/system/openDevTools', '',
-      result => console.log('打开主窗口开发者工具', result)), '打开主窗口开发者工具');
+        result => console.log('打开主窗口开发者工具', result)), '打开主窗口开发者工具');
 
     keyManager.registerHotkeyProcessor('ctrl+alt+2', () => service.invoke('/system/openPopDevTools', '',
-      result => console.log('打开弹出窗口开发者工具', result)), '打开弹出窗口开发者工具');
+        result => console.log('打开弹出窗口开发者工具', result)), '打开弹出窗口开发者工具');
 
     keyManager.registerHotkeyProcessor('f11', () => focusMode(60), '全屏');
 
@@ -579,7 +594,7 @@ export default {
         noteModel.setting.value = newSetting;
 
         service.invoke('/store/updateSetting', JSON.stringify(noteModel.setting.value), result => console.log(
-          '更新设置', result));
+            '更新设置', result));
 
         noteModel.startColdDown();
         dialogSettingVisible.value = false;
@@ -664,10 +679,10 @@ export default {
         let firstFile = videoList.value[0];
         let firstFileName = firstFile.raw.name;
         if (firstFileName.endsWith('.mp3') || firstFileName.endsWith('.wav')
-          || firstFileName.endsWith('.flac') || firstFileName.endsWith('.m4a')
-          || firstFileName.endsWith('.aac') || firstFileName.endsWith('.wma')
-          || firstFileName.endsWith('.ape') || firstFileName.endsWith('.ogg')
-          || firstFileName.endsWith('.webm')) {
+            || firstFileName.endsWith('.flac') || firstFileName.endsWith('.m4a')
+            || firstFileName.endsWith('.aac') || firstFileName.endsWith('.wma')
+            || firstFileName.endsWith('.ape') || firstFileName.endsWith('.ogg')
+            || firstFileName.endsWith('.webm')) {
           service.invoke('/record/split', {fileName: firstFile.raw.path}, result => {
             if (result.files) {
               let text = [];
@@ -905,6 +920,8 @@ export default {
       step,
       onChangeTour,
       locking,
+      showSplash,
+      showNote,
       version: __APP_VERSION__,
     };
   },
@@ -938,5 +955,19 @@ export default {
   width: 100%;
   height: 100vh;
   z-index: 2000;
+}
+
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
 }
 </style>
