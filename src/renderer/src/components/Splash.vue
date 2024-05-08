@@ -1,7 +1,7 @@
 <template>
   <div class="splash">
     <div v-show="show" class="panel">
-      <img alt="logo" src="../assets/logo.png">
+      <img src="../assets/logo.png" />
     </div>
   </div>
 </template>
@@ -35,11 +35,12 @@ export default {
     width: 50%;
     height: 50%;
     background-color: rgba(0, 0, 0, 0.5);
-    border: #484848 1px solid;
+    border: #757575 1px solid;
 
     img {
       width: 100%;
       height: 100%;
+      border-image-outset: 0px 0px 0px 0px;
     }
   }
 }
