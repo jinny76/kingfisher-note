@@ -18,6 +18,7 @@ const log = require('electron-log');
 log.log('当前路径', rootPath);
 
 let setting = {
+  rootDir: rootPath.replaceAll('\\', '/') + '/kfnote',
   noteDir: rootPath.replaceAll('\\', '/') + '/kfnote/note',
   screenshotDir: rootPath.replaceAll('\\', '/') + '/kfnote/screenshot',
   assetsDir: rootPath.replaceAll('\\', '/') + '/kfnote/assets',
@@ -62,12 +63,19 @@ const saveNoteMeta = () => {
 };
 
 //获取设置
-if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
+if (fs.existsSync(rootPath.replaceAll('\\', '/') + '/install.json')) {
+  let localSetting = JSON.parse(
+      fs.readFileSync(`${rootPath.replaceAll('\\', '/')}/install.json`,
+          'utf-8'));
+  setting.rootDir = localSetting.rootDir;
+}
+
+if (!fs.existsSync(`${setting.rootDir}/setting.json`)) {
   log.log('未找到设置文件');
-  if (!fs.existsSync(rootPath + '/kfnote')) {
-    fs.mkdirSync(rootPath + '/kfnote');
+  if (!fs.existsSync(setting.rootDir)) {
+    fs.mkdirSync(setting.rootDir);
   }
-  fs.writeFileSync(`${rootPath}/kfnote/setting.json`, JSON.stringify(setting),
+  fs.writeFileSync(`${setting.rootDir}/setting.json`, JSON.stringify(setting),
       'utf-8');
   if (isDevelopment) {
     log.log('设置文件已创建', setting);
@@ -75,7 +83,7 @@ if (!fs.existsSync(`${rootPath}/kfnote/setting.json`)) {
   loadNoteMeta();
 } else {
   let localSetting = JSON.parse(
-      fs.readFileSync(`${rootPath}/kfnote/setting.json`, 'utf-8'));
+      fs.readFileSync(`${setting.rootDir}/setting.json`, 'utf-8'));
   Object.keys(localSetting).forEach(key => {
     setting[key] = localSetting[key];
   });
@@ -196,8 +204,7 @@ const install = (mainWindow, windowManager) => {
       if (fs.existsSync(`${setting.noteDir}/${path}.auto`)) {
         versions.unshift({
           name: `${path}.auto`,
-          time: fs.statSync(
-              `${setting.noteDir}/${path}.auto`).mtime.getTime(),
+          time: fs.statSync(`${setting.noteDir}/${path}.auto`).mtime.getTime(),
           label: '自动保存',
         });
       }
@@ -257,8 +264,7 @@ const install = (mainWindow, windowManager) => {
       };
     } else {
       return {
-        code: 404,
-        message: '笔记不存在',
+        code: 404, message: '笔记不存在',
       };
     }
   });
@@ -274,8 +280,15 @@ const install = (mainWindow, windowManager) => {
         setting[key] = newSetting[key];
       });
       log.log('更新设置', setting);
-      fs.writeFileSync(`${rootPath}/kfnote/setting.json`,
+      if (!fs.existsSync(setting.rootDir)) {
+        fs.mkdirSync(setting.rootDir);
+      }
+      fs.writeFileSync(`${setting.rootDir}/setting.json`,
           JSON.stringify(setting), 'utf-8');
+      fs.writeFileSync(`${rootPath.replaceAll('\\', '/')}/install.json`,
+          JSON.stringify({
+            rootDir: setting.rootDir,
+          }), 'utf-8');
     }
     return {
       code: 200,
@@ -286,19 +299,16 @@ const install = (mainWindow, windowManager) => {
     if (params) {
       if (!fs.existsSync(setting.assetsDir + '/' + params)) {
         return {
-          code: 404,
-          message: '文件不存在',
+          code: 404, message: '文件不存在',
         };
       }
 
       return {
-        code: 200,
-        data: fs.readFileSync(setting.assetsDir + '/' + params),
+        code: 200, data: fs.readFileSync(setting.assetsDir + '/' + params),
       };
     }
     return {
-      code: 500,
-      message: '参数错误',
+      code: 500, message: '参数错误',
     };
   });
 
@@ -312,19 +322,16 @@ const install = (mainWindow, windowManager) => {
 
       if (!fs.existsSync(params)) {
         return {
-          code: 404,
-          message: '文件不存在',
+          code: 404, message: '文件不存在',
         };
       }
 
       return {
-        code: 200,
-        data: fs.readFileSync(params),
+        code: 200, data: fs.readFileSync(params),
       };
     }
     return {
-      code: 500,
-      message: '参数错误',
+      code: 500, message: '参数错误',
     };
   });
 
@@ -345,8 +352,7 @@ const install = (mainWindow, windowManager) => {
       };
     } else {
       return {
-        code: 500,
-        message: '参数错误',
+        code: 500, message: '参数错误',
       };
     }
   });
@@ -416,14 +422,13 @@ const storeAssets = async (req, res) => {
 
   log.log(req.files);
   let file = req.files['file[]'];
-  let target = setting.assetsDir + '/' + Date.now() +
-      file.name.substring(file.name.lastIndexOf('.'));
+  let fileName = Date.now() + file.name.substring(file.name.lastIndexOf('.'));
+  let target = setting.assetsDir + '/' + fileName;
   await file.mv(target);
 
   res.send({
-    code: 200,
-    result: {
-      path: target,
+    code: 200, result: {
+      path: `__assets__/${fileName}`,
     },
   });
 };

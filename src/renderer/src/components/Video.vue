@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbar" id="idToolbar">
+  <div class="toolbar" id="idToolbar" v-show="contentType === 'video'">
     <div class="panel">
       <el-button title="插入时间" @click="insertContent('timestamp')" v-if="!embed" >
         <svg class="icon" height="20" p-id="5255" t="1713751961582" version="1.1"
@@ -91,7 +91,7 @@
                      controls
                      style="width: 100%; height: 100%;display: flex" v-bind="options"
                      @play="whenPlay"></vue3-video-player>
-  <webview v-show="contentType === 'website'" ref="webview" :src="options.src" style="width: 100%; height: 100%;display: flex"></webview>
+  <webview v-show="contentType === 'website' || contentType === 'document'" ref="webview" :src="options.src" style="width: 100%; height: 100%;display: flex"></webview>
 </template>
 
 <script lang="js">
@@ -149,7 +149,7 @@ export default {
       if (urlStr && urlStr.indexOf('://') === -1) { // 本地文件
         if (urlStr.endsWith('.html') || urlStr.endsWith('.htm') || urlStr.endsWith('.pdf')) {
           contentType.value = 'document';
-          urlStr = urlStr += '#view=FitH,top';
+          urlStr = 'kingfisher://' + urlStr.replaceAll('\\', '/');
         } else {
           contentType.value = 'video';
           if (urlStr.endsWith('.mp4') || urlStr.endsWith('.webm') || urlStr.endsWith('.ogg')
@@ -177,7 +177,9 @@ export default {
     watch(noteModel.currPage, () => {
       if (noteModel.currPage.value != null && contentType.value === 'document') {
         let urlStr = options.value.src;
-        urlStr = urlStr.substring(0, urlStr.indexOf('#'));
+        if (urlStr.indexOf('#') !== -1) {
+          urlStr = urlStr.substring(0, urlStr.indexOf('#'));
+        }
         if (urlStr.endsWith('.pdf')) {
           urlStr = urlStr + '#page=' + noteModel.currPage.value + '&view=FitH,top';
           options.value.src = '_blank';

@@ -6,14 +6,13 @@ import {
   globalShortcut,
   ipcMain,
   Menu,
+  nativeTheme,
   protocol,
   shell,
-  nativeTheme,
 } from 'electron';
 import {join} from 'path';
 import {electronApp, is, optimizer} from '@electron-toolkit/utils';
 import icon from '../../resources/icon.ico?asset';
-import logo from './logo';
 import StreamServer from './video/server';
 import storeService from './service/store';
 import noteService from './service/note';
@@ -24,9 +23,10 @@ import {checkUpdate} from './update';
 import {initHttpServer} from './http';
 
 const log = require('electron-log');
-let date = new Date()
-let dateStr = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
-log.transports.file.resolvePathFn = () => 'log\\' + dateStr+ '.log';
+let date = new Date();
+let dateStr = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' +
+    date.getDate();
+log.transports.file.resolvePathFn = () => 'log\\' + dateStr + '.log';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 const path = require('path');
@@ -113,8 +113,12 @@ app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.electron');
 
   protocol.registerFileProtocol('kingfisher', (request, callback) => {
-    const url = request.url.substr('kingfisher'.length + 3);
-    log.log('转换视频链接', decodeURI(path.normalize(url)));
+    let url = request.url.substr('kingfisher'.length + 3);
+    url = url.replace('__screenshot__/',
+        storeService.setting.screenshotDir.replaceAll('\\', '/') + '/');
+    url = url.replace('__assets__/',
+        storeService.setting.assetsDir.replaceAll('\\', '/') + '/');
+    log.log('转换视频链接', request.url, decodeURI(path.normalize(url)));
     callback(decodeURI(path.normalize(url)));
   });
 

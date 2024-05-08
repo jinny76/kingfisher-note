@@ -11,6 +11,12 @@
         </el-col>
       </el-row>
       <el-row style="padding: 5px;">
+        <el-col :span="6" title="软件根目录">根目录：</el-col>
+        <el-col :span="18">
+          <el-input v-model="setting.rootDir" placeholder="请输入根目录" :maxlength="200"></el-input>
+        </el-col>
+      </el-row>
+      <el-row style="padding: 5px;">
         <el-col :span="6" title="保存笔记的目录">笔记目录：</el-col>
         <el-col :span="18">
           <el-input v-model="setting.noteDir" placeholder="请输入笔记目录" :maxlength="200"></el-input>

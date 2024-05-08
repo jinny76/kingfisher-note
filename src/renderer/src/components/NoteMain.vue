@@ -453,7 +453,9 @@ export default {
                     }));
                   }
                 } else if (dom.href.startsWith('kingfisher://')) {
-                  if (dom.href.indexOf('.mp4') !== -1 || dom.href.indexOf('.webm') !== -1) {
+                  if (dom.href.indexOf('.mp4') !== -1 || dom.href.indexOf('.webm') !== -1
+                    || dom.href.indexOf('.html') !== -1 || dom.href.indexOf('.html') !== -1
+                    || dom.href.indexOf('.pdf') !== -1) {
                     closeVideo();
                     nextTick(() => openVideo(decodeURIComponent(dom.href.replace('kingfisher://', ''))));
                   } else {
@@ -617,7 +619,7 @@ export default {
                 }
               },
             },
-            {
+            /*{
               hotkey: '⇧⌘G',
               name: 'insert-page',
               tipPosition: 's',
@@ -636,7 +638,7 @@ export default {
                   ElMessage.warning('请先打开一个笔记');
                 }
               },
-            },
+            },*/
             {
               hotkey: '⇧⌘S',
               name: 'insert-start',
@@ -904,6 +906,8 @@ export default {
     }
 
     let captureSubtitleListener = function(event, arg) {
+      let fileName = JSON.parse(arg).fileName;
+      fileName= fileName.replace(noteModel.setting.value.assetsDir, '__assets__');
       if (noteModel.setting.value.aiServer && noteModel.setting.value.aiKey) {
         ElMessageBox.confirm('字幕已经生成，要不要进行分析？', '字幕分析', {
           confirmButtonText: '是',
@@ -911,9 +915,9 @@ export default {
           type: 'success',
         }).
           then(() => analysisSubtitle(arg)).
-          catch(() => insertText(`\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`));
+          catch(() => insertText(`\n\n[[字幕]](subtitle://${fileName})\n`));
       } else {
-        insertText(`\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`);
+        insertText(`\n\n[[字幕]](subtitle://${fileName})\n`);
       }
     };
     electron.ipcRenderer.on('/client/captureSubtitle', captureSubtitleListener);
@@ -952,13 +956,10 @@ export default {
     let recordSaveListener = function(event, arg) {
       if (noteModel.currNote.value.name) {
         if (arg.type === 'video') {
-          let video = arg.fileName;
-          let fileName = video.substring(video.lastIndexOf('/') + 1);
-          let content = `\n\n[[本地资料 ${fileName}]](kingfisher://${encodeURIComponent(video + '/')})\n`;
+          let content = `\n\n[[本地资料 ${arg.fileName}]](kingfisher://__assets__/${arg.fileName}/)\n`;
           insertText(content);
         } else if (arg.type === 'audio') {
-          let content = `\n\n[音频](kingfisher://${arg.fileName}) [[转文字](tts://${arg.fileName.substring(
-            arg.fileName.lastIndexOf('/') + 1) + '/'})]\n`;
+          let content = `\n\n[音频](kingfisher://__assets__/${arg.fileName}) [[转文字](tts://${arg.fileName}/)]\n`;
           insertText(content);
         }
       }
@@ -984,7 +985,7 @@ export default {
 
     // format 1 to file://./screenshot/1.png to md file
     function insertMdImg(fileId) {
-      return `![](kingfisher://${noteModel.setting.value.screenshotDir.replaceAll('\\', '/') + `/${fileId}.png`})`;
+      return `![](kingfisher://__screenshot__/${fileId}.png)`;
     }
 
     const videoWidth = computed(() => showVideo.value ? '33%' : '0%');

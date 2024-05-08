@@ -512,8 +512,8 @@ export default {
         step.value.push(toolbar.children[31]);
         step.value.push(toolbar.children[32]);
         step.value.push(toolbar.children[33]);
-        step.value.push(toolbar.children[38]);
-        step.value.push(toolbar.children[41]);
+        step.value.push(toolbar.children[37]);
+        step.value.push(toolbar.children[40]);
       }
 
       showTour.value = true;

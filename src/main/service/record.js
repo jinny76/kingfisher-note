@@ -81,6 +81,7 @@ const install = (mainWindow, windowManager) => {
     await webmFix(params.fileName);
     fs.rmSync(params.fileName);
     params.fileName = params.fileName.replace('.webm', '.fixed.webm');
+    params.fileName = params.fileName.replace(storeService.setting.assetsDir + '/', '');
     mainWindow.webContents.send('/client/record-save', params);
   });
 
