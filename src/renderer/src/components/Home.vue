@@ -296,8 +296,8 @@ export default {
       canvas.getContext('2d');
       const _w = screen.value.width = window.innerWidth;
       const _h = screen.value.height = window.innerHeight;
-      canvas.width = _w - 10;
-      canvas.height = _h - 4;
+      canvas.width = _w;
+      canvas.height = _h;
     };
 
     let lockTimer;
