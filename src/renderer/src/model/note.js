@@ -40,11 +40,14 @@ const aiServers = [
 const favoriteContent = localStorage.getItem('KC_FAVORITE');
 
 const favorite = ref(favoriteContent ? JSON.parse(favoriteContent) : [
-  '此处甚好',
-  '这里是重点',
-  '这里有问题，留后续整理',
-  '这里不太明白',
+  {value: '这里甚好', count: 0},
+  {value: '这里是重点', count: 0},
+  {value: '这里是总结部分', count: 0},
+  {value: '这里有问题，留后续整理', count: 0},
+  {value: '这里不太明白', count: 0},
 ]);
+
+const newFavorite = ref("");
 
 localStorage.getItem('KC_FAVORITE', JSON.stringify(favorite.value));
 
@@ -140,4 +143,5 @@ export default {
   aiServers,
   startingPoint,
   favorite,
+  newFavorite
 };
