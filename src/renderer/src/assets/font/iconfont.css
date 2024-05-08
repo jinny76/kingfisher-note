@@ -1,0 +1,27 @@
+@font-face {
+  font-family: "iconfont"; /* Project id 3466728 */
+  src: url('iconfont.woff2?t=1715130226081') format('woff2'),
+       url('iconfont.woff?t=1715130226081') format('woff'),
+       url('iconfont.ttf?t=1715130226081') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-kingfisherauto:before {
+  content: "\e6eb";
+}
+
+.icon-kingfisherall:before {
+  content: "\e6ef";
+}
+
+.icon-kingfisherbussiness-man:before {
+  content: "\e6f0";
+}
+

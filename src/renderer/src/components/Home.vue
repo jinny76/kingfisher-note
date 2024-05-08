@@ -16,7 +16,7 @@
         <el-sub-menu index="1">
           <template #title>文件</template>
           <el-menu-item id="idMenuFile" index="2-1">
-            新建笔记
+            <i class="iconfont icon-kingfisherall"></i> 新建笔记
           </el-menu-item>
           <el-menu-item index="2-2">打开笔记</el-menu-item>
           <el-sub-menu index="2-3">
