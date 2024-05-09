@@ -453,6 +453,7 @@ export default {
             inputPattern: /^\d+$/,
             inputErrorMessage: '请输入学习时间（分钟）',
             inputValue: 60,
+            closeOnClickModal: false
           }).then(({value}) => focusMode(value)).catch(() => {
           });
           break;
@@ -805,6 +806,7 @@ export default {
           confirmButtonText: '解锁',
           cancelButtonText: '取消',
           inputType: 'password',
+          closeOnClickModal: false
         }).then(({value}) => {
           if (!value) {
             value = '';

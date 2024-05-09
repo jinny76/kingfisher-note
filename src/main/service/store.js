@@ -38,13 +38,18 @@ const encrypt = (data, key) => {
 };
 
 const decrypt = (data, key) => {
-  for (let i = 0; i < 16; i++) {
-    key = md5(key);
+  try {
+    for (let i = 0; i < 16; i++) {
+      key = md5(key);
+    }
+    const decipher = crypto.createDecipheriv(algorithm, key, initVector);
+    let decrypted = decipher.update(Buffer.from(data, 'hex'));
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
+  } catch (e) {
+    log.error('解密失败', e);
+    throw e;
   }
-  const decipher = crypto.createDecipheriv(algorithm, key, initVector);
-  let decrypted = decipher.update(Buffer.from(data, 'hex'));
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
-  return decrypted.toString();
 };
 
 const loadNoteMeta = () => {

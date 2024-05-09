@@ -343,6 +343,16 @@ export default {
                   insertContent('timestamp');
                 }
               }
+
+              nextTick(() => {
+                let cursorPosition = editor.getCursorPosition();
+                let editorContainer = document.querySelector('.vditor-sv');
+                console.log(cursorPosition, editorContainer.scrollTop, editorContainer.scrollHeight,
+                  editorContainer.clientHeight);
+                if (editorContainer.clientHeight < cursorPosition.top + 100) {
+                  editorContainer.scrollTop += cursorPosition.top - editorContainer.clientHeight + 100;
+                }
+              });
             }
             noteModel.startColdDown();
           },
@@ -566,6 +576,7 @@ export default {
                     cancelButtonText: '取消',
                     inputPattern: /\S/,
                     inputErrorMessage: '网址不能为空',
+                    closeOnClickModal: false,
                   }).
                     then(({value}) => openVideo(value.replace('http', 'vhttp'), true)).
                     catch(() => console.log('取消打开网址'));
@@ -633,6 +644,7 @@ export default {
                     cancelButtonText: '取消',
                     inputPattern: /\d+/,
                     inputErrorMessage: '页码必须填写',
+                    closeOnClickModal: false
                   }).then(({value}) => insertText(`\n\n[[页码${value}]](page://${value})\n`));
                 } else {
                   ElMessage.warning('请先打开一个笔记');
@@ -907,7 +919,7 @@ export default {
 
     let captureSubtitleListener = function(event, arg) {
       let fileName = JSON.parse(arg).fileName;
-      fileName= fileName.replace(noteModel.setting.value.assetsDir, '__assets__');
+      fileName = fileName.replace(noteModel.setting.value.assetsDir, '__assets__');
       if (noteModel.setting.value.aiServer && noteModel.setting.value.aiKey) {
         ElMessageBox.confirm('字幕已经生成，要不要进行分析？', '字幕分析', {
           confirmButtonText: '是',
@@ -1006,6 +1018,7 @@ export default {
         cancelButtonText: '取消',
         inputPattern: /\S/,
         inputErrorMessage: '笔记名称不能为空',
+        closeOnClickModal: false,
       }).then(({value}) => {
         closeVideo();
         service.invoke('/store/newNote', value, result => {
@@ -1116,6 +1129,7 @@ export default {
             inputPattern: /\S/,
             inputErrorMessage: '密码不能为空',
             inputType: 'password',
+            closeOnClickModal: false,
           }).then(({value}) => {
             note.key = value;
             callOpen(note, time);
@@ -1374,6 +1388,7 @@ export default {
             inputPattern: /\S/,
             inputErrorMessage: '密码不能为空',
             inputType: 'password',
+            closeOnClickModal: false,
           }).then(({value}) =>
             service.invoke('/store/encryptNote', JSON.stringify({
               path: noteModel.currNote.value.name,
@@ -1696,8 +1711,7 @@ export default {
 .favorite-panel {
   position: absolute;
   z-index: 2;
-  border: 1px solid dodgerblue;
-  box-shadow: dodgerblue 0px 0px 10px;
+  border: 1px solid #4d4d4d;
   background-color: rgb(84, 92, 100);
   width: 300px;
 
