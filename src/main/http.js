@@ -1,11 +1,16 @@
+const {app} = require('electron');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
 import storeService from './service/store';
+
 const log = require('electron-log');
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 export const initHttpServer = () => {
+  log.log('应用根路径', app.getAppPath());
+
   const server = express();
   server.use(cors());
 
@@ -19,7 +24,11 @@ export const initHttpServer = () => {
 
   server.use('/upload', router);
 
-  server.use('/vditor', express.static('./resources/vditor'));
+  if (isDevelopment) {
+    server.use('/vditor', express.static('resources/vditor'));
+  } else {
+    server.use('/vditor', express.static('../resources/vditor'));
+  }
 
   server.listen(13999, () => log.log(
       'HTTP 服务器启动 http://localhost:13999'));
