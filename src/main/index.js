@@ -28,7 +28,6 @@ let dateStr = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' +
     date.getDate();
 log.transports.file.resolvePathFn = () => 'log\\' + dateStr + '.log';
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
 const path = require('path');
 
 initHttpServer();

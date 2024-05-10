@@ -1,4 +1,4 @@
-import {ipcMain} from 'electron';
+import {ipcMain, app} from 'electron';
 import fs from 'fs';
 import crypto from 'crypto';
 import md5 from 'md5';
@@ -6,7 +6,6 @@ import pathService from 'path';
 
 const algorithm = 'aes-256-cbc';
 const encryptPrefix = '!!!secure:';
-const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // generate 16 bytes of random data
 let iv = md5('kingisher note').substring(0, 16);
@@ -82,7 +81,7 @@ if (!fs.existsSync(`${setting.rootDir}/setting.json`)) {
   }
   fs.writeFileSync(`${setting.rootDir}/setting.json`, JSON.stringify(setting),
       'utf-8');
-  if (isDevelopment) {
+  if (!app.isPackaged) {
     log.log('设置文件已创建', setting);
   }
   loadNoteMeta();
@@ -92,7 +91,7 @@ if (!fs.existsSync(`${setting.rootDir}/setting.json`)) {
   Object.keys(localSetting).forEach(key => {
     setting[key] = localSetting[key];
   });
-  if (isDevelopment) {
+  if (!app.isPackaged) {
     log.log('设置文件已加载', setting);
   }
   loadNoteMeta();

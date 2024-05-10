@@ -4,9 +4,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
 import storeService from './service/store';
+import fs from 'fs';
 
 const log = require('electron-log');
-const isDevelopment = process.env.NODE_ENV !== 'production';
 
 export const initHttpServer = () => {
   log.log('应用根路径', app.getAppPath());
@@ -24,10 +24,12 @@ export const initHttpServer = () => {
 
   server.use('/upload', router);
 
-  if (isDevelopment) {
+  if (!app.isPackaged) {
     server.use('/vditor', express.static('resources/vditor'));
   } else {
-    server.use('/vditor', express.static(app.getAppPath() + '../../Resources/vditor'));
+    let cdn = app.getAppPath() + '.unpacked/../../Resources/vditor';
+    log.log('CDN', fs.existsSync(cdn));
+    server.use('/vditor', express.static(cdn));
   }
 
   server.listen(13999, () => log.log(
