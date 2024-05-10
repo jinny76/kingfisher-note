@@ -27,7 +27,7 @@ export const initHttpServer = () => {
   if (isDevelopment) {
     server.use('/vditor', express.static('resources/vditor'));
   } else {
-    server.use('/vditor', express.static('../../Resources/vditor'));
+    server.use('/vditor', express.static(app.getAppPath() + '../../Resources/vditor'));
   }
 
   server.listen(13999, () => log.log(
