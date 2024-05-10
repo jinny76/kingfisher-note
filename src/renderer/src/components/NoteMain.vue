@@ -347,8 +347,6 @@ export default {
               nextTick(() => {
                 let cursorPosition = editor.getCursorPosition();
                 let editorContainer = document.querySelector('.vditor-sv');
-                console.log(cursorPosition, editorContainer.scrollTop, editorContainer.scrollHeight,
-                  editorContainer.clientHeight);
                 if (editorContainer.clientHeight < cursorPosition.top + 100) {
                   editorContainer.scrollTop += cursorPosition.top - editorContainer.clientHeight + 100;
                 }
@@ -1102,6 +1100,7 @@ export default {
         path: note.name,
         key: note.key,
         time,
+        auto: note.auto
       }), result => {
         if (result.code === 200) {
           closeVideo();
@@ -1335,10 +1334,13 @@ export default {
           icon: 'material',
         }));
 
-    const loadVersion = time => {
-      let note = {
-        name: noteModel.currNote.value.name,
-      };
+    const loadVersion = note => {
+      let time = note.time;
+      if (note.name.endsWith(".auto")) {
+        time = null;
+        note.auto = true;
+      }
+      note.name = noteModel.currNote.value.name;
       if (noteModel.currNote.value.changed) {
         ElMessageBox.confirm('当前笔记已修改，是否保存？', '提示', {
           confirmButtonText: '保存',

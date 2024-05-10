@@ -6,6 +6,11 @@ import fs from 'fs';
 const log = require('electron-log');
 
 const install = (mainWindow, windowManager) => {
+  let processCb = (percent, timemark) => {
+    mainWindow.webContents.send('/client/ffmpeg-progress',
+        {percent, timemark});
+  };
+
   //log.log(mainWindow.getMediaSourceId());
   desktopCapturer.getSources({
     types: ['screen', 'window'], // 设定需要捕获的是"屏幕"，还是"窗口"
@@ -87,7 +92,7 @@ const install = (mainWindow, windowManager) => {
 
   ipcMain.handle('/record/split', async (event, params) => {
     log.log('切割文件', params);
-    let result = await splitAudio(params.fileName);
+    let result = await splitAudio(params.fileName, processCb);
     let target = result.target;
     //list all files
     let files = fs.readdirSync(target);

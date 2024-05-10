@@ -9,9 +9,10 @@ class Ffmepg {
     this.instance = null;
   }
 
-  init() {
+  init(processCb) {
     //ffmpeg.setFfmpegPath(require('@ffmpeg-installer/ffmpeg').path);
-    ffmpeg.setFfmpegPath("./resources/ffmpeg/ffmpeg");
+    ffmpeg.setFfmpegPath('./resources/ffmpeg/ffmpeg');
+    this.processCb = processCb;
   }
 
   create(input) {
@@ -35,6 +36,7 @@ class Ffmepg {
   }
 
   captureAudio(input, audioc = 'copy') {
+    const _self = this;
     return new Promise((resolve, reject) => {
       if (audioc === 'mp3') {
         audioc = 'libmp3lame';
@@ -47,6 +49,9 @@ class Ffmepg {
           audioCodec(audioc).
           on('progress', function(progress) {
             log.log('处理时间: ' + progress.timemark);
+            if (_self.processCb) {
+              _self.processCb(progress.percent, progress.timemark);
+            }
           }).
           on('error', function(err) {
             log.log('发生错误: ' + err.message);
@@ -61,6 +66,7 @@ class Ffmepg {
   }
 
   convert(input, videoc = 'copy', audioc = 'copy') {
+    const _self = this;
     return new Promise((resolve, reject) => {
       if (videoc === 'h264') {
         videoc = 'libx264';
@@ -81,6 +87,9 @@ class Ffmepg {
           format('mp4').
           on('progress', function(progress) {
             log.log('处理时间: ' + progress.timemark);
+            if (_self.processCb) {
+              _self.processCb(progress.percent, progress.timemark);
+            }
           }).
           on('error', function(err) {
             log.log('发生错误: ' + err.message);
@@ -95,6 +104,7 @@ class Ffmepg {
   }
 
   splitAudio(input) {
+    const _self = this;
     return new Promise((resolve, reject) => {
       let tempDir = Date.now().toString();
       fs.mkdirSync(tempDir, {recursive: true});
@@ -103,6 +113,9 @@ class Ffmepg {
           audioCodec('copy').
           outputOptions('-f', 'segment', '-segment_time', '20').
           on('progress', function(progress) {
+            if (_self.processCb) {
+              _self.processCb(progress.percent, progress.timemark);
+            }
             log.log('处理时间: ' + progress.timemark);
           }).
           on('error', function(err) {
@@ -113,11 +126,13 @@ class Ffmepg {
             log.log('处理完成');
             resolve(tempDir);
           }).
-          save(`${tempDir}/out%03d.${input.substring(input.lastIndexOf('.') + 1)}`);
+          save(`${tempDir}/out%03d.${input.substring(
+              input.lastIndexOf('.') + 1)}`);
     });
   }
 
   webmFix(input) {
+    const _self = this;
     return new Promise((resolve, reject) => {
       this.instance = ffmpeg().
           input(input).
@@ -125,6 +140,9 @@ class Ffmepg {
           audioCodec('copy').
           format('webm').
           on('progress', function(progress) {
+            if (_self.processCb) {
+              _self.processCb(progress.percent, progress.timemark);
+            }
             log.log('处理时间: ' + progress.timemark);
           }).
           on('error', function(err) {
@@ -156,11 +174,15 @@ class Ffmepg {
   }
 
   extractSubtitle(input) {
+    const _self = this;
     return new Promise((resolve, reject) => {
       this.instance = ffmpeg().
           input(input.path).
           outputOptions('-map', '0:' + input.index).
           on('progress', function(progress) {
+            if (_self.processCb) {
+              _self.processCb(progress.percent, progress.timemark);
+            }
             log.log('处理时间: ' + progress.timemark);
           }).
           on('error', function(err) {

@@ -154,6 +154,9 @@ app.whenReady().then(() => {
   aiService.install(mainWindow, windowManager);
   recordService.install(mainWindow, windowManager);
 
+  const streamServer = new StreamServer(mainWindow);
+  streamServer.start();
+
   checkUpdate(mainWindow, ipcMain);
 });
 
@@ -169,8 +172,5 @@ app.on('window-all-closed', () => {
 
 let windowManager = new Window();
 windowManager.listen();
-
-const streamServer = new StreamServer();
-streamServer.start();
 
 log.log('Websocket 服务器启动 ws://localhost:18888');

@@ -241,11 +241,13 @@ const install = (mainWindow, windowManager) => {
   ipcMain.handle('/store/getNote', (event, params) => {
     log.log('开始获取文件');
     // get file from "note" folder
-    let {path, time, key} = JSON.parse(params);
+    let {path, time, key, auto} = JSON.parse(params);
 
     let target = path;
     if (time) {
       target = `${target}.${time}.bak`;
+    } else if (auto) {
+      target = `${target}.auto`;
     }
 
     if (fs.existsSync(`${setting.noteDir}/${target}`)) {

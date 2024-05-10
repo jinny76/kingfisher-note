@@ -13,6 +13,11 @@ const rootPath = process.cwd();
 const log = require('electron-log');
 
 const install = (mainWindow, windowManager) => {
+  let processCb = (percent, timemark) => {
+    mainWindow.webContents.send('/client/ffmpeg-progress',
+        {percent, timemark});
+  };
+
   ipcMain.handle('/note/insertAll', (event, params) => {
     log.log('开始插入内容');
     // save file to "note" folder
@@ -94,7 +99,7 @@ const install = (mainWindow, windowManager) => {
   ipcMain.handle('/note/convert', async (event, params) => {
     let request = JSON.parse(params);
     await convert(request.files, request.options.h264 ? 'h264' : null,
-        request.options.mp3 ? 'mp3' : null);
+        request.options.mp3 ? 'mp3' : null, processCb);
     return {
       code: 200,
     };
@@ -114,14 +119,14 @@ const install = (mainWindow, windowManager) => {
 
   ipcMain.handle('/note/captureAudio', async (event, params) => {
     let request = JSON.parse(params);
-    await captureAudio(request.files, 'mp3');
+    await captureAudio(request.files, 'mp3', processCb);
     return {
       code: 200,
     };
   });
 
   ipcMain.handle('/note/extractSubtitle', async (event, params) => {
-    let result = await extractSubtitle(JSON.parse(params));
+    let result = await extractSubtitle(JSON.parse(params), processCb);
     mainWindow.webContents.send('/client/captureSubtitle',
         JSON.stringify({fileName: result.result}));
     return result;

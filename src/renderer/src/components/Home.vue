@@ -1,20 +1,20 @@
 <template>
   <transition name="slide-fade">
-    <Splash v-if="showSplash"/>
+    <Splash v-if="showSplash" />
   </transition>
   <el-container v-show="showNote" style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
     <el-header style="padding: 0px; display: flex; justify-content: space-between">
       <el-menu
-          ref="menu"
-          :default-active="activeIndex"
-          active-text-color="#ffd04b"
-          background-color="#545c64"
-          class="el-menu-demo"
-          mode="horizontal"
-          popper-effect="dark"
-          style="width: 400px;"
-          text-color="#fff"
-          @select="handleSelect"
+        ref="menu"
+        :default-active="activeIndex"
+        active-text-color="#ffd04b"
+        background-color="#545c64"
+        class="el-menu-demo"
+        mode="horizontal"
+        popper-effect="dark"
+        style="width: 400px;"
+        text-color="#fff"
+        @select="handleSelect"
       >
         <el-sub-menu index="1">
           <template #title>文件</template>
@@ -64,51 +64,51 @@
         <div style="padding-left: 40px">
           标签:
           <el-select
-              v-model="currNote.tags"
-              :max-collapse-tags="3"
-              :reserve-keyword="false"
-              allow-create
-              collapse-tags
-              collapse-tags-tooltip
-              default-first-option
-              filterable
-              multiple
-              placeholder="选择标签"
-              style="width: 300px"
+            v-model="currNote.tags"
+            :max-collapse-tags="3"
+            :reserve-keyword="false"
+            allow-create
+            collapse-tags
+            collapse-tags-tooltip
+            default-first-option
+            filterable
+            multiple
+            placeholder="选择标签"
+            style="width: 300px"
           >
             <el-option
-                v-for="item in tags"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+              v-for="item in tags"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
             />
           </el-select>
         </div>
         <div style="padding-left: 40px">
           版本:
           <el-select
-              v-model="currVersion"
-              empty-text="没有历史版本"
-              filterable
-              placeholder="加载历史版本"
-              style="width: 180px"
-              @change="loadVersion"
+            v-model="currVersion"
+            empty-text="没有历史版本"
+            filterable
+            placeholder="加载历史版本"
+            style="width: 180px"
+            @change="loadVersion"
           >
             <el-option
-                v-for="version in versions"
-                :key="version.time"
-                :label="version.index + ' ' + version.duration"
-                :title="version.label"
-                :value="version.time"
+              v-for="version in versions"
+              :key="version.time"
+              :label="version.index + ' ' + version.duration"
+              :title="version.label"
+              :value="version"
             />
           </el-select>
         </div>
         <div v-if="targetTime> 0" style="padding-left: 40px; width: 300px;">
           <el-progress
-              :percentage="restPercent"
-              :stroke-width="20"
-              :text-inside="true"
-              status="success">
+            :percentage="restPercent"
+            :stroke-width="20"
+            :text-inside="true"
+            status="success">
             <span style="color:white">您已经沉浸学习了 {{ studyTime }} </span>
           </el-progress>
         </div>
@@ -155,21 +155,21 @@
              draggable
              title="选择字幕" width="435">
     <el-table
-        :data="subtitleList"
-        border
-        height="400"
-        style="width: 100%"
-        @row-click="handleSubtitleClick"
+      :data="subtitleList"
+      border
+      height="400"
+      style="width: 100%"
+      @row-click="handleSubtitleClick"
     >
       <el-table-column
-          label="标题"
-          prop="title"
-          width="300">
+        label="标题"
+        prop="title"
+        width="300">
       </el-table-column>
       <el-table-column
-          label="语言"
-          prop="language"
-          width="100">
+        label="语言"
+        prop="language"
+        width="100">
       </el-table-column>
       >
     </el-table>
@@ -183,10 +183,10 @@
              draggable
              title="文件处理" width="800">
     <el-upload
-        v-model:file-list="videoList"
-        :auto-upload="false"
-        :multiple="false"
-        accept="video/*,audio/*"
+      v-model:file-list="videoList"
+      :auto-upload="false"
+      :multiple="false"
+      accept="video/*,audio/*,video/x-matroska"
     >
       <el-button type="primary">选择文件</el-button>
       <template #tip>
@@ -201,14 +201,17 @@
       <el-checkbox v-model="convertOptions.mp3">MP3</el-checkbox>
     </div>
     <el-progress
-        v-show="showProgress"
-        :duration="10"
-        :percentage="100"
-        :stroke-width="15"
-        status="success"
-        striped
-        striped-flow
-    />
+      v-show="showProgress"
+      :duration="10"
+      :percentage="process.percent"
+      :stroke-width="15"
+      :text-inside="true"
+      status="success"
+      striped
+      striped-flow
+    >
+      <span>{{ process.timemark }}</span>
+    </el-progress>
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="doConvert">转换视频</el-button>
@@ -228,7 +231,7 @@
       <div>点击菜单，创建一个新的笔记</div>
     </el-tour-step>
     <el-tour-step :target="step[1]" placement="center" title="编写笔记">
-      <div>就可以编写笔记了</div>
+      <div>就可以编写笔记了，左侧是编辑窗口，右侧是实时预览窗口</div>
     </el-tour-step>
     <el-tour-step :target="step[2]" title="获得帮助">
       <div>笔记使用Markdown格式，可以从这里获得帮助</div>
@@ -237,13 +240,13 @@
       <div>编写过程中可以点击按钮，或者使用快捷键 Ctrl+S 来保存笔记</div>
     </el-tour-step>
     <el-tour-step :target="step[4]" title="打开文件">
-      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+V 来打开一个文件</div>
+      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+V 来打开一个文件，可以是视频教程，也可以是录音教程，还可以是PDF等文本教程</div>
     </el-tour-step>
     <el-tour-step :target="step[5]" title="打开音视频网址">
-      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+U 来打开一个音视频网址，目前B站和网易公开课支持较好</div>
+      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+U 来打开一个音视频网址，目前B站,网易公开课,慕课网和中国大学MOOC支持较好</div>
     </el-tour-step>
     <el-tour-step :target="step[6]" title="插入定位">
-      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+T 来插入一个时间定位，然后在笔记预览链接点击可以快速跳转</div>
+      <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+T 来插入一个时间定位，然后在笔记预览链接点击可以快速跳转到对应位置</div>
     </el-tour-step>
     <el-tour-step :target="step[7]" title="插入截图">
       <div>可以点击按钮，或者使用快捷键 Ctrl+Shift+P 来插入一个视频截图，然后在笔记预览可以点击看大图</div>
@@ -258,7 +261,7 @@
       <div>可以点击按钮，导出笔记，支持MD，PDF和HTML格式</div>
     </el-tour-step>
     <el-tour-step title="欢迎使用">
-      <div>感谢大家使用灵翠笔记，软件的成熟还靠大家支持。</div>
+      <div>除此之外还有很多贴心功能，大家可以查看帮助文档。感谢大家使用灵翠笔记，软件的成熟还靠大家支持。</div>
     </el-tour-step>
   </el-tour>
   <div v-show="locking" class="cv" @click="unlock">
@@ -311,7 +314,7 @@ export default {
       setTimeout(() => {
         showSplash.value = false;
         setTimeout(() => showNote.value = true, 1000);
-        }, 2000);
+      }, 2000);
     });
 
     const draw = () => {
@@ -341,10 +344,10 @@ export default {
     keyManager.init();
 
     keyManager.registerHotkeyProcessor('ctrl+alt+1', () => service.invoke('/system/openDevTools', '',
-        result => console.log('打开主窗口开发者工具', result)), '打开主窗口开发者工具');
+      result => console.log('打开主窗口开发者工具', result)), '打开主窗口开发者工具');
 
     keyManager.registerHotkeyProcessor('ctrl+alt+2', () => service.invoke('/system/openPopDevTools', '',
-        result => console.log('打开弹出窗口开发者工具', result)), '打开弹出窗口开发者工具');
+      result => console.log('打开弹出窗口开发者工具', result)), '打开弹出窗口开发者工具');
 
     keyManager.registerHotkeyProcessor('f11', () => focusMode(60), '全屏');
 
@@ -362,6 +365,15 @@ export default {
       console.log('退出全屏', arg);
       targetTime.value = 0;
       clearInterval(studyTimer);
+    });
+
+    const process = ref({
+      percent: 0,
+      timemark: '',
+    });
+    window.electron.ipcRenderer.on('/client/ffmpeg-progress', function(event, args) {
+      console.log('处理进展', args);
+      process.value = args;
     });
 
     let downloadedListener = function() {
@@ -444,6 +456,10 @@ export default {
         case '4-2':
           videoList.value = [];
           dialogConvertVisible.value = true;
+          process.value = {
+            percent: 0,
+            timemark: '',
+          };
           break;
         case '4-3':
           ElMessageBox.prompt('预计学习时间(分钟)', '专注模式', {
@@ -453,7 +469,7 @@ export default {
             inputPattern: /^\d+$/,
             inputErrorMessage: '请输入学习时间（分钟）',
             inputValue: 60,
-            closeOnClickModal: false
+            closeOnClickModal: false,
           }).then(({value}) => focusMode(value)).catch(() => {
           });
           break;
@@ -595,7 +611,7 @@ export default {
         noteModel.setting.value = newSetting;
 
         service.invoke('/store/updateSetting', JSON.stringify(noteModel.setting.value), result => console.log(
-            '更新设置', result));
+          '更新设置', result));
 
         noteModel.startColdDown();
         dialogSettingVisible.value = false;
@@ -631,6 +647,7 @@ export default {
         }), result => {
           showProgress.value = false;
           console.log('转换成功', result);
+          videoList.value = [];
           ElMessage.success('转换成功，请查看文件夹');
         }, error => {
           console.error('转换失败', error);
@@ -660,6 +677,7 @@ export default {
         }), result => {
           showProgress.value = false;
           console.log('抓取成功', result);
+          videoList.value = [];
           ElMessage.success('抓取成功，请查看文件夹');
         }, error => {
           console.error('抓取失败', error);
@@ -680,17 +698,22 @@ export default {
         let firstFile = videoList.value[0];
         let firstFileName = firstFile.raw.name;
         if (firstFileName.endsWith('.mp3') || firstFileName.endsWith('.wav')
-            || firstFileName.endsWith('.flac') || firstFileName.endsWith('.m4a')
-            || firstFileName.endsWith('.aac') || firstFileName.endsWith('.wma')
-            || firstFileName.endsWith('.ape') || firstFileName.endsWith('.ogg')
-            || firstFileName.endsWith('.webm')) {
+          || firstFileName.endsWith('.flac') || firstFileName.endsWith('.m4a')
+          || firstFileName.endsWith('.aac') || firstFileName.endsWith('.wma')
+          || firstFileName.endsWith('.ape') || firstFileName.endsWith('.ogg')
+          || firstFileName.endsWith('.webm')) {
           service.invoke('/record/split', {fileName: firstFile.raw.path}, result => {
+            videoList.value = [];
             if (result.files) {
               let text = [];
               let index = 0;
               stt(result.files[index], index);
 
               function stt(_file, i) {
+                process.value = {
+                  percent: (i + 1) / result.files.length * 100,
+                  timemark: '分段' + (i + 1),
+                };
                 service.invoke('/store/downloadFile', _file, r => {
                   if (r.code === 200) {
                     let file = new File([r.data], Date.now() + '.mp3', {type: 'audio/mp3'});
@@ -752,6 +775,7 @@ export default {
           }), result => {
             showProgress.value = false;
             console.log('抓取成功', result);
+            videoList.value = [];
             if (result.code === 200) {
               subtitleList.value = result.result.filter(item => item.codec_type === 'subtitle').map(item => ({
                 path: raw.path,
@@ -793,10 +817,10 @@ export default {
     const subtitleList = ref([]);
     const dialogSubtitleVisible = ref(false);
 
-    const loadVersion = time => {
-      console.log('加载历史版本', time);
+    const loadVersion = note => {
+      console.log('加载历史版本', note);
       if (mainComponent.value.loadVersion) {
-        mainComponent.value.loadVersion(time);
+        mainComponent.value.loadVersion(note);
       }
     };
 
@@ -806,7 +830,7 @@ export default {
           confirmButtonText: '解锁',
           cancelButtonText: '取消',
           inputType: 'password',
-          closeOnClickModal: false
+          closeOnClickModal: false,
         }).then(({value}) => {
           if (!value) {
             value = '';
@@ -924,6 +948,7 @@ export default {
       locking,
       showSplash,
       showNote,
+      process,
       version: __APP_VERSION__,
     };
   },
