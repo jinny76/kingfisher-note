@@ -2,15 +2,136 @@ const websites = {
   'www.bilibili.com': {
     debug: false, replace: 'www.b.com',
     loadScript: `
-    window.KFEventHandler = {
-      captureSubtitle: function(){
-        let button = document.querySelector(".bpx-player-ctrl-subtitle");
-        if (button) {
-          button.childNodes[1].childNodes[0].click();
-        }
+    let timerPlayer = setInterval(() => {
+      let div = document.querySelector("#playerWrap");
+      if (div) {
+        clearInterval(timerPlayer);
+        div.style.width = "100%";
+        div.style.height = "100vh";
+        let player = document.querySelector("#bilibili-player");
+        player.style.width = "100%";
+        player.style.height = "100%";
+        document.body.style.minWidth = "0px";
+        document.body.appendChild(div);
+        document.querySelector("#app").style.display = 'none';
       }
-    };
+    }, 1000);
+    `,
+    captureSubtitle: true,
+  }, 'www.youtube.com': {
+    replace: 'www.y.com',
+  }, 'open.163.com': {
+    videoId: '#open-video_html5_api', loadScript: `let timer = setInterval(() => {
+              let button = document.querySelector(".vjs-grow-button");
+              if (button) {
+                clearInterval(timer);
+                button.click();
+                let videoMainBox = document.querySelector(".video-main-box");
+                if (videoMainBox) {
+                  document.body.appendChild(videoMainBox);
+                  document.body.removeChild(document.body.children[0]);
+                  document.body.removeChild(document.body.children[0]);
+                }
+              }
+            }, 1000);`,
+  },
+  'live.bilibili.com': {
+    loadScript: `let timer = setInterval(() => {
+              let div = document.querySelector(".player-section");
+              if (div) {
+                clearInterval(timer);
+                div.style.width = "100%";
+                div.style.height = "100vh";
+                document.body.style.minWidth = "0px";
+                document.body.appendChild(div);
+                document.body.removeChild(document.querySelector(".live-room-app"));
+              }
+            }, 1000);`,
+  },
+  'www.icourse163.org': {
+    debug: false,
+    loadScript: `
+              let iframe = document.createElement('iframe');
+          　　 document.body.appendChild(iframe);
+          　　 window.console = iframe.contentWindow.console;
+              console.log("初始化")
+              let moved = false;
+              let srcChanged = false;
+              let timer = setInterval(() => {
+                let div = document.querySelector(".ux-video-player");
+                let video = document.body.querySelector(".u-edu-h5player-mainvideo").childNodes[0];
+                video.crossOrigin = "anonymous";
+                if (div) {
+                  div.style.width = "100%";
+                  div.style.height = "100vh";
+                  document.body.style.minWidth = "0px";
+                  if (!moved) {
+                    document.body.insertBefore(div, document.body.children[0]);
+                    moved = true
+                  }
+                  let src = video?.childNodes[0]?.src;
+                  if (src !== '' && !srcChanged) {
+                    srcChanged = true;
+                    video.removeChild(video.childNodes[0]);
+                    setTimeout(() => {
+                      video.src = src;
+                      video.play();
+                    },200);
+                  }
+              }
+            }, 1000);`,
+  },
+  "www.imooc.com": {
+    debug: false,
+    loadScript: `
+              let iframe = document.createElement('iframe');
+          　　 document.body.appendChild(iframe);
+          　　 window.console = iframe.contentWindow.console;
+              console.log("初始化");
+              let kfTimer = setInterval(() => {
+                clearInterval(kfTimer);
+                let div = document.querySelector(".course-video-wrap");
+                if (div) {
+                  div.style.width = "100%";
+                  div.style.height = "100vh";
+                  document.body.style.minWidth = "0px";
+                  document.body.insertBefore(div, document.body.children[0]);
+              }
+            }, 1000);`,
+  }
+};
 
+const findWebsite = url => {
+  let webKey = Object.keys(websites).find(website => url.includes(website));
+  if (webKey) {
+    return websites[webKey];
+  } else {
+    return null;
+  }
+};
+
+const replaceWebsite = url => {
+  let result = Object.keys(websites).find(website => url.includes(website));
+
+  if (result && websites[result].replace) {
+    return url.replaceAll(result, websites[result].replace);
+  }
+  return url;
+};
+
+const handleReplacedWebsite = url => {
+  let website = Object.values(websites).
+      find(website => url.includes(website.replace));
+
+  if (website) {
+    url = url.replace(website.replace,
+        Object.keys(websites).find(key => websites[key] === website));
+  }
+  return url;
+};
+
+const KfXHR = `
+  if (!window.KfXHR){
     window.KfXHR = (function(){
 
       // save the native XHR method to xhrConstructor;
@@ -229,128 +350,9 @@ const websites = {
         }
       }
     }
-
-    let timer = setInterval(() => {
-      let button = document.querySelector(".bpx-player-ctrl-web");
-      if (button) {
-        clearInterval(timer);
-        button.click();
-      }
-    }, 1000);
-    `,
-    captureSubtitle: true,
-  }, 'www.youtube.com': {
-    replace: 'www.y.com',
-  }, 'open.163.com': {
-    videoId: '#open-video_html5_api', loadScript: `let timer = setInterval(() => {
-              let button = document.querySelector(".vjs-grow-button");
-              if (button) {
-                clearInterval(timer);
-                button.click();
-                let videoMainBox = document.querySelector(".video-main-box");
-                if (videoMainBox) {
-                  document.body.appendChild(videoMainBox);
-                  document.body.removeChild(document.body.children[0]);
-                  document.body.removeChild(document.body.children[0]);
-                }
-              }
-            }, 1000);`,
-  },
-  'live.bilibili.com': {
-    loadScript: `let timer = setInterval(() => {
-              let div = document.querySelector(".player-section");
-              if (div) {
-                clearInterval(timer);
-                div.style.width = "100%";
-                div.style.height = "100vh";
-                document.body.style.minWidth = "0px";
-                document.body.appendChild(div);
-                document.body.removeChild(document.querySelector(".live-room-app"));
-              }
-            }, 1000);`,
-  },
-  'www.icourse163.org': {
-    debug: false,
-    loadScript: `             
-              let iframe = document.createElement('iframe');
-          　　 document.body.appendChild(iframe);
-          　　 window.console = iframe.contentWindow.console;
-              console.log("初始化")
-              let moved = false;
-              let srcChanged = false;
-              let timer = setInterval(() => {
-                let div = document.querySelector(".ux-video-player");  
-                let video = document.body.querySelector(".u-edu-h5player-mainvideo").childNodes[0];
-                video.crossOrigin = "anonymous";             
-                if (div) {
-                  div.style.width = "100%";
-                  div.style.height = "100vh";
-                  document.body.style.minWidth = "0px";
-                  if (!moved) {
-                    document.body.insertBefore(div, document.body.children[0]);
-                    moved = true
-                  }                  
-                  let src = video?.childNodes[0]?.src;
-                  if (src !== '' && !srcChanged) {
-                    srcChanged = true;
-                    video.removeChild(video.childNodes[0]);
-                    setTimeout(() => {
-                      video.src = src;
-                      video.play();
-                    },200);
-                  }                                
-              }
-            }, 1000);`,
-  },
-  "www.imooc.com": {
-    debug: false,
-    loadScript: `             
-              let iframe = document.createElement('iframe');
-          　　 document.body.appendChild(iframe);
-          　　 window.console = iframe.contentWindow.console;
-              console.log("初始化");
-              let kfTimer = setInterval(() => {
-                clearInterval(kfTimer);
-                let div = document.querySelector(".course-video-wrap");           
-                if (div) {
-                  div.style.width = "100%";
-                  div.style.height = "100vh";
-                  document.body.style.minWidth = "0px";                  
-                  document.body.insertBefore(div, document.body.children[0]);                                                                             
-              }
-            }, 1000);`,
   }
-};
-
-const findWebsite = url => {
-  let webKey = Object.keys(websites).find(website => url.includes(website));
-  if (webKey) {
-    return websites[webKey];
-  } else {
-    return null;
-  }
-};
-
-const replaceWebsite = url => {
-  let result = Object.keys(websites).find(website => url.includes(website));
-
-  if (result && websites[result].replace) {
-    return url.replaceAll(result, websites[result].replace);
-  }
-  return url;
-};
-
-const handleReplacedWebsite = url => {
-  let website = Object.values(websites).
-      find(website => url.includes(website.replace));
-
-  if (website) {
-    url = url.replace(website.replace,
-        Object.keys(websites).find(key => websites[key] === website));
-  }
-  return url;
-};
+`
 
 export default {
-  handleReplacedWebsite, replaceWebsite, findWebsite, websites,
+  handleReplacedWebsite, replaceWebsite, findWebsite, websites, KfXHR
 };

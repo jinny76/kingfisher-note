@@ -1,7 +1,7 @@
 <template>
-  <div class="toolbar" id="idToolbar" v-show="contentType === 'video'">
+  <div v-show="contentType === 'video' || contentType === 'website'" id="idToolbar" class="toolbar">
     <div class="panel">
-      <el-button title="插入时间" @click="insertContent('timestamp')" v-if="!embed" >
+      <el-button v-if="!embed" title="插入时间" @click="insertContent('timestamp')">
         <svg class="icon" height="20" p-id="5255" t="1713751961582" version="1.1"
              viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -15,7 +15,7 @@
             fill="#FFFFFF" p-id="5258"></path>
         </svg>
       </el-button>
-      <el-button title="插入截图" @click="insertContent('screenshot')" v-if="!embed" >
+      <el-button v-if="!embed" title="插入截图" @click="insertContent('screenshot')">
         <svg class="icon" height="20" p-id="13508" t="1713752087666" version="1.1"
              viewBox="0 0 1280 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -23,7 +23,7 @@
             fill="#FFFFFF" p-id="13509"></path>
         </svg>
       </el-button>
-      <el-button title="插入时间和截图" @click="insertContent('all')" v-if="!embed" >
+      <el-button v-if="!embed" title="插入时间和截图" @click="insertContent('all')">
         <svg class="icon" height="20" p-id="18671" t="1713752331119" version="1.1"
              viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -31,7 +31,7 @@
             fill="#FFFFFF" p-id="18672"></path>
         </svg>
       </el-button>
-      <el-button title="快进" @click="forward" v-if="!embed" >
+      <el-button v-if="!embed" title="快进" @click="forward">
         <svg class="icon" height="20" p-id="5223" t="1713840577418" version="1.1"
              viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -39,7 +39,7 @@
             fill="#FFFFFF" p-id="5224"></path>
         </svg>
       </el-button>
-      <el-button title="倒退" @click="backward" v-if="!embed" >
+      <el-button v-if="!embed" title="倒退" @click="backward">
         <svg class="icon" height="20" p-id="1220" t="1713840644659" version="1.1"
              viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -55,7 +55,7 @@
             fill="#FFFFFF" p-id="27367"></path>
         </svg>
       </el-button>
-      <el-button title="录像" @click="record('video')" v-if="!embed" >
+      <el-button v-if="!embed" title="录像" @click="record('video')">
         <svg class="icon" height="20" p-id="35629" t="1714691217630" version="1.1"
              viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -63,7 +63,7 @@
             fill="#FFFFFF" p-id="35630"></path>
         </svg>
       </el-button>
-      <el-button v-if="extendButtons.captureSubtitle" title="抓取字幕" @click="captureSubtitle">
+      <el-button v-if="extendButtons.captureSubtitle" title="开始抓取字幕" @click="captureSubtitle">
         <svg class="icon" height="20" p-id="5662" t="1714908048845" version="1.1"
              viewBox="0 0 1105 1024" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -78,7 +78,7 @@
       </el-input>
     </div>
   </div>
-  <div v-show="recording" class="record blink" id="idRecording">
+  <div v-show="recording" id="idRecording" class="record blink">
     <svg class="icon" height="20" p-id="14885" t="1714691020090" version="1.1"
          viewBox="0 0 1024 1024" width="20" xmlns="http://www.w3.org/2000/svg">
       <path d="M512 0a512 512 0 1 1 0 1024A512 512 0 0 1 512 0z m0 64a448 448 0 1 0 0 896A448 448 0 0 0 512 64z"
@@ -91,11 +91,13 @@
                      controls
                      style="width: 100%; height: 100%;display: flex" v-bind="options"
                      @play="whenPlay"></vue3-video-player>
-  <webview v-show="contentType === 'website' || contentType === 'document'" ref="webview" :src="options.src" style="width: 100%; height: 100%;display: flex"></webview>
+  <webview v-show="contentType === 'website' || contentType === 'document'" ref="webview"
+           :src="(contentType === 'website' || contentType === 'document') ? options.src: ''"
+           style="width: 100%; height: 100%;display: flex"></webview>
 </template>
 
 <script lang="js">
-import {nextTick, onUnmounted, ref, watch, onMounted} from 'vue';
+import {nextTick, onMounted, onUnmounted, ref, watch} from 'vue';
 import {useRoute} from 'vue-router';
 import service from '../utils/service';
 import {ElMessage, ElMessageBox} from 'element-plus';
@@ -191,13 +193,13 @@ export default {
     });
 
     onMounted(() => {
-      if (noteModel.setting.value.displayMode === "same") {
-        let toolbar = document.querySelector("#idToolbar");
-        toolbar.style.top = "40px";
-        toolbar.style.width = "30%";
+      if (noteModel.setting.value.displayMode === 'same') {
+        let toolbar = document.querySelector('#idToolbar');
+        toolbar.style.top = '40px';
+        toolbar.style.width = '30%';
 
-        let recording = document.querySelector("#idRecording");
-        recording.style.top = "40px";
+        let recording = document.querySelector('#idRecording');
+        recording.style.top = '40px';
       }
     });
 
@@ -326,7 +328,7 @@ export default {
         let video = playerDom.value.$el.childNodes[0];
         if (video) {
           let data = {
-            type: type
+            type: type,
           };
 
           if (type === 'timestamp' || type === 'all') {
@@ -416,11 +418,11 @@ export default {
         }).then(() => {
           service.invoke('/note/analysisSubtitle', arg);
         }).catch(() => {
-          service.invoke("/system/redirect", {
-            target: "main",
-            route: "/client/send",
-            args: `\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`
-          })
+          service.invoke('/system/redirect', {
+            target: 'main',
+            route: '/client/send',
+            args: `\n\n[[字幕]](subtitle://${JSON.parse(arg).fileName})\n`,
+          });
         });
       }
     };
@@ -541,6 +543,7 @@ export default {
 
     const captureSubtitle = () => {
       if (contentType.value === 'website') {
+        webview.value.executeJavaScript(website.KfXHR);
         service.invoke('/note/captureSubtitle', '');
       }
     };

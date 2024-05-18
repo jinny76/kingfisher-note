@@ -462,6 +462,7 @@ export default {
                   }
                 } else if (dom.href.startsWith('kingfisher://')) {
                   if (dom.href.indexOf('.mp4') !== -1 || dom.href.indexOf('.webm') !== -1
+                    || dom.href.indexOf('.mp3') || dom.href.indexOf('.wav')
                     || dom.href.indexOf('.html') !== -1 || dom.href.indexOf('.html') !== -1
                     || dom.href.indexOf('.pdf') !== -1) {
                     closeVideo();
