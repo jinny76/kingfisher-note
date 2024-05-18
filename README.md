@@ -41,7 +41,7 @@ Linux。主要用于记录视频笔记，支持视频播放、笔记记录、笔
 
 ## 目录
 
-- [用户教程](http://resource.kingfisher.live/note/%E6%95%99%E5%AD%A6%E8%A7%86%E9%A2%91.mp4)
+- [用户教程](https://www.bilibili.com/video/BV1oH4y1M7qn/)
 - [上手指南](#上手指南)
     - [开发前的配置要求](#开发前的配置要求)
     - [安装步骤](#安装步骤)
